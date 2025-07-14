@@ -1,0 +1,237 @@
+{
+  "admin": {
+    "sidebar": {
+      "dashboard": "لوحة التحكم",
+      "properties": "العقارات",
+      "categories": "الفئات",
+      "featured": "المميزة",
+      "settings": "الإعدادات",
+      "logout": "تسجيل الخروج"
+    },
+    "header": {
+      "viewSite": "عرض الموقع",
+      "welcome": "مرحباً"
+    },
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "description": "أهلاً بك في لوحة الإدارة. هنا نظرة سريعة على موقعك.",
+      "totalProperties": "إجمالي العقارات",
+      "totalCategories": "إجمالي الفئات",
+      "featuredProperties": "العقارات المميزة",
+      "activeListings": "الإعلانات النشطة",
+      "recentActivity": "النشاط الأخير",
+      "newPropertyListed": "تم إدراج عقار جديد",
+      "categoryUpdated": "تم تحديث الفئة",
+      "userRegistered": "تم تسجيل مستخدم جديد",
+      "viewAll": "عرض الكل"
+    },
+    "categories": {
+      "title": "الفئات",
+      "addButton": "إضافة فئة",
+      "grid": {
+        "name": "الاسم",
+        "actions": "الإجراءات",
+        "edit": "تعديل",
+        "delete": "حذف"
+      },
+      "dialog": {
+        "addTitle": "إضافة فئة جديدة",
+        "editTitle": "تعديل الفئة",
+        "nameLabel": "الاسم",
+        "namePlaceholder": "أدخل اسم الفئة",
+        "slugLabel": "المعرّف (Slug)",
+        "slugPlaceholder": "أدخل معرّف الفئة",
+        "cancel": "إلغاء",
+        "save": "حفظ"
+      }
+    },
+    "featured": {
+      "title": "العقارات المميزة",
+      "description": "إدارة العقارات التي تظهر بشكل بارز على موقعك",
+      "currentlyFeatured": "المميزة حالياً",
+      "currentlyFeaturedSubtitle": "العقارات المحددة حالياً كمميزة",
+      "total": "الإجمالي",
+      "noCategory": "بدون فئة",
+      "featured": "مميز",
+      "noFeaturedProperties": "لا توجد عقارات مميزة",
+      "noFeaturedPropertiesSubtitle": "لم تقم بتمييز أي عقارات بعد. قم بتمييز بعض العقارات لعرضها بشكل بارز.",
+      "availableToFeature": "متاح للتمييز",
+      "availableToFeatureSubtitle": "العقارات النشطة الحديثة التي يمكن تمييزها",
+      "viewAllProperties": "عرض كل العقارات",
+      "new": "جدید",
+      "noAvailableToFeature": "لا توجد عقارات متاحة للتمييز.",
+      "table": {
+        "property": "العقار",
+        "category": "الفئة",
+        "price": "السعر",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "tips": {
+        "title": "نصائح للعقارات المميزة:",
+        "tip1": "• تظهر العقارات المميزة بشكل بارز على صفحتك الرئيسية",
+        "tip2": "• تحصل على رؤية أعلى في نتائج البحث",
+        "tip3": "• حدد عدد العقارات المميزة إلى 6-8 للحصول على أفضل تأثير",
+        "tip4": "• اختر أفضل العقارات وأكثرها جاذبية",
+        "tip5": "• قم بتحديث العقارات المميزة بانتظام للحفاظ على حداثة المحتوى",
+        "tip6": "• تحصل العقارات المميزة عادة على 3 أضعاف عدد المشاهدات"
+      },
+      "toggleError": "فشل تحديث العقار"
+    },
+    "properties": {
+      "title": "العقارات",
+      "description": "إدارة جميع قوائم العقارات الخاصة بك",
+      "addProperty": "إضافة عقار",
+      "search": {
+        "placeholder": "البحث بالاسم أو الموقع..."
+      },
+      "allCategories": "جميع الفئات",
+      "allStatuses": "جميع الحالات",
+      "active": "نشط",
+      "inactive": "غير نشط",
+      "table": {
+        "property": "العقار",
+        "category": "الفئة",
+        "price": "السعر",
+        "status": "الحالة",
+        "actions": "الإجراءات"
+      },
+      "noProperties": "لم يتم العثور على عقارات.",
+      "noPropertiesDescription": "ابدأ بإنشاء قائمة العقارات الأولى الخاصة بك.",
+      "noPropertiesFound": "لم يتم العثور على عقارات",
+      "noPropertiesMatchFilters": "لا توجد عقارات تطابق المرشحات الحالية.",
+      "getStarted": "ابدأ بإضافة أول عقار لك.",
+      "delete": {
+        "title": "حذف العقار",
+        "confirmation": "هل أنت متأكد أنك تريد حذف هذا العقار؟ لا يمكن التراجع عن هذا الإجراء.",
+        "cancel": "إلغاء",
+        "deleting": "جارٍ الحذف...",
+        "delete": "حذف",
+        "success": "تم حذف العقار بنجاح",
+        "error": "فشل حذف العقار"
+      },
+      "tabs": {
+        "details": "التفاصيل",
+        "media": "الوسائط",
+        "location": "الموقع",
+        "amenities": "المرافق"
+      },
+      "form": {
+        "createTitle": "إنشاء عقار جديد",
+        "editTitle": "تعديل العقار",
+        "nameLabel": "اسم العقار",
+        "namePlaceholder": "مثال: شقة حديثة في وسط المدينة",
+        "descriptionLabel": "الوصف",
+        "descriptionPlaceholder": "وصف مفصل للعقار",
+        "priceLabel": "السعر (بالجنيه المصري)",
+        "pricePlaceholder": "مثال: 2500000",
+        "categoryLabel": "الفئة",
+        "selectCategory": "اختر فئة",
+        "typeLabel": "نوع الإعلان",
+        "forSale": "للبيع",
+        "forRent": "للإيجار",
+        "statusLabel": "الحالة",
+        "selectStatus": "اختر الحالة",
+        "bedroomsLabel": "غرف النوم",
+        "selectBedrooms": "اختر عدد غرف النوم",
+        "bathroomsLabel": "الحمامات",
+        "selectBathrooms": "اختر عدد الحمامات",
+        "sizeLabel": "المساحة (م²)",
+        "sizePlaceholder": "مثال: 150",
+        "locationLabel": "الموقع",
+        "locationPlaceholder": "مثال: الزمالك، القاهرة",
+        "addressLabel": "العنوان الكامل",
+        "addressPlaceholder": "مثال: 123 شارع النيل، الزمالك، القاهرة",
+        "saveButton": "حفظ العقار",
+        "saving": "جارٍ الحفظ...",
+        "success": "تم حفظ العقار بنجاح",
+        "error": "فشل حفظ العقار"
+      }
+    },
+    "settings": {
+      "title": "الإعدادات",
+      "description": "إدارة إعدادات وتفضيلات التطبيق الخاص بك",
+      "save": "حفظ الإعدادات",
+      "tabs": {
+        "general": "عام",
+        "seo": "تحسين محركات البحث",
+        "notifications": "الإشعارات",
+        "security": "الأمان",
+        "display": "العرض"
+      },
+      "general": {
+        "siteInfo": {
+          "title": "معلومات الموقع",
+          "siteName": "اسم الموقع",
+          "contactEmail": "البريد الإلكتروني للتواصل",
+          "siteDescription": "وصف الموقع",
+          "contactPhone": "هاتف التواصل",
+          "address": "العنوان"
+        },
+        "featureToggles": {
+          "title": "مفاتيح الميزات",
+          "liveChat": "الدردشة الحية",
+          "liveChatDesc": "تمكين دعم الدردشة الحية",
+          "propertyReviews": "مراجعات العقارات",
+          "propertyReviewsDesc": "السماح للمستخدمين بمراجعة العقارات",
+          "wishlist": "قائمة الرغبات",
+          "wishlistDesc": "تمكين ميزة قائمة رغبات العقارات",
+          "propertyComparison": "مقارنة العقارات",
+          "propertyComparisonDesc": "السماح بمقارنة العقارات",
+          "maintenanceMode": "وضع الصيانة",
+          "maintenanceModeDesc": "وضع الموقع في وضع الصيانة",
+          "active": "نشط"
+        }
+      },
+      "seo": {
+        "title": "إعدادات تحسين محركات البحث",
+        "metaTitle": "عنوان الميتا",
+        "metaTitlePlaceholder": "عنوان الميتا لموقعك",
+        "metaDescription": "وصف الميتا",
+        "metaDescriptionPlaceholder": "وصف الميتا لموقعك",
+        "metaKeywords": "الكلمات الرئيسية للميتا",
+        "metaKeywordsPlaceholder": "كلمة1, كلمة2, كلمة3"
+      },
+      "notifications": {
+        "title": "تفضيلات الإشعارات",
+        "email": "إشعارات البريد الإلكتروني",
+        "emailDesc": "تلقي الإشعارات عبر البريد الإلكتروني",
+        "sms": "إشعارات الرسائل القصيرة",
+        "smsDesc": "تلقي الإشعارات عبر الرسائل القصيرة",
+        "push": "إشعارات الدفع",
+        "pushDesc": "تلقي إشعارات الدفع في المتصفح",
+        "marketing": "رسائل التسويق الإلكتروني",
+        "marketingDesc": "تلقي رسائل البريد الإلكتروني التسويقية والترويجية"
+      },
+      "security": {
+        "title": "إعدادات الأمان",
+        "twoFactorAuth": "المصادقة الثنائية",
+        "twoFactorAuthDesc": "تمكين المصادقة الثنائية لتعزيز الأمان",
+        "sessionTimeout": "مهلة الجلسة (بالدقائق)",
+        "minutes15": "15 دقيقة",
+        "minutes30": "30 دقيقة",
+        "hour1": "ساعة واحدة",
+        "hours2": "ساعتان",
+        "passwordExpiry": "انتهاء صلاحية كلمة المرور (بالأيام)",
+        "days30": "30 يومًا",
+        "days60": "60 يومًا",
+        "days90": "90 يومًا",
+        "never": "أبدًا"
+      },
+      "display": {
+        "title": "تفضيلات العرض",
+        "itemsPerPage": "العناصر في كل صفحة",
+        "items6": "6 عناصر",
+        "items12": "12 عنصرًا",
+        "items24": "24 عنصرًا",
+        "items48": "48 عنصرًا",
+        "defaultCurrency": "العملة الافتراضية",
+        "egp": "جنيه مصري",
+        "usd": "دولار أمريكي",
+        "eur": "يورو",
+        "dateFormat": "تنسيق التاريخ",
+        "timezone": "المنطقة الزمنية"
+      }
+    }
+  }
+} 
