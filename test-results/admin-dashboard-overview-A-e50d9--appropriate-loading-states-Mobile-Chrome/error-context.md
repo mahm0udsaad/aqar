@@ -1,0 +1,80 @@
+# Page snapshot
+
+```yaml
+- img
+- text: Login Sign in to your account Email
+- textbox "Email"
+- text: Password
+- textbox "Password"
+- button "Sign In"
+- paragraph:
+  - text: Don't have an account?
+  - link "Sign Up":
+    - /url: /en/auth/signup
+- paragraph:
+  - link "Admin Registration":
+    - /url: /en/auth/admin-signup
+- region "Notifications (F8)":
+  - list
+- contentinfo:
+  - img
+  - text: Elite Properties
+  - paragraph: Your trusted partner in finding the perfect property. We specialize in premium real estate with exceptional service.
+  - img
+  - img
+  - img
+  - img
+  - heading "Quick Links" [level=3]
+  - list:
+    - listitem:
+      - link "Home":
+        - /url: /en
+    - listitem:
+      - link "Search Properties":
+        - /url: /en/search
+    - listitem:
+      - link "Apartments":
+        - /url: /en/categories/apartments
+    - listitem:
+      - link "Villas":
+        - /url: /en/categories/villas
+    - listitem:
+      - link "Contact":
+        - /url: /en/contact
+  - heading "Services" [level=3]
+  - list:
+    - listitem: Property Sales
+    - listitem: Property Management
+    - listitem: Investment Consulting
+    - listitem: Market Analysis
+    - listitem: Legal Support
+  - heading "Legal" [level=3]
+  - list:
+    - listitem:
+      - link "Terms and Conditions":
+        - /url: /en/legal/terms
+    - listitem:
+      - link "Privacy Policy":
+        - /url: /en/legal/policies
+  - heading "Contact Info" [level=3]
+  - img
+  - text: 123 Business Ave, City, State 12345
+  - img
+  - text: +1 (555) 123-4567
+  - img
+  - text: info@eliteproperties.com
+  - paragraph:
+    - text: © 2024 Elite Properties. All rights reserved.
+    - link "Privacy Policy":
+      - /url: /en/legal/policies
+    - text: "|"
+    - link "Terms of Service":
+      - /url: /en/legal/terms
+- region "Notifications alt+T"
+- button "Open Next.js Dev Tools":
+  - img
+- button "Open issues overlay": 1 Issue
+- button "Collapse issues badge":
+  - img
+- alert
+```

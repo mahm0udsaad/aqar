@@ -20,7 +20,7 @@ import { Home, Building, TreePine, Store, ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 interface CategoryPageProps {
-  params: Promise<{ lng: Locale; slug: string }>
+  params: { lng: Locale; slug: string }
 }
 
 const categoryIcons = {
@@ -31,9 +31,6 @@ const categoryIcons = {
 }
 
 export default async function CategoryPage({ params: { lng, slug } }: CategoryPageProps) {
-export default async function CategoryPage({ params }: CategoryPageProps) {
-  const { lng, slug } = await params
-  const { lng, slug } = await params
   const dict = await getDictionary(lng)
   const category = await getCategoryBySlug(slug)
 
@@ -86,7 +83,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
         {properties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} dict={dict} lng={lng} />
+              <PropertyCard key={property.id} property={property} />
             ))}
           </div>
         ) : (
