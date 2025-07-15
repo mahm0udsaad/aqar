@@ -17,11 +17,13 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
 interface PageProps {
-  params: { lng: Locale }
-  searchParams: { search?: string; category?: string; status?: string }
+  params: Promise<{ lng: Locale }>
+  searchParams: Promise<{ search?: string; category?: string; status?: string }>
 }
 
-export default async function AdminPropertiesPage({ params, searchParams }: PageProps) {
+export default async function AdminPropertiesPage({ params: initialParams, searchParams: initialSearchParams }: PageProps) {
+  const params = await initialParams
+  const searchParams = await initialSearchParams
   const { lng } = params
   const supabase = createServerComponentClient<Database>({ cookies })
   const dict = await getDictionary(lng)

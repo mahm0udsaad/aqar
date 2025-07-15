@@ -6,11 +6,12 @@ import { cn } from "@/lib/utils"
 
 export default async function AdminLayout({
   children,
-  params,
+  params: initialParams,
 }: {
   children: React.ReactNode
-  params: { lng: string }
+  params: Promise<{ lng: string }>
 }) {
+  const params = await initialParams
   const dict = await getDictionary(params.lng as "en" | "ar")
   return (
     <AdminGuard lng={params.lng}>
