@@ -159,7 +159,7 @@ export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="relative bg-transparent">
+        <Button variant="outline" size="sm" className="relative bg-transparent sm:hidden">
           <SlidersHorizontal className="h-4 w-4 mr-2" />
           {dict.search.filters}
           {activeFiltersCount > 0 && (

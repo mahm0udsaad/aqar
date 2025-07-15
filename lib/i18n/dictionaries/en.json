@@ -92,7 +92,14 @@
     "filters": "Filters",
     "results": "Search Results",
     "noResults": "No properties found matching your criteria",
-    "sortBy": "Sort by",
+    "sortBy": {
+      "newest": "Newest First",
+      "oldest": "Oldest First",
+      "priceLow": "Price: Low to High",
+      "priceHigh": "Price: High to Low",
+      "areaLarge": "Area: Large to Small",
+      "areaSmall": "Area: Small to Large"
+    },
     "priceRange": "Price Range",
     "propertyType": "Property Type",
     "bedrooms": "Bedrooms",
