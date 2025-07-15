@@ -120,13 +120,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
           )}
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-6">
-            <Link
-              href={`/${lng}`}
-              className={`text-sm font-medium transition-colors hover:text-primary`}
-            >
-              {dict.nav.home}
-            </Link>
+          <div className="hidden md:flex items-center gap-6">
             <Link
               href={`/${lng}/search`}
               className={`text-sm font-medium transition-colors hover:text-primary`}

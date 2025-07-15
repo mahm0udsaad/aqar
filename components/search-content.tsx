@@ -48,14 +48,12 @@ export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
       setLoading(true)
       try {
         const data = await getProperties({
-          search: searchQuery,
           category: filters.category,
           minPrice: filters.minPrice ? Number.parseInt(filters.minPrice) : undefined,
           maxPrice: filters.maxPrice ? Number.parseInt(filters.maxPrice) : undefined,
           location: filters.location,
           bedrooms: filters.bedrooms ? Number.parseInt(filters.bedrooms) : undefined,
           bathrooms: filters.bathrooms ? Number.parseInt(filters.bathrooms) : undefined,
-          sortBy: sortBy as any,
         })
         setProperties(data || [])
       } catch (error) {
@@ -125,9 +123,9 @@ export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSearch} className="px-6">
-                {dict.search.searchButton}
+                {dict.nav.search}
               </Button>
-              <Button variant="outline" onClick={() => setShowFilters(true)} className="md:hidden">
+              <Button variant="outline" onClick={() => setShowFilters(true)} className="lg:hidden">
                 <Filter className="h-4 w-4 mr-2" />
                 {dict.search.filters}
                 {activeFiltersCount > 0 && (
@@ -144,22 +142,8 @@ export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Desktop Filters */}
         <div className="hidden lg:block lg:col-span-1">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold flex items-center gap-2">
-                  <SlidersHorizontal className="h-4 w-4" />
-                  {dict.search.filters}
-                </h3>
-                {activeFiltersCount > 0 && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters}>
-                    {dict.search.clearAll}
-                  </Button>
-                )}
-              </div>
+            
               <SearchFilters dict={dict} lng={lng} filters={filters} onFiltersChange={handleFilterChange} />
-            </CardContent>
-          </Card>
         </div>
 
         {/* Results */}
@@ -178,7 +162,7 @@ export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-48">
-                <SelectValue />
+                <SelectValue placeholder={dict.search.sortBy.label} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">{dict.search.sortBy.newest}</SelectItem>

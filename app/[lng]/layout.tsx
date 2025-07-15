@@ -3,6 +3,7 @@ import { Inter, Cairo } from "next/font/google"
 import { i18n, type Locale } from "@/lib/i18n/config"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { ThemeProvider } from "@/components/theme-provider"
+import { AuthProvider } from "@/lib/auth/auth-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Footer } from "@/components/footer"
 import "../globals.css"
@@ -55,16 +56,18 @@ export default async function RootLayout({
   params,
 }: {
   children: React.ReactNode
-  params: Promise<{ lng: Locale }>
+  params: { lng: Locale }
 }) {
-  const { lng } = await params
+  const { lng } = params
   const dict = await getDictionary(lng)
 
   return (
-    <html lang={lng} dir={lng === "ar" ? "rtl" : "ltr"}>
+    <html lang={lng} dir={lng === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
       <body className={lng === "ar" ? cairo.className : inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          {children}
+          <AuthProvider>
+            {children}
+          </AuthProvider>
           <Toaster />
           <Footer lng={lng} dict={dict} />
         </ThemeProvider>
