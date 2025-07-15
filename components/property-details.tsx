@@ -221,10 +221,6 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
                       {property.year_built || "2020"}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Property ID</span>
-                    <span className="font-medium">#{property.id}</span>
-                  </div>
                 </div>
               </div>
 

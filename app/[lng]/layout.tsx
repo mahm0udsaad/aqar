@@ -53,11 +53,12 @@ export async function generateMetadata({
 
 export default async function RootLayout({
   children,
-  params,
+  params: initialParams,
 }: {
   children: React.ReactNode
-  params: { lng: Locale }
+  params: Promise<{ lng: Locale }>
 }) {
+  const params = await initialParams
   const { lng } = params
   const dict = await getDictionary(lng)
 
