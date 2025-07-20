@@ -13,10 +13,13 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { SearchContent } from "@/components/search-content"
 import { SearchFiltersSheet } from "@/components/search-filters-sheet"
 
+import type { PropertyWithDetails } from "@/lib/supabase/queries"
+
 interface SearchProps {
   dict: any
   lng: Locale
   searchParams: { [key: string]: string | string[] | undefined }
+  initialProperties: PropertyWithDetails[]
 }
 
 function SearchSkeleton() {
@@ -63,7 +66,7 @@ function SearchSkeleton() {
   )
 }
 
-export function Search({ dict, lng, searchParams }: SearchProps) {
+export function Search({ dict, lng, searchParams, initialProperties }: SearchProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navbar lng={lng} dict={dict} />
@@ -75,7 +78,7 @@ export function Search({ dict, lng, searchParams }: SearchProps) {
           </div>
 
           <Suspense fallback={<SearchSkeleton />}> 
-            <SearchContent lng={lng} dict={dict} searchParams={searchParams} />
+            <SearchContent lng={lng} dict={dict} searchParams={searchParams} initialProperties={initialProperties} />
           </Suspense>
         </div>
       </main>
