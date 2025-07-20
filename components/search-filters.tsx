@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Filter, SlidersHorizontal, X } from "lucide-react"
 import type { SearchFilters as SearchFiltersType } from "@/lib/types"
-import { categories } from "@/lib/data"
+import { getCategories } from "@/lib/supabase/queries"
 
 interface SearchFiltersProps {
   filters: SearchFiltersType
@@ -79,6 +79,20 @@ const amenities = [
 export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobile = false, lng, dict }: SearchFiltersProps) {
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 10000000])
   const [sizeRange, setSizeRange] = useState([filters.minSize || 50, filters.maxSize || 500])
+  const [categories, setCategories] = useState<any[]>([])
+
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const data = await getCategories()
+        setCategories(data || [])
+      } catch (error) {
+        console.error("Error loading categories:", error)
+        setCategories([])
+      }
+    }
+    loadCategories()
+  }, [])
 
   const updateFilter = (key: keyof SearchFiltersType, value: any) => {
     onFiltersChange({ ...filters, [key]: value })
@@ -139,7 +153,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
         <Label className="text-sm font-medium">{dict.search.category}</Label>
         <Select
           value={filters.category || "all"}
-          onValueChange={(value) => updateFilter("category", value || undefined)}
+          onValueChange={(value) => updateFilter("category", value === "all" ? undefined : value)}
         >
           <SelectTrigger className="mt-1">
             <SelectValue placeholder={dict.search.allCategories} />
@@ -158,7 +172,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
       {/* Area */}
       <div>
         <Label className="text-sm font-medium">{dict.search.area}</Label>
-        <Select value={filters.area || "all"} onValueChange={(value) => updateFilter("area", value || undefined)}>
+        <Select value={filters.area || "all"} onValueChange={(value) => updateFilter("area", value === "all" ? undefined : value)}>
           <SelectTrigger className="mt-1">
             <SelectValue placeholder={dict.search.allAreas} />
           </SelectTrigger>
@@ -220,7 +234,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
           <Label className="text-sm font-medium">{dict.search.bedrooms}</Label>
           <Select
             value={filters.bedrooms?.toString() || "any"}
-            onValueChange={(value) => updateFilter("bedrooms", value ? Number(value) : undefined)}
+            onValueChange={(value) => updateFilter("bedrooms", value === "any" ? undefined : Number(value))}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder={dict.general.any} />
@@ -239,7 +253,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
           <Label className="text-sm font-medium">{dict.search.bathrooms}</Label>
           <Select
             value={filters.bathrooms?.toString() || "any"}
-            onValueChange={(value) => updateFilter("bathrooms", value ? Number(value) : undefined)}
+            onValueChange={(value) => updateFilter("bathrooms", value === "any" ? undefined : Number(value))}
           >
             <SelectTrigger className="mt-1">
               <SelectValue placeholder={dict.general.any} />
@@ -257,25 +271,20 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
 
       {/* Owner Type */}
       <div>
-        <Label className="text-sm font-medium mb-3 block">{dict.search.ownerType}</Label>
-        <div className="flex gap-2">
-          <Button
-            variant={filters.ownerType === "owner" ? "default" : "outline"}
-            size="sm"
-            onClick={() => updateFilter("ownerType", filters.ownerType === "owner" ? undefined : "owner")}
-            className="flex-1"
-          >
-            {dict.search.owner}
-          </Button>
-          <Button
-            variant={filters.ownerType === "broker" ? "default" : "outline"}
-            size="sm"
-            onClick={() => updateFilter("ownerType", filters.ownerType === "broker" ? undefined : "broker")}
-            className="flex-1"
-          >
-            {dict.search.broker}
-          </Button>
-        </div>
+        <Label className="text-sm font-medium">{dict.search.ownerType}</Label>
+        <Select
+          value={filters.ownerType || "all"}
+          onValueChange={(value) => updateFilter("ownerType", value === "all" ? undefined : value as "owner" | "broker")}
+        >
+          <SelectTrigger className="mt-1">
+            <SelectValue placeholder={dict.search.allOwners} />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">{dict.search.allOwners}</SelectItem>
+            <SelectItem value="owner">{dict.search.owner}</SelectItem>
+            <SelectItem value="broker">{dict.search.broker}</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* New Properties */}
@@ -297,17 +306,15 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
           {amenities.map((amenity) => {
             const amenityKey = amenityToKeyMap[amenity]
             return (
-              <div
-                key={amenity}
-                className={`flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors ${
-                  (filters.amenities || []).includes(amenity)
-                    ? "border-primary bg-primary/5"
-                    : "border-gray-200 hover:border-primary/50"
-                }`}
-                onClick={() => toggleAmenity(amenity)}
-              >
-                <Checkbox checked={(filters.amenities || []).includes(amenity)} disabled />
-                <span className="text-sm">{dict.amenities[amenityKey as keyof typeof dict.amenities] || amenity}</span>
+              <div key={amenity} className="flex items-center space-x-2">
+                <Checkbox
+                  id={amenity}
+                  checked={filters.amenities?.includes(amenity) || false}
+                  onCheckedChange={(checked) => toggleAmenity(amenity)}
+                />
+                <Label htmlFor={amenity} className="text-sm">
+                  {dict.amenities[amenityKey as keyof typeof dict.amenities] || amenity}
+                </Label>
               </div>
             )
           })}
@@ -357,6 +364,14 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
           </div>
         </div>
       )}
+
+      {/* Clear Filters */}
+      {hasActiveFilters && (
+        <Button onClick={onClearFilters} variant="outline" className="w-full">
+          <X className="h-4 w-4 mr-2" />
+          {dict.search.clearFilters}
+        </Button>
+      )}
     </div>
   )
 
@@ -364,14 +379,19 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
     return (
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="outline" className="w-full bg-transparent">
-            <SlidersHorizontal className="w-4 h-4 mr-2" />
-            {dict.search.filters} {hasActiveFilters && `(${Object.keys(filters).length})`}
+          <Button variant="outline" className="w-full">
+            <Filter className="h-4 w-4 mr-2" />
+            {dict.search.filters}
+            {hasActiveFilters && (
+              <Badge variant="secondary" className="ml-2">
+                {Object.values(filters).filter((v) => v !== undefined && v !== "").length}
+              </Badge>
+            )}
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
+        <SheetContent side="left" className="w-80">
           <SheetHeader>
-            <SheetTitle>{dict.search.searchFilters}</SheetTitle>
+            <SheetTitle>{dict.search.filters}</SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             <FilterContent />
@@ -382,15 +402,12 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
   }
 
   return (
-    <div className="bg-white rounded-lg border p-6 sticky top-4">
+    <div className="bg-card rounded-lg border p-6">
       <div className="flex items-center justify-between mb-6">
-        <h3 className="font-semibold flex items-center">
-          <Filter className="w-5 h-5 mr-2" />
-          {dict.search.filters}
-        </h3>
+        <h3 className="text-lg font-semibold">{dict.search.filters}</h3>
         {hasActiveFilters && (
-          <Button variant="ghost" size="sm" onClick={onClearFilters}>
-            <X className="w-4 h-4 mr-1" />
+          <Button onClick={onClearFilters} variant="ghost" size="sm">
+            <X className="h-4 w-4 mr-1" />
             {dict.search.clear}
           </Button>
         )}

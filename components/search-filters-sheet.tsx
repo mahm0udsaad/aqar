@@ -1,251 +1,262 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
-import { SlidersHorizontal, X } from "lucide-react"
+import { Filter, X } from "lucide-react"
 import { getCategories } from "@/lib/supabase/queries"
+import type { SearchFilters as SearchFiltersType } from "@/lib/types"
 
 interface SearchFiltersSheetProps {
   lng: string
   dict: any
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  filters: SearchFiltersType
+  onFiltersChange: (filters: SearchFiltersType) => void
+  onApply: () => void
 }
 
-export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
-  const [isOpen, setIsOpen] = useState(false)
-  const [categories, setCategories] = useState<any[]>([])
-  const [filters, setFilters] = useState({
-    category: "all",
-    propertyType: "all",
-    minPrice: 0,
-    maxPrice: 10000000,
-    bedrooms: "any",
-    bathrooms: "any",
-    minSize: 0,
-    maxSize: 1000,
-    location: "",
-    amenities: [] as string[],
-  })
+// Map area names to dictionary keys
+const areaToKeyMap: Record<string, string> = {
+  "New Cairo": "newCairo",
+  "Maadi": "maadi",
+  "Zamalek": "zamalek",
+  "Heliopolis": "heliopolis",
+  "6th of October": "sixthOfOctober",
+  "Sheikh Zayed": "sheikhZayed",
+  "New Capital": "newCapital",
+  "Alexandria": "alexandria",
+  "Giza": "giza",
+  "Nasr City": "nasrCity",
+}
 
-  const router = useRouter()
-  const searchParams = useSearchParams()
+// Map amenity names to dictionary keys
+const amenityToKeyMap: Record<string, string> = {
+  "Swimming Pool": "swimmingPool",
+  "Gym": "gym",
+  "Garden": "garden",
+  "Parking": "parking",
+  "Security": "security",
+  "Elevator": "elevator",
+  "Balcony": "balcony",
+  "Central AC": "centralAC",
+  "Kitchen Appliances": "kitchenAppliances",
+  "Furnished": "furnished",
+}
+
+const areas = [
+  "New Cairo",
+  "Maadi",
+  "Zamalek",
+  "Heliopolis",
+  "6th of October",
+  "Sheikh Zayed",
+  "New Capital",
+  "Alexandria",
+  "Giza",
+  "Nasr City",
+]
+
+const amenities = [
+  "Swimming Pool",
+  "Gym",
+  "Garden",
+  "Parking",
+  "Security",
+  "Elevator",
+  "Balcony",
+  "Central AC",
+  "Kitchen Appliances",
+  "Furnished",
+]
+
+export function SearchFiltersSheet({ 
+  lng, 
+  dict, 
+  open, 
+  onOpenChange, 
+  filters, 
+  onFiltersChange, 
+  onApply 
+}: SearchFiltersSheetProps) {
+  const [categories, setCategories] = useState<any[]>([])
+  const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 10000000])
+  const [sizeRange, setSizeRange] = useState([filters.minSize || 50, filters.maxSize || 500])
 
   useEffect(() => {
     const loadCategories = async () => {
+      try {
       const data = await getCategories()
-      setCategories(data)
+        setCategories(data || [])
+      } catch (error) {
+        console.error("Error loading categories:", error)
+        setCategories([])
+      }
     }
     loadCategories()
+  }, [])
 
-    // Load filters from URL
-    const urlFilters = {
-      category: searchParams.get("category") || "all",
-      propertyType: searchParams.get("type") || "all",
-      minPrice: Number.parseInt(searchParams.get("minPrice") || "0"),
-      maxPrice: Number.parseInt(searchParams.get("maxPrice") || "10000000"),
-      bedrooms: searchParams.get("bedrooms") || "any",
-      bathrooms: searchParams.get("bathrooms") || "any",
-      minSize: Number.parseInt(searchParams.get("minSize") || "0"),
-      maxSize: Number.parseInt(searchParams.get("maxSize") || "1000"),
-      location: searchParams.get("location") || "",
-      amenities: searchParams.get("amenities")?.split(",").filter(Boolean) || [],
-    }
-    setFilters(urlFilters)
-  }, [searchParams])
-
-  const amenitiesList = [
-    { value: "Parking", label: dict.amenities.parking },
-    { value: "Swimming Pool", label: dict.amenities.swimmingPool },
-    { value: "Gym", label: dict.amenities.gym },
-    { value: "Garden", label: dict.amenities.garden },
-    { value: "Balcony", label: dict.amenities.balcony },
-    { value: "Elevator", label: dict.amenities.elevator },
-    { value: "Security", label: dict.amenities.security },
-    { value: "Central AC", label: dict.amenities.centralAC },
-    { value: "Kitchen Appliances", label: dict.amenities.kitchenAppliances },
-    { value: "Furnished", label: dict.amenities.furnished },
-  ]
-
-  const handleAmenityChange = (amenity: string, checked: boolean) => {
-    setFilters((prev) => ({
-      ...prev,
-      amenities: checked ? [...prev.amenities, amenity] : prev.amenities.filter((a) => a !== amenity),
-    }))
+  const updateFilter = (key: keyof SearchFiltersType, value: any) => {
+    onFiltersChange({ ...filters, [key]: value })
   }
 
-  const applyFilters = () => {
-    const params = new URLSearchParams(searchParams.toString())
-
-    // Clear existing filter params
-    const filterKeys = [
-      "category",
-      "type",
-      "minPrice",
-      "maxPrice",
-      "bedrooms",
-      "bathrooms",
-      "minSize",
-      "maxSize",
-      "location",
-      "amenities",
-    ]
-    filterKeys.forEach((key) => params.delete(key))
-
-    // Add new filter params
-    if (filters.category !== "all") params.set("category", filters.category)
-    if (filters.propertyType !== "all") params.set("type", filters.propertyType)
-    if (filters.minPrice > 0) params.set("minPrice", filters.minPrice.toString())
-    if (filters.maxPrice < 10000000) params.set("maxPrice", filters.maxPrice.toString())
-    if (filters.bedrooms !== "any") params.set("bedrooms", filters.bedrooms)
-    if (filters.bathrooms !== "any") params.set("bathrooms", filters.bathrooms)
-    if (filters.minSize > 0) params.set("minSize", filters.minSize.toString())
-    if (filters.maxSize < 1000) params.set("maxSize", filters.maxSize.toString())
-    if (filters.location) params.set("location", filters.location)
-    if (filters.amenities.length > 0) params.set("amenities", filters.amenities.join(","))
-
-    router.push(`/${lng}/search?${params.toString()}`)
-    setIsOpen(false)
+  const toggleAmenity = (amenity: string) => {
+    const currentAmenities = filters.amenities || []
+    const newAmenities = currentAmenities.includes(amenity)
+      ? currentAmenities.filter((a) => a !== amenity)
+      : [...currentAmenities, amenity]
+    updateFilter("amenities", newAmenities)
   }
 
-  const clearFilters = () => {
-    const params = new URLSearchParams(searchParams.toString())
-    const filterKeys = [
-      "category",
-      "type",
-      "minPrice",
-      "maxPrice",
-      "bedrooms",
-      "bathrooms",
-      "minSize",
-      "maxSize",
-      "location",
-      "amenities",
-    ]
-    filterKeys.forEach((key) => params.delete(key))
-
-    setFilters({
-      category: "all",
-      propertyType: "all",
-      minPrice: 0,
-      maxPrice: 10000000,
-      bedrooms: "any",
-      bathrooms: "any",
-      minSize: 0,
-      maxSize: 1000,
-      location: "",
-      amenities: [],
-    })
-
-    router.push(`/${lng}/search?${params.toString()}`)
+  const handlePriceRangeChange = (values: number[]) => {
+    setPriceRange(values)
+    updateFilter("minPrice", values[0])
+    updateFilter("maxPrice", values[1])
   }
 
-  const activeFiltersCount = Object.entries(filters).reduce((count, [key, value]) => {
-    if (key === "amenities") return count + (value as string[]).length
-    if (key === "minPrice" && typeof value === "number" && value > 0) return count + 1
-    if (key === "maxPrice" && typeof value === "number" && value < 10000000) return count + 1
-    if (key === "minSize" && typeof value === "number" && value > 0) return count + 1
-    if (key === "maxSize" && typeof value === "number" && value < 1000) return count + 1
-    if (value && value !== "" && value !== "any" && value !== "all") return count + 1
-    return count
-  }, 0)
+  const handleSizeRangeChange = (values: number[]) => {
+    setSizeRange(values)
+    updateFilter("minSize", values[0])
+    updateFilter("maxSize", values[1])
+  }
+
+  const hasActiveFilters = Object.values(filters).some((value) => {
+    if (Array.isArray(value)) return value.length > 0
+    return value !== undefined && value !== ""
+  })
+
+  const handleApply = () => {
+    onApply()
+    onOpenChange(false)
+  }
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="sm" className="relative bg-transparent sm:hidden">
-          <SlidersHorizontal className="h-4 w-4 mr-2" />
-          {dict.search.filters}
-          {activeFiltersCount > 0 && (
-            <Badge
-              variant="secondary"
-              className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-            >
-              {activeFiltersCount}
-            </Badge>
-          )}
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="right" className="w-80 overflow-y-auto">
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent side="left" className="w-80 overflow-y-auto">
         <SheetHeader>
           <SheetTitle>{dict.search.filters}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6 mt-6">
+          {/* Property Type */}
+          <div>
+            <Label className="text-sm font-medium mb-3 block">{dict.search.propertyType}</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={filters.propertyType === "sale" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateFilter("propertyType", "sale")}
+                className="flex-1"
+              >
+                {dict.search.forSale}
+              </Button>
+              <Button
+                variant={filters.propertyType === "rent" ? "default" : "outline"}
+                size="sm"
+                onClick={() => updateFilter("propertyType", "rent")}
+                className="flex-1"
+              >
+                {dict.search.forRent}
+              </Button>
+            </div>
+          </div>
+
           {/* Category */}
-          <div className="space-y-2">
-            <Label>{dict.search.propertyType}</Label>
+          <div>
+            <Label className="text-sm font-medium">{dict.search.category}</Label>
             <Select
-              value={filters.category}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, category: value }))}
+              value={filters.category || "all"}
+              onValueChange={(value) => updateFilter("category", value === "all" ? undefined : value)}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder={dict.search.allCategories} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Categories</SelectItem>
+                <SelectItem value="all">{dict.search.allCategories}</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {lng === "ar" ? category.name_ar : category.name}
+                    {category.name}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
 
-          {/* Property Type */}
-          <div className="space-y-2">
-            <Label>Listing Type</Label>
-            <Select
-              value={filters.propertyType}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, propertyType: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select type" />
+          {/* Area */}
+          <div>
+            <Label className="text-sm font-medium">{dict.search.area}</Label>
+            <Select value={filters.area || "all"} onValueChange={(value) => updateFilter("area", value === "all" ? undefined : value)}>
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder={dict.search.allAreas} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                <SelectItem value="sale">For Sale</SelectItem>
-                <SelectItem value="rent">For Rent</SelectItem>
+                <SelectItem value="all">{dict.search.allAreas}</SelectItem>
+                {areas.map((area) => {
+                  const areaKey = areaToKeyMap[area]
+                  return (
+                    <SelectItem key={area} value={area}>
+                      {dict.areas[areaKey as keyof typeof dict.areas] || area}
+                    </SelectItem>
+                  )
+                })}
               </SelectContent>
             </Select>
           </div>
 
           {/* Price Range */}
-          <div className="space-y-3">
-            <Label>{dict.search.priceRange}</Label>
-            <div className="px-2">
+          <div>
+            <Label className="text-sm font-medium">{dict.search.priceRangeEGP}</Label>
+            <div className="mt-3 px-2">
               <Slider
-                value={[filters.minPrice, filters.maxPrice]}
-                onValueChange={([min, max]) => setFilters((prev) => ({ ...prev, minPrice: min, maxPrice: max }))}
+                value={priceRange}
+                onValueChange={handlePriceRangeChange}
                 max={10000000}
                 min={0}
-                step={50000}
+                step={100000}
                 className="w-full"
               />
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{(filters.minPrice / 1000000).toFixed(1)}M</span>
-              <span>-</span>
-              <span>{(filters.maxPrice / 1000000).toFixed(1)}M EGP</span>
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>{(priceRange[0] / 1000000).toFixed(1)}M</span>
+                <span>{(priceRange[1] / 1000000).toFixed(1)}M</span>
+              </div>
             </div>
           </div>
 
-          {/* Bedrooms */}
-          <div className="space-y-2">
-            <Label>{dict.search.bedrooms}</Label>
+          {/* Size Range */}
+          <div>
+            <Label className="text-sm font-medium">{dict.search.sizeRangeM2}</Label>
+            <div className="mt-3 px-2">
+              <Slider
+                value={sizeRange}
+                onValueChange={handleSizeRangeChange}
+                max={500}
+                min={50}
+                step={10}
+                className="w-full"
+              />
+              <div className="flex justify-between text-sm text-gray-500 mt-2">
+                <span>{sizeRange[0]} {dict.property.squareMeter}</span>
+                <span>{sizeRange[1]} {dict.property.squareMeter}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Bedrooms & Bathrooms */}
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-sm font-medium">{dict.search.bedrooms}</Label>
             <Select
-              value={filters.bedrooms}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, bedrooms: value }))}
+                value={filters.bedrooms?.toString() || "any"}
+                onValueChange={(value) => updateFilter("bedrooms", value === "any" ? undefined : Number(value))}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={dict.general.any} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">{dict.general.any}</SelectItem>
@@ -257,16 +268,14 @@ export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
               </SelectContent>
             </Select>
           </div>
-
-          {/* Bathrooms */}
-          <div className="space-y-2">
-            <Label>{dict.search.bathrooms}</Label>
+            <div>
+              <Label className="text-sm font-medium">{dict.search.bathrooms}</Label>
             <Select
-              value={filters.bathrooms}
-              onValueChange={(value) => setFilters((prev) => ({ ...prev, bathrooms: value }))}
+                value={filters.bathrooms?.toString() || "any"}
+                onValueChange={(value) => updateFilter("bathrooms", value === "any" ? undefined : Number(value))}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Any" />
+                <SelectTrigger className="mt-1">
+                  <SelectValue placeholder={dict.general.any} />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="any">{dict.general.any}</SelectItem>
@@ -276,66 +285,60 @@ export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
                 <SelectItem value="4">4+</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Size Range */}
-          <div className="space-y-3">
-            <Label>{dict.search.size}</Label>
-            <div className="px-2">
-              <Slider
-                value={[filters.minSize, filters.maxSize]}
-                onValueChange={([min, max]) => setFilters((prev) => ({ ...prev, minSize: min, maxSize: max }))}
-                max={1000}
-                min={0}
-                step={10}
-                className="w-full"
-              />
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <span>{filters.minSize}m²</span>
-              <span>-</span>
-              <span>{filters.maxSize}m²</span>
             </div>
           </div>
 
-          {/* Location */}
-          <div className="space-y-2">
-            <Label>{dict.search.location}</Label>
-            <Input
-              value={filters.location}
-              onChange={(e) => setFilters((prev) => ({ ...prev, location: e.target.value }))}
-              placeholder="Enter location"
-            />
+          {/* Owner Type */}
+          <div>
+            <Label className="text-sm font-medium">{dict.search.ownerType}</Label>
+            <Select
+              value={filters.ownerType || "all"}
+              onValueChange={(value) => updateFilter("ownerType", value === "all" ? undefined : value as "owner" | "broker")}
+            >
+              <SelectTrigger className="mt-1">
+                <SelectValue placeholder={dict.search.allOwners} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">{dict.search.allOwners}</SelectItem>
+                <SelectItem value="owner">{dict.search.owner}</SelectItem>
+                <SelectItem value="broker">{dict.search.broker}</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Amenities */}
-          <div className="space-y-3">
-            <Label>{dict.search.amenities}</Label>
+          <div>
+            <Label className="text-sm font-medium mb-3 block">{dict.search.amenities}</Label>
             <div className="grid grid-cols-2 gap-2">
-              {amenitiesList.map((amenity) => (
-                <div key={amenity.value} className="flex items-center space-x-2">
+              {amenities.map((amenity) => {
+                const amenityKey = amenityToKeyMap[amenity]
+                return (
+                  <div key={amenity} className="flex items-center space-x-2">
                   <Checkbox
-                    id={amenity.value}
-                    checked={filters.amenities.includes(amenity.value)}
-                    onCheckedChange={(checked) => handleAmenityChange(amenity.value, checked as boolean)}
-                  />
-                  <Label htmlFor={amenity.value} className="text-sm">
-                    {amenity.label}
+                      id={amenity}
+                      checked={filters.amenities?.includes(amenity) || false}
+                      onCheckedChange={(checked) => toggleAmenity(amenity)}
+                    />
+                    <Label htmlFor={amenity} className="text-sm">
+                      {dict.amenities[amenityKey as keyof typeof dict.amenities] || amenity}
                   </Label>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex space-x-2 pt-4 border-t">
-            <Button variant="outline" onClick={clearFilters} className="flex-1 bg-transparent">
-              <X className="h-4 w-4 mr-2" />
-              {dict.search.clearFilters}
-            </Button>
-            <Button onClick={applyFilters} className="flex-1">
+          <div className="flex gap-2 pt-4">
+            <Button onClick={handleApply} className="flex-1">
               {dict.search.applyFilters}
             </Button>
+            {hasActiveFilters && (
+              <Button variant="outline" onClick={() => onFiltersChange({})}>
+                <X className="h-4 w-4 mr-2" />
+                {dict.search.clear}
+              </Button>
+            )}
           </div>
         </div>
       </SheetContent>

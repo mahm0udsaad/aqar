@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -14,6 +14,7 @@ import { Search, Filter, SlidersHorizontal, MapPin, Home, DollarSign } from "luc
 import type { Locale } from "@/lib/i18n/config"
 import { getProperties, searchProperties } from "@/lib/supabase/queries"
 import type { Property } from "@/lib/types"
+import type { SearchFilters as SearchFiltersType } from "@/lib/types"
 
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
 
@@ -32,37 +33,43 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
   const [showFilters, setShowFilters] = useState(false)
 
   // Search state
-  const [searchQuery, setSearchQuery] = useState((searchParams.q as string) || "")
-  const [sortBy, setSortBy] = useState((searchParams.sort as string) || "newest")
-  const [filters, setFilters] = useState({
-    category: (searchParams.category as string) || "",
-    minPrice: (searchParams.minPrice as string) || "",
-    maxPrice: (searchParams.maxPrice as string) || "",
-    location: (searchParams.location as string) || "",
-    bedrooms: (searchParams.bedrooms as string) || "",
-    bathrooms: (searchParams.bathrooms as string) || "",
-    area: (searchParams.area as string) || "",
-    type: (searchParams.type as string) || "",
-  })
+  const [searchQuery, setSearchQuery] = useState(searchParams?.q ? String(searchParams.q) : "")
+  const [sortBy, setSortBy] = useState(searchParams?.sort ? String(searchParams.sort) : "newest")
+  
+  // Memoize the initial filters to prevent infinite re-renders
+  const initialFilters = useMemo(() => ({
+    category: searchParams?.category ? String(searchParams.category) : undefined,
+    minPrice: searchParams?.minPrice ? Number.parseInt(String(searchParams.minPrice)) : undefined,
+    maxPrice: searchParams?.maxPrice ? Number.parseInt(String(searchParams.maxPrice)) : undefined,
+    area: searchParams?.location ? String(searchParams.location) : undefined,
+    bedrooms: searchParams?.bedrooms ? Number.parseInt(String(searchParams.bedrooms)) : undefined,
+    bathrooms: searchParams?.bathrooms ? Number.parseInt(String(searchParams.bathrooms)) : undefined,
+    minSize: searchParams?.area ? Number.parseInt(String(searchParams.area)) : undefined,
+    propertyType: searchParams?.type ? String(searchParams.type) as "sale" | "rent" : undefined,
+  }), [searchParams])
+  
+  const [filters, setFilters] = useState<SearchFiltersType>(initialFilters)
 
   // Load properties
   useEffect(() => {
     const loadProperties = async () => {
       setLoading(true)
       try {
+        console.log("Loading properties with filters:", filters)
         const searchFilters = {
           category: filters.category,
-          minPrice: filters.minPrice ? Number.parseInt(filters.minPrice) : undefined,
-          maxPrice: filters.maxPrice ? Number.parseInt(filters.maxPrice) : undefined,
-          location: filters.location,
-          bedrooms: filters.bedrooms ? Number.parseInt(filters.bedrooms) : undefined,
-          bathrooms: filters.bathrooms ? Number.parseInt(filters.bathrooms) : undefined,
+          minPrice: filters.minPrice,
+          maxPrice: filters.maxPrice,
+          area: filters.area,
+          bedrooms: filters.bedrooms,
+          bathrooms: filters.bathrooms,
         }
         
         const data = searchQuery 
           ? await searchProperties(searchQuery, searchFilters)
           : await getProperties(searchFilters)
 
+        console.log("Properties loaded:", data?.length || 0)
         setProperties(data || [])
       } catch (error) {
         console.error("Error loading properties:", error)
@@ -80,9 +87,16 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
     const params = new URLSearchParams()
     if (searchQuery) params.set("q", searchQuery)
     if (sortBy !== "newest") params.set("sort", sortBy)
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.set(key, value)
-    })
+    
+    // Convert filters back to strings for URL
+    if (filters.category) params.set("category", filters.category)
+    if (filters.minPrice) params.set("minPrice", filters.minPrice.toString())
+    if (filters.maxPrice) params.set("maxPrice", filters.maxPrice.toString())
+    if (filters.area) params.set("location", filters.area)
+    if (filters.bedrooms) params.set("bedrooms", filters.bedrooms.toString())
+    if (filters.bathrooms) params.set("bathrooms", filters.bathrooms.toString())
+    if (filters.minSize) params.set("area", filters.minSize.toString())
+    if (filters.propertyType) params.set("type", filters.propertyType)
 
     const newURL = `/${lng}/search${params.toString() ? `?${params.toString()}` : ""}`
     router.push(newURL, { scroll: false })
@@ -92,26 +106,24 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
     updateURL()
   }
 
-  const handleFilterChange = (newFilters: typeof filters) => {
+  const handleFilterChange = (newFilters: SearchFiltersType) => {
     setFilters(newFilters)
   }
 
   const clearFilters = () => {
-    setFilters({
-      category: "",
-      minPrice: "",
-      maxPrice: "",
-      location: "",
-      bedrooms: "",
-      bathrooms: "",
-      area: "",
-      type: "",
-    })
+    setFilters({})
     setSearchQuery("")
     setSortBy("newest")
   }
 
-  const activeFiltersCount = Object.values(filters).filter(Boolean).length + (searchQuery ? 1 : 0)
+  // Calculate active filters count more robustly
+  const filterCount = Object.values(filters).reduce((count, value) => {
+    if (Array.isArray(value)) return count + (value.length > 0 ? 1 : 0)
+    return count + (value !== undefined && value !== "" ? 1 : 0)
+  }, 0)
+  
+  const searchCount = searchQuery && typeof searchQuery === 'string' && searchQuery.trim() !== '' ? 1 : 0
+  const activeFiltersCount = filterCount + searchCount
 
   return (
     <div className="space-y-6">
@@ -138,7 +150,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                 {dict.search.filters}
                 {activeFiltersCount > 0 && (
                   <Badge variant="secondary" className="ml-2">
-                    {activeFiltersCount}
+                    {String(activeFiltersCount)}
                   </Badge>
                 )}
               </Button>
@@ -150,8 +162,13 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Desktop Filters */}
         <div className="hidden lg:block lg:col-span-1">
-            
-              <SearchFilters dict={dict} lng={lng} filters={filters} onFiltersChange={handleFilterChange} />
+          <SearchFilters 
+            dict={dict} 
+            lng={lng} 
+            filters={filters} 
+            onFiltersChange={handleFilterChange}
+            onClearFilters={clearFilters}
+          />
         </div>
 
         {/* Results */}
@@ -160,25 +177,25 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h2 className="text-xl font-semibold">
-                {loading ? dict.search.searching : `${properties.length} ${dict.search.propertiesFound}`}
+                {loading ? (dict.search.searching || "Searching...") : `${properties.length} ${dict.search.propertiesFound || "properties found"}`}
               </h2>
               {searchQuery && (
                 <p className="text-muted-foreground">
-                  {dict.search.searchResults}: &quot;{searchQuery}&quot;
+                  {dict.search.searchResults || "Search results"}: &quot;{searchQuery}&quot;
                 </p>
               )}
             </div>
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder={dict.search.sortBy.label} />
+                <SelectValue placeholder={dict.search.sortBy?.label || "Sort by"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">{dict.search.sortBy.newest}</SelectItem>
-                <SelectItem value="oldest">{dict.search.sortBy.oldest}</SelectItem>
-                <SelectItem value="price-low">{dict.search.sortBy.priceLow}</SelectItem>
-                <SelectItem value="price-high">{dict.search.sortBy.priceHigh}</SelectItem>
-                <SelectItem value="area-large">{dict.search.sortBy.areaLarge}</SelectItem>
-                <SelectItem value="area-small">{dict.search.sortBy.areaSmall}</SelectItem>
+                <SelectItem value="newest">{dict.search.sortBy?.newest || "Newest"}</SelectItem>
+                <SelectItem value="oldest">{dict.search.sortBy?.oldest || "Oldest"}</SelectItem>
+                <SelectItem value="price-low">{dict.search.sortBy?.priceLow || "Price: Low to High"}</SelectItem>
+                <SelectItem value="price-high">{dict.search.sortBy?.priceHigh || "Price: High to Low"}</SelectItem>
+                <SelectItem value="area-large">{dict.search.sortBy?.areaLarge || "Area: Large to Small"}</SelectItem>
+                <SelectItem value="area-small">{dict.search.sortBy?.areaSmall || "Area: Small to Large"}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -199,10 +216,10 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                     {dict.categories[filters.category] || filters.category}
                   </Badge>
                 )}
-                {filters.location && (
+                {filters.area && (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <MapPin className="h-3 w-3" />
-                    {filters.location}
+                    {filters.area}
                   </Badge>
                 )}
                 {(filters.minPrice || filters.maxPrice) && (
@@ -239,7 +256,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
           {!loading && properties.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {properties.map((property) => (
-                <PropertyCard key={property.id} property={property} dict={dict} lng={lng} />
+                <PropertyCard key={property.id} property={property} />
               ))}
             </div>
           )}
@@ -265,17 +282,14 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
       </div>
 
       {/* Mobile Filters Sheet */}
-      <SearchFiltersSheet
+      <SearchFiltersSheet 
+        lng={lng} 
+        dict={dict} 
         open={showFilters}
         onOpenChange={setShowFilters}
-        dict={dict}
-        lng={lng}
         filters={filters}
         onFiltersChange={handleFilterChange}
-        onApply={() => {
-          setShowFilters(false)
-          updateURL()
-        }}
+        onApply={updateURL}
       />
     </div>
   )

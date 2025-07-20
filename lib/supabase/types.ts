@@ -69,6 +69,7 @@ export interface Database {
           contact_avatar: string | null
           contact_is_verified: boolean | null
           response_time: string | null
+          thumbnail_url: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -105,6 +106,7 @@ export interface Database {
           contact_avatar?: string | null
           contact_is_verified?: boolean | null
           response_time?: string | null
+          thumbnail_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -141,6 +143,7 @@ export interface Database {
           contact_avatar?: string | null
           contact_is_verified?: boolean | null
           response_time?: string | null
+          thumbnail_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
