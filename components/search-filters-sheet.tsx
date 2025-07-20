@@ -68,9 +68,9 @@ export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
     { value: "Balcony", label: dict.amenities.balcony },
     { value: "Elevator", label: dict.amenities.elevator },
     { value: "Security", label: dict.amenities.security },
-    { value: "Air Conditioning", label: dict.amenities.airConditioning },
+    { value: "Central AC", label: dict.amenities.centralAC },
+    { value: "Kitchen Appliances", label: dict.amenities.kitchenAppliances },
     { value: "Furnished", label: dict.amenities.furnished },
-    { value: "Pet Friendly", label: dict.amenities.petFriendly },
   ]
 
   const handleAmenityChange = (amenity: string, checked: boolean) => {
@@ -148,10 +148,10 @@ export function SearchFiltersSheet({ lng, dict }: SearchFiltersSheetProps) {
 
   const activeFiltersCount = Object.entries(filters).reduce((count, [key, value]) => {
     if (key === "amenities") return count + (value as string[]).length
-    if (key === "minPrice" && value > 0) return count + 1
-    if (key === "maxPrice" && value < 10000000) return count + 1
-    if (key === "minSize" && value > 0) return count + 1
-    if (key === "maxSize" && value < 1000) return count + 1
+    if (key === "minPrice" && typeof value === "number" && value > 0) return count + 1
+    if (key === "maxPrice" && typeof value === "number" && value < 10000000) return count + 1
+    if (key === "minSize" && typeof value === "number" && value > 0) return count + 1
+    if (key === "maxSize" && typeof value === "number" && value < 1000) return count + 1
     if (value && value !== "" && value !== "any" && value !== "all") return count + 1
     return count
   }, 0)

@@ -2,21 +2,52 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import { Filter, SlidersHorizontal, X } from "lucide-react"
 import type { SearchFilters as SearchFiltersType } from "@/lib/types"
 import { categories } from "@/lib/data"
-import { Filter, X, SlidersHorizontal } from "lucide-react"
 
 interface SearchFiltersProps {
   filters: SearchFiltersType
   onFiltersChange: (filters: SearchFiltersType) => void
   onClearFilters: () => void
   isMobile?: boolean
+  lng: string
+  dict: any
+}
+
+// Map area names to dictionary keys
+const areaToKeyMap: Record<string, string> = {
+  "New Cairo": "newCairo",
+  "Maadi": "maadi",
+  "Zamalek": "zamalek",
+  "Heliopolis": "heliopolis",
+  "6th of October": "sixthOfOctober",
+  "Sheikh Zayed": "sheikhZayed",
+  "New Capital": "newCapital",
+  "Alexandria": "alexandria",
+  "Giza": "giza",
+  "Nasr City": "nasrCity",
+}
+
+// Map amenity names to dictionary keys
+const amenityToKeyMap: Record<string, string> = {
+  "Swimming Pool": "swimmingPool",
+  "Gym": "gym",
+  "Garden": "garden",
+  "Parking": "parking",
+  "Security": "security",
+  "Elevator": "elevator",
+  "Balcony": "balcony",
+  "Central AC": "centralAC",
+  "Kitchen Appliances": "kitchenAppliances",
+  "Furnished": "furnished",
 }
 
 const areas = [
@@ -133,11 +164,14 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">{dict.search.allAreas}</SelectItem>
-            {areas.map((area) => (
-              <SelectItem key={area} value={area}>
-                {dict.areas[area as keyof typeof dict.areas]}
-              </SelectItem>
-            ))}
+            {areas.map((area) => {
+              const areaKey = areaToKeyMap[area]
+              return (
+                <SelectItem key={area} value={area}>
+                  {dict.areas[areaKey as keyof typeof dict.areas] || area}
+                </SelectItem>
+              )
+            })}
           </SelectContent>
         </Select>
       </div>
@@ -260,20 +294,23 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
       <div>
         <Label className="text-sm font-medium mb-3 block">{dict.search.amenities}</Label>
         <div className="grid grid-cols-2 gap-2">
-          {amenities.map((amenity) => (
-            <div
-              key={amenity}
-              className={`flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors ${
-                (filters.amenities || []).includes(amenity)
-                  ? "border-primary bg-primary/5"
-                  : "border-gray-200 hover:border-primary/50"
-              }`}
-              onClick={() => toggleAmenity(amenity)}
-            >
-              <Checkbox checked={(filters.amenities || []).includes(amenity)} readOnly />
-              <span className="text-sm">{dict.amenities[amenity as keyof typeof dict.amenities]}</span>
-            </div>
-          ))}
+          {amenities.map((amenity) => {
+            const amenityKey = amenityToKeyMap[amenity]
+            return (
+              <div
+                key={amenity}
+                className={`flex items-center space-x-2 p-2 rounded border cursor-pointer transition-colors ${
+                  (filters.amenities || []).includes(amenity)
+                    ? "border-primary bg-primary/5"
+                    : "border-gray-200 hover:border-primary/50"
+                }`}
+                onClick={() => toggleAmenity(amenity)}
+              >
+                <Checkbox checked={(filters.amenities || []).includes(amenity)} disabled />
+                <span className="text-sm">{dict.amenities[amenityKey as keyof typeof dict.amenities] || amenity}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -301,16 +338,22 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, isMobi
             )}
             {filters.area && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                {dict.areas[filters.area as keyof typeof dict.areas]}
+                {(() => {
+                  const areaKey = areaToKeyMap[filters.area]
+                  return dict.areas[areaKey as keyof typeof dict.areas] || filters.area
+                })()}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("area", undefined)} />
               </Badge>
             )}
-            {(filters.amenities || []).map((amenity) => (
-              <Badge key={amenity} variant="secondary" className="flex items-center gap-1">
-                {dict.amenities[amenity as keyof typeof dict.amenities]}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => toggleAmenity(amenity)} />
-              </Badge>
-            ))}
+            {(filters.amenities || []).map((amenity) => {
+              const amenityKey = amenityToKeyMap[amenity]
+              return (
+                <Badge key={amenity} variant="secondary" className="flex items-center gap-1">
+                  {dict.amenities[amenityKey as keyof typeof dict.amenities] || amenity}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => toggleAmenity(amenity)} />
+                </Badge>
+              )
+            })}
           </div>
         </div>
       )}

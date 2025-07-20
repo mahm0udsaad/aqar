@@ -5,10 +5,11 @@ import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 
 interface PageProps {
-  params: { lng: string }
+  params: Promise<{ lng: string }>
 }
 
 export default async function NewPropertyPage({ params }: PageProps) {
+  const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
 
   // Fetch categories for the form
@@ -19,11 +20,16 @@ export default async function NewPropertyPage({ params }: PageProps) {
 
   return (
     <div>
-      <AdminHeader title="Add New Property" description="Create a new property listing" />
+      <AdminHeader 
+        title="Add New Property" 
+        description="Create a new property listing"
+        lng={lng}
+        dict={{} as any}
+      />
       <div className="p-6">
         <PropertyForm 
           categories={categories || []} 
-          lng={params.lng}
+          lng={lng}
           mode="create"
         />
       </div>

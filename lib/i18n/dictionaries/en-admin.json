@@ -83,7 +83,14 @@
       "description": "Manage all your property listings",
       "addProperty": "Add Property",
       "search": {
-        "placeholder": "Search by name or location..."
+        "placeholder": "Search by name or location...",
+        "allCategories": "All Categories",
+        "allStatuses": "All Statuses",
+        "active": "Active",
+        "draft": "Draft",
+        "sold": "Sold",
+        "rented": "Rented",
+        "inactive": "Inactive"
       },
       "allCategories": "All Categories",
       "allStatuses": "All Statuses",

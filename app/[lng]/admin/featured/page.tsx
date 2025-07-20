@@ -15,12 +15,13 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
 interface PageProps {
-  params: { lng: Locale }
+  params: Promise<{ lng: Locale }>
 }
 
 export default async function AdminFeaturedPage({ params }: PageProps) {
+  const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
-  const dict = await getDictionary(params.lng)
+  const dict = await getDictionary(lng)
 
   // Fetch featured properties
   const { data: featuredProperties, error } = await supabase
@@ -55,7 +56,7 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
       <AdminHeader
         title={dict.admin.featured.title}
         description={dict.admin.featured.description}
-        lng={params.lng}
+        lng={lng}
         dict={dict}
       />
 
@@ -127,12 +128,12 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Link href={`/${params.lng}/properties/${property.id}`} target="_blank">
+                                <Link href={`/${lng}/properties/${property.id}`} target="_blank">
                                   <Button variant="ghost" size="sm">
                                     <Eye className="w-4 h-4" />
                                   </Button>
                                 </Link>
-                                <Link href={`/${params.lng}/admin/properties/${property.id}/edit`}>
+                                <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
                                   <Button variant="ghost" size="sm">
                                     <Edit className="w-4 h-4" />
                                   </Button>
@@ -174,7 +175,7 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
                 {dict.admin.featured.availableToFeatureSubtitle}
               </p>
             </div>
-            <Link href={`/${params.lng}/admin/properties`}>
+            <Link href={`/${lng}/admin/properties`}>
               <Button variant="outline">
                 {dict.admin.featured.viewAllProperties}
               </Button>
@@ -238,12 +239,12 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
                             </TableCell>
                             <TableCell>
                               <div className="flex items-center space-x-2">
-                                <Link href={`/${params.lng}/properties/${property.id}`} target="_blank">
+                                <Link href={`/${lng}/properties/${property.id}`} target="_blank">
                                   <Button variant="ghost" size="sm">
                                     <Eye className="w-4 h-4" />
                                   </Button>
                                 </Link>
-                                <Link href={`/${params.lng}/admin/properties/${property.id}/edit`}>
+                                <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
                                   <Button variant="ghost" size="sm">
                                     <Edit className="w-4 h-4" />
                                   </Button>

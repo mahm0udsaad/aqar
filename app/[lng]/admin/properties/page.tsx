@@ -159,12 +159,12 @@ export default async function AdminPropertiesPage({ params: initialParams, searc
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Link href={`/${params.lng}/properties/${property.id}`} target="_blank">
+                              <Link href={`/${lng}/properties/${property.id}`} target="_blank">
                                 <Button variant="ghost" size="sm">
                                   <Eye className="w-4 h-4" />
                                 </Button>
                               </Link>
-                              <Link href={`/${params.lng}/admin/properties/${property.id}/edit`}>
+                              <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
                                 <Button variant="ghost" size="sm">
                                   <Edit className="w-4 h-4" />
                                 </Button>
@@ -190,7 +190,7 @@ export default async function AdminPropertiesPage({ params: initialParams, searc
                             ? dict.admin.properties.noPropertiesMatchFilters
                             : dict.admin.properties.getStarted}
                         </p>
-                        <Link href={`/${params.lng}/admin/properties/new`}>
+                        <Link href={`/${lng}/admin/properties/new`}>
                           <Button>
                             <Plus className="w-4 h-4 mr-2" />
                             {dict.admin.properties.addProperty}
