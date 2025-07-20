@@ -59,7 +59,7 @@ export function PropertyCard({
         <Link href={`/properties/${property.id}`}>
           <div className="relative h-48 overflow-hidden">
             <Image
-              src={mainImage?.url || "/placeholder.svg?height=300&width=400"}
+              src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400"}
               alt={mainImage?.alt_text || property.title}
               fill
               className="object-cover transition-transform duration-300 group-hover:scale-105"

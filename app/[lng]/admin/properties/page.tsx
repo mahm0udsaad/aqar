@@ -112,7 +112,7 @@ export default async function AdminPropertiesPage({ params: initialParams, searc
                             <div className="flex items-center space-x-3">
                               <div className="relative w-12 h-12 rounded-md overflow-hidden">
                                 <Image
-                                  src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
+                                  src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=48&width=48"}
                                   alt={property.title}
                                   fill
                                   className="object-cover"
