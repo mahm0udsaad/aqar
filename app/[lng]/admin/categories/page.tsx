@@ -12,12 +12,13 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
 interface PageProps {
-  params: { lng: Locale }
+  params: Promise<{ lng: Locale }>
 }
 
 export default async function AdminCategoriesPage({ params }: PageProps) {
+  const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
-  const dict = await getDictionary(params.lng)
+  const dict = await getDictionary(lng)
 
   // Fetch categories with property counts
   const { data: categories } = await supabase
@@ -38,8 +39,8 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
     <div>
       <AdminHeader
         title={dict.admin.categories.title}
-        description={dict.admin.categories.description}
-        lng={params.lng}
+        description="Manage property categories"
+        lng={lng}
         dict={dict}
       />
 
@@ -47,39 +48,39 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
         {/* Header Actions */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-lg font-semibold">{dict.admin.categories.propertyCategories}</h2>
-            <p className="text-muted-foreground">{dict.admin.categories.dragAndDrop}</p>
+            <h2 className="text-lg font-semibold">Property Categories</h2>
+            <p className="text-muted-foreground">Drag and drop to reorder categories</p>
           </div>
-          <CategoryDialog lng={params.lng} mode="create" dict={dict}>
+          <CategoryDialog lng={lng} mode="create" dict={dict}>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              {dict.admin.categories.addCategory}
+              {dict.admin.categories.addButton}
             </Button>
           </CategoryDialog>
         </div>
 
         {/* Categories Grid with Drag & Drop */}
-        <CategoryGrid categories={categoriesWithCounts} lng={params.lng} dict={dict} />
+        <CategoryGrid categories={categoriesWithCounts} lng={lng} dict={dict} />
 
         {/* Instructions */}
         <Card className="mt-8">
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">{dict.admin.categories.howToManage}</h3>
+            <h3 className="font-semibold mb-3">How to Manage Categories</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
               <div className="space-y-2">
                 <p>
-                  • <strong>{dict.admin.categories.dragAndDropTitle}:</strong> {dict.admin.categories.dragAndDropText}
+                  • <strong>Drag and Drop:</strong> Reorder categories by dragging them
                 </p>
                 <p>
-                  • <strong>{dict.admin.categories.editTitle}:</strong> {dict.admin.categories.editText}
+                  • <strong>Edit:</strong> Click the edit button to modify category details
                 </p>
               </div>
               <div className="space-y-2">
                 <p>
-                  • <strong>{dict.admin.categories.deleteTitle}:</strong> {dict.admin.categories.deleteText}
+                  • <strong>Delete:</strong> Remove categories that are no longer needed
                 </p>
                 <p>
-                  • <strong>{dict.admin.categories.displayOrderTitle}:</strong> {dict.admin.categories.displayOrderText}
+                  • <strong>Display Order:</strong> Categories are displayed in the order shown here
                 </p>
               </div>
             </div>

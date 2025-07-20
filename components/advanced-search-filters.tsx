@@ -26,6 +26,7 @@ interface AdvancedSearchFiltersProps {
   onFiltersChange: (filters: any) => void
   onClearFilters: () => void
   isMobile?: boolean
+  dict?: any
 }
 
 const amenitiesList = [
@@ -44,6 +45,7 @@ export function AdvancedSearchFilters({
   onFiltersChange,
   onClearFilters,
   isMobile = false,
+  dict,
 }: AdvancedSearchFiltersProps) {
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 5000000])
   const [areaRange, setAreaRange] = useState([500, 5000])
@@ -71,6 +73,16 @@ export function AdvancedSearchFilters({
     return value !== undefined && value !== "" && value !== "all"
   })
 
+  // Map amenity IDs to dictionary keys
+  const amenityToKeyMap: Record<string, string> = {
+    "parking": "parking",
+    "wifi": "wifi",
+    "gym": "gym",
+    "security": "security",
+    "garden": "garden",
+    "pool": "swimmingPool",
+  }
+
   const FilterContent = () => (
     <div className="space-y-6">
       {/* Search Query */}
@@ -90,18 +102,18 @@ export function AdvancedSearchFilters({
         </div>
       </div>
 
-      {/* Location */}
+      {/* Area */}
       <div>
-        <Label htmlFor="location" className="text-sm font-medium">
-          Location
+        <Label htmlFor="area" className="text-sm font-medium">
+          Area
         </Label>
         <div className="relative mt-1">
           <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
           <Input
-            id="location"
+            id="area"
             placeholder="Enter city, neighborhood, or address..."
-            value={filters.location || ""}
-            onChange={(e) => updateFilter("location", e.target.value)}
+            value={filters.area || ""}
+            onChange={(e) => updateFilter("area", e.target.value)}
             className="pl-10"
           />
         </div>
@@ -272,20 +284,24 @@ export function AdvancedSearchFilters({
       <div>
         <Label className="text-sm font-medium mb-3 block">Amenities</Label>
         <div className="grid grid-cols-2 gap-3">
-          {amenitiesList.map((amenity) => (
-            <div
-              key={amenity.id}
-              className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${
-                (filters.amenities || []).includes(amenity.id)
-                  ? "border-primary bg-primary/5"
-                  : "border-border hover:border-primary/50"
-              }`}
-              onClick={() => toggleAmenity(amenity.id)}
-            >
-              <amenity.icon className="h-4 w-4" />
-              <span className="text-sm">{amenity.label}</span>
-            </div>
-          ))}
+          {amenitiesList.map((amenity) => {
+            const amenityKey = amenityToKeyMap[amenity.id]
+            const label = dict?.amenities?.[amenityKey as keyof typeof dict.amenities] || amenity.label
+            return (
+              <div
+                key={amenity.id}
+                className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                  (filters.amenities || []).includes(amenity.id)
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+                onClick={() => toggleAmenity(amenity.id)}
+              >
+                <amenity.icon className="h-4 w-4" />
+                <span className="text-sm">{label}</span>
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -299,30 +315,34 @@ export function AdvancedSearchFilters({
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {filters.query && (
+            {filters.propertyType && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Search: {filters.query}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("query", "")} />
-              </Badge>
-            )}
-            {filters.location && (
-              <Badge variant="secondary" className="flex items-center gap-1">
-                Location: {filters.location}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("location", "")} />
+                {filters.propertyType}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("propertyType", undefined)} />
               </Badge>
             )}
             {filters.category && (
               <Badge variant="secondary" className="flex items-center gap-1">
-                Category: {categories.find((c) => c.id === filters.category)?.name}
+                {categories.find((c) => c.id === filters.category)?.name}
                 <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("category", undefined)} />
               </Badge>
             )}
-            {(filters.amenities || []).map((amenityId) => (
-              <Badge key={amenityId} variant="secondary" className="flex items-center gap-1">
-                {amenitiesList.find((a) => a.id === amenityId)?.label}
-                <X className="h-3 w-3 cursor-pointer" onClick={() => toggleAmenity(amenityId)} />
+            {filters.area && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                {filters.area}
+                <X className="h-3 w-3 cursor-pointer" onClick={() => updateFilter("area", undefined)} />
               </Badge>
-            ))}
+            )}
+            {(filters.amenities || []).map((amenity) => {
+              const amenityKey = amenityToKeyMap[amenity]
+              const label = dict?.amenities?.[amenityKey as keyof typeof dict.amenities] || amenity
+              return (
+                <Badge key={amenity} variant="secondary" className="flex items-center gap-1">
+                  {label}
+                  <X className="h-3 w-3 cursor-pointer" onClick={() => toggleAmenity(amenity)} />
+                </Badge>
+              )
+            })}
           </div>
         </div>
       )}
@@ -335,12 +355,12 @@ export function AdvancedSearchFilters({
         <SheetTrigger asChild>
           <Button variant="outline" className="w-full bg-transparent">
             <Filter className="w-4 h-4 mr-2" />
-            Filters {hasActiveFilters && `(${Object.keys(filters).length})`}
+            Advanced Filters {hasActiveFilters && `(${Object.keys(filters).length})`}
           </Button>
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[90vh] overflow-y-auto">
           <SheetHeader>
-            <SheetTitle>Search Filters</SheetTitle>
+            <SheetTitle>Advanced Search Filters</SheetTitle>
           </SheetHeader>
           <div className="mt-6">
             <FilterContent />
@@ -351,20 +371,12 @@ export function AdvancedSearchFilters({
   }
 
   return (
-    <Card className="sticky top-4">
+    <Card className="w-full">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center">
-            <Search className="w-5 h-5 mr-2" />
-            Search & Filter
-          </CardTitle>
-          {hasActiveFilters && (
-            <Button variant="ghost" size="sm" onClick={onClearFilters}>
-              <X className="w-4 h-4 mr-1" />
-              Clear
-            </Button>
-          )}
-        </div>
+        <CardTitle className="flex items-center">
+          <Filter className="w-5 h-5 mr-2" />
+          Advanced Search Filters
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <FilterContent />

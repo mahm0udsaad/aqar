@@ -83,7 +83,14 @@
       "description": "إدارة جميع قوائم العقارات الخاصة بك",
       "addProperty": "إضافة عقار",
       "search": {
-        "placeholder": "البحث بالاسم أو الموقع..."
+        "placeholder": "البحث بالاسم أو الموقع...",
+        "allCategories": "جميع الفئات",
+        "allStatuses": "جميع الحالات",
+        "active": "نشط",
+        "draft": "مسودة",
+        "sold": "مباع",
+        "rented": "مؤجر",
+        "inactive": "غير نشط"
       },
       "allCategories": "جميع الفئات",
       "allStatuses": "جميع الحالات",

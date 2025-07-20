@@ -5,15 +5,16 @@ import { getProperties, searchProperties } from "@/lib/supabase/queries"
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
 
 interface SearchPageProps {
-  params: { lng: Locale }
-  searchParams: { [key: string]: string | string[] | undefined }
+  params: Promise<{ lng: Locale }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }
 
 export default async function SearchPage({ params, searchParams }: SearchPageProps) {
-  const dict = await getDictionary(params.lng)
+  const [resolvedParams, resolvedSearchParams] = await Promise.all([params, searchParams])
+  const dict = await getDictionary(resolvedParams.lng)
 
   const initialProperties = await (async () => {
-    const { q, ...filters } = searchParams
+    const { q, ...filters } = resolvedSearchParams
     const searchFilters = {
       category: filters.category as string,
       minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
@@ -29,5 +30,5 @@ export default async function SearchPage({ params, searchParams }: SearchPagePro
     return await getProperties(searchFilters)
   })()
 
-  return <Search dict={dict} lng={params.lng} searchParams={searchParams} initialProperties={initialProperties} />
+  return <Search dict={dict} lng={resolvedParams.lng} searchParams={resolvedSearchParams} initialProperties={initialProperties} />
 }

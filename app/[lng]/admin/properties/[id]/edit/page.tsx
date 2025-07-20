@@ -6,10 +6,11 @@ import { notFound } from "next/navigation"
 import type { Database } from "@/lib/supabase/types"
 
 interface PageProps {
-  params: { lng: string; id: string }
+  params: Promise<{ lng: string; id: string }>
 }
 
 export default async function EditPropertyPage({ params }: PageProps) {
+  const { lng, id } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
 
   // Fetch the property with all related data
@@ -20,7 +21,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
       categories (id, name),
       property_images (id, url, alt_text, is_main, order_index)
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .single()
 
   if (error || !property) {
@@ -37,12 +38,14 @@ export default async function EditPropertyPage({ params }: PageProps) {
     <div>
       <AdminHeader 
         title={`Edit Property: ${property.title}`} 
-        description="Update property information and settings" 
+        description="Update property information and settings"
+        lng={lng}
+        dict={{} as any}
       />
       <div className="p-6">
         <PropertyForm 
           categories={categories || []} 
-          lng={params.lng}
+          lng={lng}
           mode="edit"
           property={property}
         />
