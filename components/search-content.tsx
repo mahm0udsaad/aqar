@@ -12,20 +12,23 @@ import { PropertyCard } from "@/components/property-card"
 import { SearchFiltersSheet } from "@/components/search-filters-sheet"
 import { Search, Filter, SlidersHorizontal, MapPin, Home, DollarSign } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import { getProperties } from "@/lib/supabase/queries"
+import { getProperties, searchProperties } from "@/lib/supabase/queries"
 import type { Property } from "@/lib/types"
+
+import type { PropertyWithDetails } from "@/lib/supabase/queries"
 
 interface SearchContentProps {
   dict: any
   lng: Locale
   searchParams: { [key: string]: string | string[] | undefined }
+  initialProperties: PropertyWithDetails[]
 }
 
-export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
+export function SearchContent({ dict, lng, searchParams, initialProperties }: SearchContentProps) {
   const router = useRouter()
   const urlSearchParams = useSearchParams()
-  const [properties, setProperties] = useState<Property[]>([])
-  const [loading, setLoading] = useState(true)
+  const [properties, setProperties] = useState<PropertyWithDetails[]>(initialProperties)
+  const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
   // Search state
@@ -47,14 +50,19 @@ export function SearchContent({ dict, lng, searchParams }: SearchContentProps) {
     const loadProperties = async () => {
       setLoading(true)
       try {
-        const data = await getProperties({
+        const searchFilters = {
           category: filters.category,
           minPrice: filters.minPrice ? Number.parseInt(filters.minPrice) : undefined,
           maxPrice: filters.maxPrice ? Number.parseInt(filters.maxPrice) : undefined,
           location: filters.location,
           bedrooms: filters.bedrooms ? Number.parseInt(filters.bedrooms) : undefined,
           bathrooms: filters.bathrooms ? Number.parseInt(filters.bathrooms) : undefined,
-        })
+        }
+        
+        const data = searchQuery 
+          ? await searchProperties(searchQuery, searchFilters)
+          : await getProperties(searchFilters)
+
         setProperties(data || [])
       } catch (error) {
         console.error("Error loading properties:", error)
