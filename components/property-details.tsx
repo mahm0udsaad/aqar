@@ -334,6 +334,17 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
               <Button size="lg" variant="outline" className="w-full">
                 <MessageCircle className="w-4 h-4 mr-2" /> Send Message
               </Button>
+              <div className="flex items-center gap-2 pt-2">
+                <LoveButton propertyId={property.id} className="w-full" />
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setIsShareModalOpen(true)}
+                >
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </Button>
+              </div>
             </CardContent>
           </Card>
 
