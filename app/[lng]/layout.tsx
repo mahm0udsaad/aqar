@@ -4,6 +4,7 @@ import { i18n, type Locale } from "@/lib/i18n/config"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth/auth-context"
+import { ComparisonProvider } from "@/contexts/comparison-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Footer } from "@/components/footer"
 import "../globals.css"
@@ -67,7 +68,9 @@ export default async function RootLayout({
       <body className={lng === "ar" ? cairo.className : inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider>
-            {children}
+            <ComparisonProvider>
+              {children}
+            </ComparisonProvider>
           </AuthProvider>
           <Toaster />
           <Footer lng={lng} dict={dict} />

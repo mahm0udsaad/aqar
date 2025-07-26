@@ -3,6 +3,38 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 export interface Database {
   public: {
     Tables: {
+      areas: {
+        Row: {
+          id: string
+          name: string
+          slug: string
+          description: string | null
+          order_index: number | null
+          is_active: boolean | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          slug: string
+          description?: string | null
+          order_index?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          slug?: string
+          description?: string | null
+          order_index?: number | null
+          is_active?: boolean | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
       categories: {
         Row: {
           id: string
@@ -47,6 +79,7 @@ export interface Database {
           price_per_meter: number | null
           location: string
           area: string
+          area_id: string | null
           bedrooms: number
           bathrooms: number
           size: number
@@ -85,6 +118,7 @@ export interface Database {
           price_per_meter?: number | null
           location: string
           area: string
+          area_id?: string | null
           bedrooms?: number
           bathrooms?: number
           size: number
@@ -123,6 +157,7 @@ export interface Database {
           price_per_meter?: number | null
           location?: string
           area?: string
+          area_id?: string | null
           bedrooms?: number
           bathrooms?: number
           size?: number

@@ -19,6 +19,52 @@ import { getCategoryBySlug, getProperties, getCategories } from "@/lib/supabase/
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
+export async function generateMetadata({ params }: { params: { lng: Locale; slug: string } }) {
+  const { lng, slug } = params;
+  const dict = await getDictionary(lng);
+  const category = await getCategoryBySlug(slug);
+
+  if (!category) {
+    return {
+      title: "Category Not Found",
+      description: "The requested category could not be found.",
+    };
+  }
+
+  const properties = await getProperties({ category: category.id });
+  const categoryName = lng === "ar" ? category.name_ar : category.name_en;
+  const categoryDescription = lng === "ar" ? category.description_ar : category.description_en;
+  
+  const title = `${categoryName} Properties for Sale & Rent in Egypt`;
+  const description = `Browse ${properties.length} ${categoryName.toLowerCase()} properties in Egypt. ${categoryDescription}`;
+  const imageUrl = category.image_url || '/categories/default.png';
+
+  return {
+    title: title,
+    description: description,
+    openGraph: {
+      title: title,
+      description: description,
+      images: [{
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: categoryName,
+      }],
+      type: 'website',
+      locale: lng,
+      url: `/${lng}/categories/${slug}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: description,
+      images: [imageUrl],
+    },
+    keywords: `${categoryName}, Egypt real estate, properties for sale, properties for rent, ${categoryName.toLowerCase()} Egypt`,
+  };
+}
+
 interface CategoryPageProps {
   params: { lng: Locale; slug: string }
 }

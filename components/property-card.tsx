@@ -14,6 +14,7 @@ import {
 } from "@/lib/utils"
 import { LoveButton } from "@/components/love-button"
 import { ShareModal } from "@/components/share-modal"
+import { PropertyComparisonButton } from "@/components/property-comparison-button"
 import {
   Bed,
   Bath,
@@ -170,6 +171,26 @@ export function PropertyCard({
               <span>{property.size} m²</span>
             </div>
           </div>
+        </div>
+
+        {/* Comparison Button */}
+        <div className="mb-4">
+          <PropertyComparisonButton 
+            property={{
+              id: property.id,
+              title: property.title,
+              price: property.price,
+              location: property.location,
+              area: property.area,
+              bedrooms: property.bedrooms,
+              bathrooms: property.bathrooms,
+              size: property.size,
+              property_type: property.property_type,
+              thumbnail_url: property.thumbnail_url || undefined
+            }}
+            lng="en"
+            size="sm"
+          />
         </div>
 
         {/* Owner Info */}

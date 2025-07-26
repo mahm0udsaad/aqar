@@ -12,14 +12,29 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SearchContent } from "@/components/search-content"
 import { SearchFiltersSheet } from "@/components/search-filters-sheet"
+import { getCategories } from "@/lib/supabase/queries"
+import { getAreas } from "@/lib/actions/areas"
 
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
+
+interface Area {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Category {
+  id: string
+  name: string
+}
 
 interface SearchProps {
   dict: any
   lng: Locale
   searchParams: { [key: string]: string | string[] | undefined }
   initialProperties: PropertyWithDetails[]
+  categories: Category[]
+  areas: Area[]
 }
 
 function SearchSkeleton() {
@@ -66,7 +81,7 @@ function SearchSkeleton() {
   )
 }
 
-export function Search({ dict, lng, searchParams, initialProperties }: SearchProps) {
+export function Search({ dict, lng, searchParams, initialProperties, categories, areas }: SearchProps) {
   return (
     <div className="min-h-screen bg-background">
       <Navbar lng={lng} dict={dict} />
@@ -78,7 +93,7 @@ export function Search({ dict, lng, searchParams, initialProperties }: SearchPro
           </div>
 
           <Suspense fallback={<SearchSkeleton />}> 
-            <SearchContent lng={lng} dict={dict} searchParams={searchParams} initialProperties={initialProperties} />
+            <SearchContent lng={lng} dict={dict} searchParams={searchParams} initialProperties={initialProperties} categories={categories} areas={areas} />
           </Suspense>
         </div>
       </main>

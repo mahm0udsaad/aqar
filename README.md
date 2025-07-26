@@ -48,15 +48,12 @@ Format: Markdown checklist grouped by priority.
 	•	Add empty-state message if no listings.
 
 5. Property Creation / Media
-	•	Investigate upload failure for second property (network / validation / size limits).
 	•	Add explicit image size & aspect ratio hint in the upload UI (e.g., 1200×800 px).
-	•	Lightbox/Gallery: use larger images than the inline thumbnails.
-	•	Pre-generate responsive sizes (thumbnail, card, lightbox) to improve performance.
-	•	Validate featured image presence.
+	•	Lightbox/Gallery: use larger images than the property page like when i click on the image to display in full screen should be bigger to see the details accuratly .
 
 6. Admin UX Improvements
 	•	Add tooltips (titles) to action icons in property list (client can't tell what each icon does).
-	•	Enable drag & drop sorting inside each Category list.
+	•	Enable drag & drop sorting inside each properties like draging the property to be in a diffrent category with drag and drop .
 	•	Add drag & drop for Home page featured order.
 	•	Add bulk actions (optional) – publish/unpublish/delete multiple.
 
@@ -73,11 +70,6 @@ Format: Markdown checklist grouped by priority.
 	•	Store selections in localStorage or query params.
 	•	Clear & share link functionality.
 
-9. QA & Delivery Process
-	•	Self-review checklist before sending to client (he requested fewer back-and-forth changes).
-	•	Staging environment for client to test changes.
-	•	Add monitoring/logging for upload/search errors.
-
 10. Visual / UX Polish
 	•	Prevent image flicker by handling skeleton states properly (show skeleton only before load).
 	•	Maintain consistent spacing & card heights when data loads.
@@ -93,15 +85,6 @@ Format: Markdown checklist grouped by priority.
 	3.	Admin usability: tooltips + drag & drop ordering.
 	4.	SEO layer: per-item tags, sitemap, schema.
 	5.	Compare feature.
-	6.	Polish & QA.
-
-⸻
-
-📏 Definition of Done (per task)
-	•	Bug reproduced, root cause documented, fix implemented, and regression tests added.
-	•	Cross-browser check (Chrome, Safari, Edge) & mobile responsiveness.
-	•	Client scenario re-tested (mirror his exact steps).
-	•	Screenshots/video before & after for sign-off.
 
 ⸻
 
@@ -110,13 +93,3 @@ Format: Markdown checklist grouped by priority.
 	•	Should category images be mandatory? Provide fallback icon?
 	•	Max number of properties in comparison page? (limit to 3–4?)
 	•	Any analytics events needed around search/filter usage?
-
-⸻
-
-📊 Progress Summary
-- ✅ Completed: 4 tasks (Categories page improvements, category images)
-- 🔄 In Progress: 0 tasks
-- ⏳ Pending: 26 tasks
-- 📈 Overall Progress: ~13% complete
-
-Next step: Confirm priorities & any missing items with Ahmad, then start from section "Top 10 Priorities" and move down.

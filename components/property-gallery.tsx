@@ -83,46 +83,87 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Enhanced Modal with Full Screen */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="max-w-4xl p-0">
-          <div className="relative">
+        <DialogContent className="max-w-7xl w-full h-full p-0 bg-black/95">
+          <div className="relative w-full h-full">
+            {/* Close button */}
             <Button
               variant="secondary"
               size="icon"
-              className="absolute right-2 top-2 z-10 bg-black/50 hover:bg-black/70 text-white"
+              className="absolute right-4 top-4 z-50 bg-black/50 hover:bg-black/70 text-white border-white/20"
               onClick={() => setIsModalOpen(false)}
             >
-              <X className="w-4 h-4" />
+              <X className="w-5 h-5" />
             </Button>
-            <div className="relative h-[70vh]">
+            
+            {/* Main image container - full screen */}
+            <div className="relative w-full h-[90vh] flex items-center justify-center">
               <Image
-                src={images[selectedImage]?.url || "/placeholder.svg?height=400&width=600"}
+                src={images[selectedImage]?.url || "/placeholder.svg"}
                 alt={images[selectedImage]?.alt || title}
                 fill
                 className="object-contain"
+                quality={100}
+                priority
+                sizes="100vw"
               />
+              
+              {/* Navigation arrows */}
               {images.length > 1 && (
                 <>
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute left-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-white/20 w-12 h-12"
                     onClick={prevImage}
                   >
-                    <ChevronLeft className="w-4 h-4" />
+                    <ChevronLeft className="w-6 h-6" />
                   </Button>
                   <Button
                     variant="secondary"
                     size="icon"
-                    className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white border-white/20 w-12 h-12"
                     onClick={nextImage}
                   >
-                    <ChevronRight className="w-4 h-4" />
+                    <ChevronRight className="w-6 h-6" />
                   </Button>
                 </>
               )}
+              
+              {/* Image counter */}
+              {images.length > 1 && (
+                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/50 text-white px-4 py-2 rounded-full text-sm">
+                  {selectedImage + 1} / {images.length}
+                </div>
+              )}
             </div>
+            
+            {/* Thumbnail strip at bottom */}
+            {images.length > 1 && (
+              <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-8">
+                <div className="flex space-x-2 overflow-x-auto scrollbar-hide justify-center">
+                  {images.map((image, index) => (
+                    <div
+                      key={image.id}
+                      className={`relative w-16 h-16 flex-shrink-0 overflow-hidden rounded cursor-pointer border-2 transition-all ${
+                        selectedImage === index 
+                          ? "border-white" 
+                          : "border-transparent hover:border-white/50"
+                      }`}
+                      onClick={() => setSelectedImage(index)}
+                    >
+                      <Image 
+                        src={image.url || "/placeholder.svg"} 
+                        alt={image.alt} 
+                        fill 
+                        className="object-cover" 
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </DialogContent>
       </Dialog>

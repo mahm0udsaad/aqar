@@ -1,1 +1,0 @@
-ALTER TABLE properties ADD COLUMN location_iframe_url TEXT;
