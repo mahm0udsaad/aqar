@@ -204,6 +204,35 @@ export async function createProperty(
     // Extract the URL from the iframe
     const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
+    // Calculate order_index for proper positioning
+    // Featured and new properties should appear at the top
+    let orderIndex = 0;
+    
+    if (data.isFeatured || data.isNew) {
+      // Get the current lowest order_index for featured/new properties
+      const { data: topProperties } = await supabase
+        .from("properties")
+        .select("order_index")
+        .or("is_featured.eq.true,is_new.eq.true")
+        .order("order_index", { ascending: true })
+        .limit(1);
+      
+      if (topProperties && topProperties.length > 0) {
+        orderIndex = Math.max(0, (topProperties[0].order_index || 0) - 1);
+      }
+    } else {
+      // Regular properties go at the end
+      const { data: lastProperty } = await supabase
+        .from("properties")
+        .select("order_index")
+        .order("order_index", { ascending: false })
+        .limit(1);
+      
+      if (lastProperty && lastProperty.length > 0) {
+        orderIndex = (lastProperty[0].order_index || 0) + 1;
+      }
+    }
+
     // Insert property into database
     const { data: property, error } = await supabase
       .from("properties")
@@ -236,6 +265,7 @@ export async function createProperty(
         contact_email: data.contactEmail,
         response_time: data.responseTime,
         location_iframe_url: locationIframeUrl,
+        order_index: orderIndex,
       })
       .select()
       .single()
@@ -468,40 +498,88 @@ export async function updateProperty(
     // Extract the URL from the iframe
     const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
+    // Get current property to check if featured/new status changed
+    const { data: currentProperty } = await supabase
+      .from("properties")
+      .select("is_featured, is_new, order_index")
+      .eq("id", id)
+      .single();
+
+    let updateData: any = {
+      title: data.title,
+      description: data.description,
+      price: data.price,
+      price_per_meter: pricePerMeter,
+      location: data.location,
+      area: data.area,
+      area_id: data.areaId,
+      bedrooms: data.bedrooms,
+      bathrooms: data.bathrooms,
+      size: data.size,
+      floor: data.floor,
+      total_floors: data.totalFloors,
+      year_built: data.yearBuilt,
+      category_id: data.categoryId,
+      property_type: data.propertyType,
+      owner_type: data.ownerType,
+      status: data.status,
+      features: data.features,
+      amenities: data.amenities,
+      is_new: data.isNew,
+      is_featured: data.isFeatured,
+      is_verified: data.isVerified,
+      contact_name: data.contactName,
+      contact_phone: data.contactPhone,
+      contact_whatsapp: data.contactWhatsapp,
+      contact_email: data.contactEmail,
+      response_time: data.responseTime,
+      updated_at: new Date().toISOString(),
+      location_iframe_url: locationIframeUrl,
+    };
+
+    // If featured/new status changed, recalculate order_index
+    if (currentProperty && 
+        ((currentProperty.is_featured !== data.isFeatured) || 
+         (currentProperty.is_new !== data.isNew))) {
+      
+      let newOrderIndex = currentProperty.order_index || 0;
+      
+      if (data.isFeatured || data.isNew) {
+        // Moving to featured/new - place at top
+        const { data: topProperties } = await supabase
+          .from("properties")
+          .select("order_index")
+          .or("is_featured.eq.true,is_new.eq.true")
+          .order("order_index", { ascending: true })
+          .limit(1);
+        
+        if (topProperties && topProperties.length > 0) {
+          newOrderIndex = Math.max(0, (topProperties[0].order_index || 0) - 1);
+        } else {
+          newOrderIndex = 0;
+        }
+      } else {
+        // Moving from featured/new to regular - place at end
+        const { data: lastProperty } = await supabase
+          .from("properties")
+          .select("order_index")
+          .eq("is_featured", false)
+          .eq("is_new", false)
+          .order("order_index", { ascending: false })
+          .limit(1);
+        
+        if (lastProperty && lastProperty.length > 0) {
+          newOrderIndex = (lastProperty[0].order_index || 0) + 1;
+        }
+      }
+      
+      updateData.order_index = newOrderIndex;
+    }
+
     // Update property in database
     const { error } = await supabase
       .from("properties")
-      .update({
-        title: data.title,
-        description: data.description,
-        price: data.price,
-        price_per_meter: pricePerMeter,
-        location: data.location,
-        area: data.area,
-        area_id: data.areaId,
-        bedrooms: data.bedrooms,
-        bathrooms: data.bathrooms,
-        size: data.size,
-        floor: data.floor,
-        total_floors: data.totalFloors,
-        year_built: data.yearBuilt,
-        category_id: data.categoryId,
-        property_type: data.propertyType,
-        owner_type: data.ownerType,
-        status: data.status,
-        features: data.features,
-        amenities: data.amenities,
-        is_new: data.isNew,
-        is_featured: data.isFeatured,
-        is_verified: data.isVerified,
-        contact_name: data.contactName,
-        contact_phone: data.contactPhone,
-        contact_whatsapp: data.contactWhatsapp,
-        contact_email: data.contactEmail,
-        response_time: data.responseTime,
-        updated_at: new Date().toISOString(),
-        location_iframe_url: locationIframeUrl,
-      })
+      .update(updateData)
       .eq("id", id)
 
     if (error) {
@@ -724,9 +802,57 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
       return { success: false, message: "Admin access required" }
     }
 
+    // Get current property to check if we need to reorder
+    const { data: currentProperty } = await supabase
+      .from("properties")
+      .select("is_featured, is_new, order_index")
+      .eq("id", id)
+      .single();
+
+    let updateData: any = { 
+      is_featured: featured, 
+      updated_at: new Date().toISOString() 
+    };
+
+    // If featuring status changed, recalculate order_index
+    if (currentProperty && currentProperty.is_featured !== featured) {
+      let newOrderIndex = currentProperty.order_index || 0;
+      
+      if (featured || currentProperty.is_new) {
+        // Moving to featured (or staying new) - place at top
+        const { data: topProperties } = await supabase
+          .from("properties")
+          .select("order_index")
+          .or("is_featured.eq.true,is_new.eq.true")
+          .order("order_index", { ascending: true })
+          .limit(1);
+        
+        if (topProperties && topProperties.length > 0) {
+          newOrderIndex = Math.max(0, (topProperties[0].order_index || 0) - 1);
+        } else {
+          newOrderIndex = 0;
+        }
+      } else if (!featured && !currentProperty.is_new) {
+        // Moving to regular (not featured and not new) - place at end
+        const { data: lastProperty } = await supabase
+          .from("properties")
+          .select("order_index")
+          .eq("is_featured", false)
+          .eq("is_new", false)
+          .order("order_index", { ascending: false })
+          .limit(1);
+        
+        if (lastProperty && lastProperty.length > 0) {
+          newOrderIndex = (lastProperty[0].order_index || 0) + 1;
+        }
+      }
+      
+      updateData.order_index = newOrderIndex;
+    }
+
     const { error } = await supabase
       .from("properties")
-      .update({ is_featured: featured, updated_at: new Date().toISOString() })
+      .update(updateData)
       .eq("id", id)
 
     if (error) {
@@ -766,11 +892,19 @@ export async function updatePropertyOrder(updates: { id: string; order_index: nu
       return { success: false, message: "Admin access required" };
     }
 
-    // Perform batch update
-    const { error } = await supabase.from("properties").upsert(updates, { onConflict: "id" });
+    // Perform batch update using individual update operations
+    const updatePromises = updates.map(update => 
+      supabase
+        .from("properties")
+        .update({ order_index: update.order_index })
+        .eq("id", update.id)
+    );
 
-    if (error) {
-      console.error("Error updating property order:", error);
+    const results = await Promise.all(updatePromises);
+    const errors = results.filter(result => result.error);
+
+    if (errors.length > 0) {
+      console.error("Error updating property order:", errors[0].error);
       return { success: false, message: "Failed to update property order." };
     }
 

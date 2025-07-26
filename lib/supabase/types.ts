@@ -107,6 +107,7 @@ export interface Database {
           response_time: string | null
           thumbnail_url: string | null
           location_iframe_url: string | null
+          order_index: number | null
           created_at: string | null
           updated_at: string | null
         }
@@ -146,6 +147,7 @@ export interface Database {
           response_time?: string | null
           thumbnail_url?: string | null
           location_iframe_url?: string | null
+          order_index?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -185,6 +187,7 @@ export interface Database {
           response_time?: string | null
           thumbnail_url?: string | null
           location_iframe_url?: string | null
+          order_index?: number | null
           created_at?: string | null
           updated_at?: string | null
         }
