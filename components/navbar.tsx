@@ -17,8 +17,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Menu, Search, User, Settings, LogOut, Heart, Globe } from "lucide-react"
+import { Menu, Search, User, Settings, LogOut, Heart, Globe, GitCompare } from "lucide-react"
 import { SearchFiltersSheet } from "./search-filters-sheet"
+import { useComparison } from "@/contexts/comparison-context"
 
 interface NavbarProps {
   lng: string
@@ -34,6 +35,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
   const router = useRouter()
   const supabase = createClientComponentClient()
   const isSearchPage = pathname.includes("/search")
+  const { count: comparisonCount } = useComparison()
 
   useEffect(() => {
     const handleScroll = () => {
@@ -140,6 +142,19 @@ export function Navbar({ lng, dict }: NavbarProps) {
               {dict.nav.contact}
             </Link>
 
+            {/* Comparison Button */}
+            <Link href={`/${lng}/compare`} className="relative">
+              <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                <GitCompare className="h-4 w-4" />
+                <span className="hidden lg:inline">Compare</span>
+                {comparisonCount > 0 && (
+                  <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {comparisonCount}
+                  </Badge>
+                )}
+              </Button>
+            </Link>
+
             {/* Language Toggle */}
             <Button variant="ghost" size="sm" onClick={toggleLanguage}>
               <Globe className="h-4 w-4 mr-2" />
@@ -237,6 +252,17 @@ export function Navbar({ lng, dict }: NavbarProps) {
                     </Link>
                     <Link href={`/${lng}/contact`} className="text-lg font-medium py-2 px-3 rounded-md hover:bg-accent">
                       {dict.nav.contact}
+                    </Link>
+                    <Link href={`/${lng}/compare`} className="text-lg font-medium py-2 px-3 rounded-md hover:bg-accent flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <GitCompare className="h-5 w-5" />
+                        Compare
+                      </span>
+                      {comparisonCount > 0 && (
+                        <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
+                          {comparisonCount}
+                        </Badge>
+                      )}
                     </Link>
                   </div>
 

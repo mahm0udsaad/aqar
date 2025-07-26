@@ -98,6 +98,7 @@ const PropertyFormSchema = z.object({
   pricePerMeter: z.coerce.number().optional(),
   location: z.string().min(1, "Location is required"),
   area: z.string().min(1, "Area is required"),
+  areaId: z.string().min(1, "Area selection is required"),
   bedrooms: z.coerce.number().min(0, "Bedrooms must be 0 or greater"),
   bathrooms: z.coerce.number().min(0, "Bathrooms must be 0 or greater"),
   size: z.coerce.number().min(1, "Size must be greater than 0"),
@@ -163,6 +164,7 @@ export async function createProperty(
       pricePerMeter: formData.get("pricePerMeter") as string,
       location: formData.get("location") as string,
       area: formData.get("area") as string,
+      areaId: formData.get("areaId") as string,
       bedrooms: formData.get("bedrooms") as string,
       bathrooms: formData.get("bathrooms") as string,
       size: formData.get("size") as string,
@@ -212,6 +214,7 @@ export async function createProperty(
         price_per_meter: pricePerMeter,
         location: data.location,
         area: data.area,
+        area_id: data.areaId,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         size: data.size,
@@ -259,10 +262,14 @@ export async function createProperty(
         const isMain = formData.get(`image_${i}_is_main`) === "true"
         
         if (imageFile && imageFile.size > 0) {
+          console.log(`Uploading image ${i + 1}/${totalImages}: ${imageFile.name} (${imageFile.size} bytes)`)
+          
           // Upload image and generate thumbnail
           const uploadResult = await uploadImageToStorage(imageFile, property.id, i)
           
           if (uploadResult) {
+            console.log(`Image ${i + 1} uploaded successfully`)
+            
             // Insert into property_images table
             const imageInsert = supabase
               .from("property_images")
@@ -281,18 +288,25 @@ export async function createProperty(
             if (isMain || (i === 0 && !mainImageThumbnailUrl)) {
               mainImageThumbnailUrl = uploadResult.thumbnailUrl;
             }
+          } else {
+            console.error(`Failed to upload image ${i + 1}: ${imageFile.name}`)
           }
+        } else {
+          console.log(`Skipping image ${i + 1}: No file or empty file`)
         }
       }
       
       // Execute all image uploads
       if (imageUploads.length > 0) {
+        console.log(`Executing ${imageUploads.length} image database insertions`)
         const results = await Promise.all(imageUploads);
-        const hasErrors = results.some(result => result.error);
+        const errors = results.filter(result => result.error);
         
-        if (hasErrors) {
-          console.error("Some images failed to upload");
+        if (errors.length > 0) {
+          console.error(`${errors.length}/${results.length} image uploads failed:`, errors.map(e => e.error));
           // Continue anyway, don't fail the entire operation
+        } else {
+          console.log(`All ${results.length} images uploaded successfully`)
         }
       }
 
@@ -305,7 +319,19 @@ export async function createProperty(
       }
     }
 
+    // Revalidate all pages that might show this property
     revalidatePath("/admin/properties")
+    revalidatePath("/") // Home page
+    revalidatePath("/en") // English home page
+    revalidatePath("/ar") // Arabic home page
+    revalidatePath("/en/search") // Search pages
+    revalidatePath("/ar/search")
+    
+    // If property is featured, revalidate featured pages
+    if (data.isFeatured) {
+      revalidatePath("/admin/featured")
+    }
+    
     return {
       message: "Property created successfully!",
       success: true,
@@ -402,6 +428,7 @@ export async function updateProperty(
       pricePerMeter: formData.get("pricePerMeter") as string,
       location: formData.get("location") as string,
       area: formData.get("area") as string,
+      areaId: formData.get("areaId") as string,
       bedrooms: formData.get("bedrooms") as string,
       bathrooms: formData.get("bathrooms") as string,
       size: formData.get("size") as string,
@@ -451,6 +478,7 @@ export async function updateProperty(
         price_per_meter: pricePerMeter,
         location: data.location,
         area: data.area,
+        area_id: data.areaId,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         size: data.size,

@@ -83,6 +83,14 @@ export interface SearchFilters {
   ownerType?: "owner" | "broker"
   isNew?: boolean
   amenities?: string[]
+  features?: string[]
+  isFeatured?: boolean
+  isVerified?: boolean
+  location?: string
+  minPricePerMeter?: number
+  maxPricePerMeter?: number
+  floor?: number
+  yearBuilt?: number
   query?: string
 }
 

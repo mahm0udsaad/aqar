@@ -12,26 +12,40 @@ import { PropertyCard } from "@/components/property-card"
 import { SearchFiltersSheet } from "@/components/search-filters-sheet"
 import { Search, Filter, SlidersHorizontal, MapPin, Home, DollarSign } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import { getProperties, searchProperties } from "@/lib/supabase/queries"
+import { getProperties, searchProperties, getCategories } from "@/lib/supabase/queries"
+import { getAreas } from "@/lib/actions/areas"
 import type { Property } from "@/lib/types"
 import type { SearchFilters as SearchFiltersType } from "@/lib/types"
 
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
+
+interface Area {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Category {
+  id: string
+  name: string
+}
 
 interface SearchContentProps {
   dict: any
   lng: Locale
   searchParams: { [key: string]: string | string[] | undefined }
   initialProperties: PropertyWithDetails[]
+  categories: Category[]
+  areas: Area[]
 }
 
-export function SearchContent({ dict, lng, searchParams, initialProperties }: SearchContentProps) {
+export function SearchContent({ dict, lng, searchParams, initialProperties, categories, areas }: SearchContentProps) {
   const router = useRouter()
   const urlSearchParams = useSearchParams()
   const [properties, setProperties] = useState<PropertyWithDetails[]>(initialProperties)
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
-  const hasInitialized = useRef(false)
+  const loadingRef = useRef(false) // Prevent concurrent requests
 
   // Search state
   const [searchQuery, setSearchQuery] = useState(searchParams?.q ? String(searchParams.q) : "")
@@ -51,45 +65,52 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
   
   const [filters, setFilters] = useState<SearchFiltersType>(initialFilters)
 
-  // Separate function to load properties (not memoized to avoid dependency issues)
-  const loadProperties = async (query: string, currentFilters: SearchFiltersType) => {
+  // Load properties function with proper error handling
+  const loadProperties = useCallback(async (query: string, currentFilters: SearchFiltersType) => {
+    // Prevent concurrent requests
+    if (loadingRef.current) {
+      console.log("Request already in progress, skipping...")
+      return
+    }
+
+    loadingRef.current = true
     setLoading(true)
+    
     try {
-      console.log("Loading properties with filters:", currentFilters)
+      console.log("Loading properties with query:", query, "and filters:", currentFilters)
+      
       const searchFilters = {
         category: currentFilters.category,
         minPrice: currentFilters.minPrice,
         maxPrice: currentFilters.maxPrice,
-        area: currentFilters.area,
+        location: currentFilters.area, // Map area to location for supabase queries
         bedrooms: currentFilters.bedrooms,
         bathrooms: currentFilters.bathrooms,
+        propertyType: currentFilters.propertyType,
+        minSize: currentFilters.minSize,
+        maxSize: currentFilters.maxSize,
+        amenities: currentFilters.amenities,
+        features: currentFilters.features,
+        ownerType: currentFilters.ownerType,
+        isNew: currentFilters.isNew,
+        isFeatured: currentFilters.isFeatured,
+        isVerified: currentFilters.isVerified,
       }
       
-      const data = query 
+      const data = query && query.trim() !== ""
         ? await searchProperties(query, searchFilters)
         : await getProperties(searchFilters)
 
-      console.log("Properties loaded:", data?.length || 0)
+      console.log("Properties loaded successfully:", data?.length || 0)
       setProperties(data || [])
     } catch (error) {
       console.error("Error loading properties:", error)
       setProperties([])
     } finally {
       setLoading(false)
+      loadingRef.current = false
     }
-  }
-
-  // Load properties only on initial mount
-  useEffect(() => {
-    if (!hasInitialized.current) {
-      hasInitialized.current = true
-      // Only load if we don't have initial properties or if there are search params
-      const hasSearchParams = Object.keys(searchParams || {}).length > 0
-      if (initialProperties.length === 0 || hasSearchParams) {
-        loadProperties(searchQuery, filters)
-      }
-    }
-  }, []) // No dependencies - only run once
+  }, [])
 
   // Update URL when filters change
   const updateURL = useCallback(() => {
@@ -117,6 +138,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
   }
 
   const handleFilterChange = (newFilters: SearchFiltersType) => {
+    console.log("Filter changed:", newFilters)
     setFilters(newFilters)
   }
 
@@ -132,8 +154,33 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
     setSortBy("newest")
     // Reload properties with cleared filters
     await loadProperties("", clearedFilters)
-    updateURL()
+    // Update URL after clearing
+    const params = new URLSearchParams()
+    const newURL = `/${lng}/search`
+    router.push(newURL, { scroll: false })
   }
+
+  // Sort properties based on sortBy value
+  const sortedProperties = useMemo(() => {
+    if (!properties.length) return []
+    
+    const sorted = [...properties]
+    switch (sortBy) {
+      case "oldest":
+        return sorted.reverse()
+      case "price-low":
+        return sorted.sort((a, b) => (a.price || 0) - (b.price || 0))
+      case "price-high":
+        return sorted.sort((a, b) => (b.price || 0) - (a.price || 0))
+      case "area-large":
+        return sorted.sort((a, b) => (b.size || 0) - (a.size || 0))
+      case "area-small":
+        return sorted.sort((a, b) => (a.size || 0) - (b.size || 0))
+      case "newest":
+      default:
+        return sorted
+    }
+  }, [properties, sortBy])
 
   // Calculate active filters count more robustly
   const filterCount = Object.values(filters).reduce((count, value) => {
@@ -161,8 +208,8 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
               />
             </div>
             <div className="flex gap-2">
-              <Button onClick={handleSearch} className="px-6">
-                {dict.nav.search}
+              <Button onClick={handleSearch} className="px-6" disabled={loading}>
+                {loading ? "Searching..." : dict.nav.search}
               </Button>
               <Button variant="outline" onClick={() => setShowFilters(true)} className="lg:hidden">
                 <Filter className="h-4 w-4 mr-2" />
@@ -187,9 +234,11 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
             filters={filters} 
             onFiltersChange={handleFilterChange}
             onClearFilters={clearFilters}
+            categories={categories}
+            areas={areas}
           />
-          <Button onClick={handleApplyFilters} className="w-full mt-4">
-            {dict.search.applyFilters || "Apply Filters"}
+          <Button onClick={handleApplyFilters} className="w-full mt-4" disabled={loading}>
+            {loading ? "Applying..." : (dict.search.applyFilters || "Apply Filters")}
           </Button>
         </div>
 
@@ -199,7 +248,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
             <div>
               <h2 className="text-xl font-semibold">
-                {loading ? (dict.search.searching || "Searching...") : `${properties.length} ${dict.search.propertiesFound || "properties found"}`}
+                {loading ? (dict.search.searching || "Searching...") : `${sortedProperties.length} ${dict.search.propertiesFound || "properties found"}`}
               </h2>
               {searchQuery && (
                 <p className="text-muted-foreground">
@@ -207,7 +256,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                 </p>
               )}
             </div>
-            <Select value={sortBy} onValueChange={setSortBy}>
+            <Select value={sortBy} onValueChange={setSortBy} disabled={loading}>
               <SelectTrigger className="w-48">
                 <SelectValue placeholder={dict.search.sortBy?.label || "Sort by"} />
               </SelectTrigger>
@@ -235,7 +284,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                 {filters.category && (
                   <Badge variant="secondary" className="flex items-center gap-1">
                     <Home className="h-3 w-3" />
-                    {dict.categories[filters.category] || filters.category}
+                    {dict.categories?.[filters.category] || filters.category}
                   </Badge>
                 )}
                 {filters.area && (
@@ -250,8 +299,8 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                     {filters.minPrice && filters.maxPrice
                       ? `${filters.minPrice} - ${filters.maxPrice}`
                       : filters.minPrice
-                        ? `${dict.search.from} ${filters.minPrice}`
-                        : `${dict.search.upTo} ${filters.maxPrice}`}
+                        ? `${dict.search.from || "From"} ${filters.minPrice}`
+                        : `${dict.search.upTo || "Up to"} ${filters.maxPrice}`}
                   </Badge>
                 )}
               </div>
@@ -275,16 +324,16 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
           )}
 
           {/* Results Grid */}
-          {!loading && properties.length > 0 && (
+          {!loading && sortedProperties.length > 0 && (
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {properties.map((property) => (
+              {sortedProperties.map((property) => (
                 <PropertyCard key={property.id} property={property} />
               ))}
             </div>
           )}
 
           {/* Empty State */}
-          {!loading && properties.length === 0 && (
+          {!loading && sortedProperties.length === 0 && (
             <Card className="p-12 text-center">
               <div className="space-y-4">
                 <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
@@ -294,7 +343,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                   <h3 className="text-lg font-semibold mb-2">{dict.search.noResults}</h3>
                   <p className="text-muted-foreground mb-4">{dict.search.noResultsDescription}</p>
                   {(activeFiltersCount > 0 || searchQuery) && (
-                    <Button onClick={clearFilters} variant="outline">
+                    <Button onClick={clearFilters} variant="outline" disabled={loading}>
                       {dict.search.clearFilters}
                     </Button>
                   )}
@@ -306,15 +355,17 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
       </div>
 
       {/* Mobile Filters Sheet */}
-      <SearchFiltersSheet 
-        lng={lng} 
-        dict={dict} 
-        open={showFilters}
-        onOpenChange={setShowFilters}
-        filters={filters}
-        onFiltersChange={handleFilterChange}
-        onApply={handleApplyFilters}
-      />
+                <SearchFiltersSheet
+            lng={lng}
+            dict={dict}
+            open={showFilters}
+            onOpenChange={setShowFilters}
+            filters={filters}
+            onFiltersChange={handleFilterChange}
+            onApply={handleApplyFilters}
+            categories={categories}
+            areas={areas}
+          />
     </div>
   )
 }

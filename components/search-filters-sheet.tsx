@@ -9,8 +9,19 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Slider } from "@/components/ui/slider"
 import { Badge } from "@/components/ui/badge"
 import { Filter, X } from "lucide-react"
-import { getCategories } from "@/lib/supabase/queries"
+
 import type { SearchFilters as SearchFiltersType } from "@/lib/types"
+
+interface Area {
+  id: string
+  name: string
+  slug: string
+}
+
+interface Category {
+  id: string
+  name: string
+}
 
 interface SearchFiltersSheetProps {
   lng: string
@@ -20,6 +31,8 @@ interface SearchFiltersSheetProps {
   filters: SearchFiltersType
   onFiltersChange: (filters: SearchFiltersType) => void
   onApply: () => void
+  categories: Category[]
+  areas: Area[]
 }
 
 // Map area names to dictionary keys
@@ -50,18 +63,7 @@ const amenityToKeyMap: Record<string, string> = {
   "Furnished": "furnished",
 }
 
-const areas = [
-  "New Cairo",
-  "Maadi",
-  "Zamalek",
-  "Heliopolis",
-  "6th of October",
-  "Sheikh Zayed",
-  "New Capital",
-  "Alexandria",
-  "Giza",
-  "Nasr City",
-]
+// Areas are now passed as props from the parent component
 
 const amenities = [
   "Swimming Pool",
@@ -83,24 +85,12 @@ export function SearchFiltersSheet({
   onOpenChange, 
   filters, 
   onFiltersChange, 
-  onApply 
+  onApply,
+  categories,
+  areas
 }: SearchFiltersSheetProps) {
-  const [categories, setCategories] = useState<any[]>([])
   const [priceRange, setPriceRange] = useState([filters.minPrice || 0, filters.maxPrice || 10000000])
   const [sizeRange, setSizeRange] = useState([filters.minSize || 50, filters.maxSize || 500])
-
-  useEffect(() => {
-    const loadCategories = async () => {
-      try {
-      const data = await getCategories()
-        setCategories(data || [])
-      } catch (error) {
-        console.error("Error loading categories:", error)
-        setCategories([])
-      }
-    }
-    loadCategories()
-  }, [])
 
   const updateFilter = (key: keyof SearchFiltersType, value: any) => {
     onFiltersChange({ ...filters, [key]: value })
@@ -195,17 +185,17 @@ export function SearchFiltersSheet({
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder={dict.search.allAreas} />
               </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{dict.search.allAreas}</SelectItem>
-                {areas.map((area) => {
-                  const areaKey = areaToKeyMap[area]
-                  return (
-                    <SelectItem key={area} value={area}>
-                      {dict.areas[areaKey as keyof typeof dict.areas] || area}
-                    </SelectItem>
-                  )
-                })}
-              </SelectContent>
+                          <SelectContent>
+              <SelectItem value="all">{dict.search.allAreas}</SelectItem>
+              {areas.map((area) => {
+                const areaKey = areaToKeyMap[area.name] || area.slug
+                return (
+                  <SelectItem key={area.id} value={area.name}>
+                    {dict.areas[areaKey as keyof typeof dict.areas] || area.name}
+                  </SelectItem>
+                )
+              })}
+            </SelectContent>
             </Select>
           </div>
 

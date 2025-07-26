@@ -9,6 +9,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts } from "@/lib/supabase/queries"
+import { getAreas } from "@/lib/actions/areas"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
 import { TrendingUp, MapPin, Building, Home, Warehouse, Users, Shield, Award } from "lucide-react"
@@ -22,7 +23,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const dict = await getDictionary(lng)
 
   // Fetch data from Supabase with fallback
-  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas] = await Promise.all([
+  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas, areas] = await Promise.all([
     getFeaturedProperties().catch(() => []),
     getProperties({ propertyType: "sale" })
       .then((data) => data.slice(0, 3))
@@ -32,6 +33,7 @@ export default async function HomePage({ params }: HomePageProps) {
       .catch(() => []),
     getCategories().catch(() => []),
     getPopularAreasWithCounts().catch(() => []),
+    getAreas().catch(() => []),
   ])
 
   const stats = [
@@ -66,7 +68,7 @@ export default async function HomePage({ params }: HomePageProps) {
   return (
     <div className={`min-h-screen bg-background ${lng === "ar" ? "rtl" : "ltr"}`}>
       <Navbar lng={lng} dict={dict} />
-      <HeroSection lng={lng} dict={dict} />
+      <HeroSection lng={lng} dict={dict} areas={areas || []} />
 
       {/* Stats Section */}
       <section className="py-16 bg-card">
@@ -224,8 +226,8 @@ export default async function HomePage({ params }: HomePageProps) {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {popularAreas.map((area, index) => (
-              <Link key={index} href={`/${lng}/search?area=${encodeURIComponent(area.name)}`}>
+            {popularAreas.map((area: any, index: number) => (
+              <Link key={index} href={`/${lng}/search?location=${encodeURIComponent(area.name)}`}>
                 <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-6">
                     <div className={`flex items-center justify-between mb-4 ${lng === "ar" ? "flex-row-reverse" : ""}`}>
@@ -239,7 +241,7 @@ export default async function HomePage({ params }: HomePageProps) {
                       className={`flex items-center text-muted-foreground ${lng === "ar" ? "flex-row-reverse" : ""}`}
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{area.count} {dict.home.propertiesLabel}</span>
+                      <span className="text-sm">{area.count} Properties</span>
                     </div>
                   </CardContent>
                 </Card>

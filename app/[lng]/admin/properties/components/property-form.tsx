@@ -15,6 +15,7 @@ import { Progress } from "@/components/ui/progress"
 import { Save, FileText, X, Upload, MapPin, Star, Phone, Plus, Info, Loader2, ArrowLeft, Camera } from "lucide-react"
 import Link from "next/link"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
+import { createArea, getAreas } from "@/lib/actions/areas"
 import { toast } from "sonner"
 import type { Database } from "@/lib/supabase/types"
 import { ImageUploadCrop, PropertyImage } from "@/components/admin/image-upload-crop"
@@ -32,8 +33,18 @@ interface Category {
   name: string
 }
 
+interface Area {
+  id: string
+  name: string
+  slug: string
+  description: string | null
+  order_index: number | null
+  is_active: boolean | null
+}
+
 interface PropertyFormProps {
   categories: Category[]
+  areas: Area[]
   lng: string
   mode: "create" | "edit"
   property?: Property & { property_images?: PropertyImageDB[] }
@@ -69,7 +80,7 @@ const COMMON_AMENITIES = [
   "Rooftop Terrace",
 ]
 
-export function PropertyForm({ categories, lng, mode, property }: PropertyFormProps) {
+export function PropertyForm({ categories, areas, lng, mode, property }: PropertyFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
@@ -95,6 +106,7 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
     pricePerMeter: property?.price_per_meter?.toString() || "",
     location: property?.location || "",
     area: property?.area || "",
+    areaId: property?.area_id || "",
     bedrooms: property?.bedrooms?.toString() || "0",
     bathrooms: property?.bathrooms?.toString() || "0",
     size: property?.size?.toString() || "",
@@ -121,6 +133,12 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
   const [customFeature, setCustomFeature] = useState("")
   const [customAmenity, setCustomAmenity] = useState("")
   const [errors, setErrors] = useState<Record<string, string[]>>({})
+  
+  // Area management state
+  const [availableAreas, setAvailableAreas] = useState<Area[]>(areas)
+  const [showNewAreaInput, setShowNewAreaInput] = useState(false)
+  const [newAreaName, setNewAreaName] = useState("")
+  const [isCreatingArea, setIsCreatingArea] = useState(false)
 
   // Calculate form completion progress
   const calculateProgress = () => {
@@ -129,7 +147,7 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
       formData.description,
       formData.price,
       formData.location,
-      formData.area,
+      formData.areaId,
       formData.bedrooms,
       formData.bathrooms,
       formData.size,
@@ -182,6 +200,85 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
     }
   }
 
+  // Area management functions
+  const handleCreateArea = async () => {
+    if (!newAreaName.trim()) {
+      toast.error("Please enter an area name")
+      return
+    }
+    
+    setIsCreatingArea(true)
+    console.log("Creating area:", newAreaName.trim())
+    
+    try {
+      const formData = new FormData()
+      formData.append("name", newAreaName.trim())
+      formData.append("isActive", "true")
+      formData.append("description", "")
+      formData.append("orderIndex", "0")
+      
+      console.log("FormData entries:", Object.fromEntries(formData.entries()))
+      
+      const result = await createArea({ errors: {}, message: "", success: false }, formData)
+      
+      console.log("Create area result:", result)
+      
+      if (result.success) {
+        toast.success(result.message || "Area created successfully!")
+        
+        // Refresh areas list
+        try {
+          const updatedAreas = await getAreas()
+          console.log("Updated areas:", updatedAreas)
+          setAvailableAreas(updatedAreas)
+          
+          // Find the newly created area and select it
+          const newArea = updatedAreas.find(area => area.name === newAreaName.trim())
+          if (newArea) {
+            setFormData(prev => ({ ...prev, areaId: newArea.id, area: newArea.name }))
+            console.log("Selected new area:", newArea)
+          }
+        } catch (fetchError) {
+          console.error("Error fetching updated areas:", fetchError)
+        }
+        
+        // Reset form
+        setNewAreaName("")
+        setShowNewAreaInput(false)
+        
+        // Optional: Trigger a page refresh if needed
+        // window.location.reload()
+      } else {
+        console.error("Failed to create area:", result)
+        if (result.errors) {
+          const errorMessages = Object.values(result.errors).flat()
+          toast.error(`Validation errors: ${errorMessages.join(", ")}`)
+        } else {
+          toast.error(result.message || "Failed to create area")
+        }
+      }
+    } catch (error) {
+      console.error("Error creating area:", error)
+      toast.error(`Failed to create area: ${error}`)
+    } finally {
+      setIsCreatingArea(false)
+    }
+  }
+
+  const handleAreaChange = (areaId: string) => {
+    if (areaId === "add_new") {
+      setShowNewAreaInput(true)
+      return
+    }
+    
+    const selectedArea = availableAreas.find(area => area.id === areaId)
+    setFormData(prev => ({ 
+      ...prev, 
+      areaId: areaId,
+      area: selectedArea ? selectedArea.name : ""
+    }))
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -198,6 +295,11 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
       const iframeSrc = extractSrcFromIframe(formData.locationIframeUrl);
       if (iframeSrc) {
         formDataObj.append("locationIframeUrl", iframeSrc);
+      }
+      
+      // Add area_id if selected
+      if (formData.areaId) {
+        formDataObj.append("areaId", formData.areaId)
       }
       
       // Add features and amenities
@@ -485,15 +587,64 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
                 </div>
 
                 <div>
-                  <Label htmlFor="area">Area/District *</Label>
-                  <Input
-                    id="area"
-                    value={formData.area}
-                    onChange={(e) => handleInputChange("area", e.target.value)}
-                    placeholder="e.g., Downtown, Westside"
-                    className={errors.area ? "border-red-500" : ""}
-                  />
-                  {errors.area && <p className="text-sm text-red-500 mt-1">{errors.area[0]}</p>}
+                  <Label htmlFor="areaId">Area/District *</Label>
+                  {!showNewAreaInput ? (
+                    <div className="space-y-2">
+                      <Select value={formData.areaId} onValueChange={handleAreaChange}>
+                        <SelectTrigger className={errors.areaId ? "border-red-500" : ""}>
+                          <SelectValue placeholder="Select an area" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {availableAreas.map((area) => (
+                            <SelectItem key={area.id} value={area.id}>
+                              {area.name}
+                            </SelectItem>
+                          ))}
+                          <SelectItem value="add_new" className="text-blue-600 font-medium">
+                            <Plus className="w-4 h-4 mr-2 inline" />
+                            Add New Area
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.areaId && <p className="text-sm text-red-500 mt-1">{errors.areaId[0]}</p>}
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex gap-2">
+                        <Input
+                          placeholder="Enter new area name"
+                          value={newAreaName}
+                          onChange={(e) => setNewAreaName(e.target.value)}
+                          onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleCreateArea())}
+                          disabled={isCreatingArea}
+                        />
+                        <Button 
+                          type="button" 
+                          onClick={handleCreateArea}
+                          disabled={!newAreaName.trim() || isCreatingArea}
+                          size="sm"
+                        >
+                          {isCreatingArea ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Plus className="w-4 h-4" />
+                          )}
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          onClick={() => {
+                            setShowNewAreaInput(false)
+                            setNewAreaName("")
+                          }}
+                          size="sm"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <p className="text-sm text-muted-foreground">Enter a new area name and click the plus button to add it.</p>
+                    </div>
+                  )}
                 </div>
               </div>
               <div className="md:col-span-2">
@@ -592,9 +743,21 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
                 <Camera className="w-5 h-5" />
                 Property Images
               </CardTitle>
-              <p className="text-sm text-muted-foreground">
-                Upload high-quality images to showcase your property. The first image will be used as the main image.
-              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-muted-foreground">
+                  Upload high-quality images to showcase your property. The first image will be used as the main image.
+                </p>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <h4 className="text-sm font-medium text-blue-900 mb-2">📷 Image Guidelines:</h4>
+                  <ul className="text-xs text-blue-800 space-y-1">
+                    <li>• <strong>Recommended size:</strong> 1200×800 pixels (16:9 ratio)</li>
+                    <li>• <strong>Maximum file size:</strong> 5MB per image</li>
+                    <li>• <strong>Supported formats:</strong> JPG, PNG, WebP</li>
+                    <li>• <strong>Best practices:</strong> High-quality, well-lit, multiple angles</li>
+                    <li>• <strong>Main image:</strong> Choose the most attractive view as main</li>
+                  </ul>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               <ImageUploadCrop

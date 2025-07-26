@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,20 +56,24 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
   }
 
   return (
-    <AlertDialog open={open} onOpenChange={setOpen}>
-      <AlertDialogTrigger asChild>
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-          type="button"
-          onClick={handleButtonClick}
-          onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
-          onMouseDown={(e) => e.stopPropagation()} // Prevent drag from starting
-        >
-          <Trash2 className="w-4 h-4" />
-        </Button>
-      </AlertDialogTrigger>
+    <TooltipProvider>
+      <Tooltip>
+        <AlertDialog open={open} onOpenChange={setOpen}>
+          <TooltipTrigger asChild>
+            <AlertDialogTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                type="button"
+                onClick={handleButtonClick}
+                onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
+                onMouseDown={(e) => e.stopPropagation()} // Prevent drag from starting
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+          </TooltipTrigger>
       
       <AlertDialogContent 
         onPointerDown={(e) => e.stopPropagation()}
@@ -106,6 +111,11 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
-    </AlertDialog>
+        </AlertDialog>
+        <TooltipContent>
+          Delete Property
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   )
 }

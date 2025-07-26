@@ -11,11 +11,17 @@ const adminDictionaries = {
   ar: () => import("./dictionaries/ar-admin.json").then((module) => module.default),
 }
 
+const legalDictionaries = {
+  en: () => import("./dictionaries/en/legal.json").then((module) => module.default),
+  ar: () => import("./dictionaries/ar/legal.json").then((module) => module.default),
+}
+
 export const getDictionary = async (locale: Locale) => {
-  const [mainDict, adminDict] = await Promise.all([
+  const [mainDict, adminDict, legalDict] = await Promise.all([
     mainDictionaries[locale] ? mainDictionaries[locale]() : mainDictionaries.en(),
     adminDictionaries[locale] ? adminDictionaries[locale]() : adminDictionaries.en(),
+    legalDictionaries[locale] ? legalDictionaries[locale]() : legalDictionaries.en(),
   ])
 
-  return { ...mainDict, ...adminDict }
+  return { ...mainDict, ...adminDict, ...legalDict }
 }

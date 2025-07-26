@@ -8,7 +8,19 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Search, MapPin, Home, Building2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 
-export function HeroSection({ lng, dict }: HeroSectionProps) {
+interface Area {
+  id: string
+  name: string
+  slug: string
+}
+
+interface HeroSectionProps {
+  lng: string
+  dict: any
+  areas: Area[]
+}
+
+export function HeroSection({ lng, dict, areas }: HeroSectionProps) {
   const router = useRouter()
   const [searchData, setSearchData] = useState({
     type: "sale" as "sale" | "rent",
@@ -20,15 +32,15 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
   const handleSearch = () => {
     const params = new URLSearchParams()
     params.set("type", searchData.type)
-    if (searchData.location) params.set("location", searchData.location)
-    if (searchData.area) params.set("area", searchData.area)
+    if (searchData.location) params.set("q", searchData.location)
+    if (searchData.area) params.set("location", searchData.area)
     if (searchData.priceRange && searchData.priceRange !== "any") {
       const [min, max] = searchData.priceRange.split("-")
       if (min) params.set("minPrice", min)
       if (max) params.set("maxPrice", max)
     }
 
-    router.push(`/search?${params.toString()}`)
+    router.push(`/${lng}/search?${params.toString()}`)
   }
 
   return (
@@ -107,8 +119,8 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {areas.map((area) => (
-                    <SelectItem key={area} value={area}>
-                      {area}
+                    <SelectItem key={area.id} value={area.name}>
+                      {area.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -173,16 +185,7 @@ const propertyTypes = [
   { value: "rent", label: "For Rent", icon: Building2 },
 ]
 
-const areas = [
-  "New Cairo",
-  "Maadi",
-  "Zamalek",
-  "Heliopolis",
-  "6th of October",
-  "Sheikh Zayed",
-  "New Capital",
-  "Alexandria",
-]
+// Areas are now passed as props from the parent component
 
 const priceRanges = {
   sale: [
