@@ -48,7 +48,7 @@ export async function getProperties(filters?: SearchFilters) {
       property_ratings (*)
     `)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .order("order_index", { ascending: true })
 
   if (filters?.category) {
     query = query.eq("category_id", filters.category)
@@ -176,7 +176,7 @@ export async function getFeaturedProperties() {
     `)
     .eq("is_featured", true)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .order("order_index", { ascending: true })
     .limit(6)
 
   if (error) {
@@ -187,7 +187,7 @@ export async function getFeaturedProperties() {
   // Sort property images for each property
   data.forEach(property => {
     if (property.property_images) {
-      property.property_images.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
   })
 
@@ -204,7 +204,7 @@ export async function getNewProperties() {
     `)
     .eq("is_new", true)
     .eq("status", "active")
-    .order("created_at", { ascending: false })
+    .order("order_index", { ascending: true })
     .limit(6)
 
   if (error) {
@@ -215,7 +215,7 @@ export async function getNewProperties() {
   // Sort property images for each property
   data.forEach(property => {
     if (property.property_images) {
-      property.property_images.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
   })
 
@@ -397,7 +397,7 @@ export async function getLikedProperties(userId: string) {
   // Sort property images for each property
   data.forEach(item => {
     if (item.properties?.property_images) {
-      item.properties.property_images.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      item.properties.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
   })
 
@@ -559,7 +559,7 @@ export async function searchProperties(query: string, filters?: SearchFilters) {
     searchQuery = searchQuery.eq("year_built", filters.yearBuilt)
   }
 
-  searchQuery = searchQuery.order("created_at", { ascending: false })
+  searchQuery = searchQuery.order("order_index", { ascending: true })
 
   const { data, error } = await searchQuery
 
@@ -571,7 +571,7 @@ export async function searchProperties(query: string, filters?: SearchFilters) {
   // Sort property images for each property
   data.forEach(property => {
     if (property.property_images) {
-      property.property_images.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+      property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
   })
 
