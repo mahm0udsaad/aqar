@@ -636,7 +636,7 @@ export async function getAllPropertiesForAdmin() {
       categories (id, name),
       property_images (id, url, alt_text, is_main, order_index)
     `)
-    .order("created_at", { ascending: false })
+    .order("order_index", { ascending: true })
 
   if (error) {
     console.error("Error fetching properties for admin:", error)

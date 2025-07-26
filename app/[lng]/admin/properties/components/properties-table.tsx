@@ -13,12 +13,13 @@ import type { Database } from "@/lib/supabase/types"
 import { DeletePropertyButton } from "./delete-property-button"
 import { ToggleFeaturedButton } from "./toggle-featured-button"
 import { Locale } from "@/lib/i18n/config"
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { useState } from 'react'
+import { useState, useTransition } from 'react'
 import { updatePropertyOrder } from '@/lib/actions/properties'
 import { toast } from 'sonner'
+import { GripVertical } from 'lucide-react'
 
 type PropertyWithDetails = Database["public"]["Tables"]["properties"]["Row"] & {
   categories: { id: string; name: string } | null;
@@ -31,15 +32,37 @@ interface SortableRowProps {
 }
 
 function SortableRow({ property, children }: SortableRowProps) {
-  const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: property.id });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: property.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
+    opacity: isDragging ? 0.8 : 1,
+    zIndex: isDragging ? 1000 : 1,
   };
 
   return (
-    <TableRow ref={setNodeRef} style={style} {...attributes} {...listeners}>
+    <TableRow 
+      ref={setNodeRef} 
+      style={style} 
+      className={isDragging ? "shadow-lg bg-background border-2 border-primary" : ""}
+    >
+      <TableCell className="w-12">
+        <div className="flex items-center gap-2">
+          {/* Order number indicator */}
+          <div className="w-6 h-6 rounded-full bg-muted flex items-center justify-center text-xs font-medium">
+            {(property.order_index || 0) + 1}
+          </div>
+          {/* Drag handle */}
+          <div 
+            {...attributes} 
+            {...listeners}
+            className="p-1 cursor-grab active:cursor-grabbing hover:bg-muted rounded"
+          >
+            <GripVertical className="w-4 h-4 text-muted-foreground" />
+          </div>
+        </div>
+      </TableCell>
       {children}
     </TableRow>
   );
@@ -53,19 +76,30 @@ interface PropertiesTableProps {
 }
 
 export function PropertiesTable({ properties: initialProperties = [], lng, dict, searchParams }: PropertiesTableProps) {
-  const [properties, setProperties] = useState<PropertyWithDetails[]>(initialProperties);
+  const [properties, setProperties] = useState<PropertyWithDetails[]>(initialProperties.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [isPending, startTransition] = useTransition();
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
 
+  const handleDragStart = (event: any) => {
+    setActiveId(event.active.id);
+  };
+
   const handleDragEnd = async (event: any) => {
     const { active, over } = event;
+    setActiveId(null);
 
-    if (active.id !== over.id && properties) {
+    if (active.id !== over?.id && properties) {
       setProperties((items) => {
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
@@ -74,22 +108,28 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
         // Update order_index for all affected properties
         const updatedProperties = newOrder.map((prop, index) => ({
           ...prop,
-          order_index: index, // Assign new order_index
+          order_index: index, // Assign new order_index starting from 0
         }));
 
-        // Call server action to update database
-        updatePropertyOrder(updatedProperties.map(p => ({ id: p.id, order_index: p.order_index })))
-          .then(res => {
-            if (res.success) {
-              toast.success(res.message);
-            } else {
-              toast.error(res.message);
-            }
-          })
-          .catch(err => {
-            console.error("Failed to update property order:", err);
-            toast.error("Failed to update property order.");
-          });
+        // Use startTransition to avoid the setState during render error
+        startTransition(() => {
+          updatePropertyOrder(updatedProperties.map(p => ({ id: p.id, order_index: p.order_index })))
+            .then(res => {
+              if (res.success) {
+                toast.success(res.message);
+              } else {
+                toast.error(res.message);
+                // Revert the optimistic update on error
+                setProperties(initialProperties.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
+              }
+            })
+            .catch(err => {
+              console.error("Failed to update property order:", err);
+              toast.error("Failed to update property order.");
+              // Revert the optimistic update on error
+              setProperties(initialProperties.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)));
+            });
+        });
 
         return updatedProperties;
       });
@@ -100,9 +140,20 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
     <Card>
       <CardContent className="p-0">
         <div className="overflow-x-auto">
+          {isPending && (
+            <div className="absolute top-4 right-4 z-50">
+              <div className="bg-background border rounded-lg px-3 py-2 shadow-lg">
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+                  Updating order...
+                </div>
+              </div>
+            </div>
+          )}
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-24">Order</TableHead>
                 <TableHead>{dict.admin.properties.table.property}</TableHead>
                 <TableHead>{dict.admin.properties.table.category}</TableHead>
                 <TableHead>{dict.admin.properties.table.price}</TableHead>
@@ -113,6 +164,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
             <DndContext
               sensors={sensors}
               collisionDetection={closestCenter}
+              onDragStart={handleDragStart}
               onDragEnd={handleDragEnd}
             >
               <SortableContext items={(properties || []).map(p => p.id)} strategy={verticalListSortingStrategy}>
@@ -211,7 +263,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                     })
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-12">
+                      <TableCell colSpan={6} className="text-center py-12">
                         <Building className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                         <h3 className="text-lg font-semibold mb-2">{dict.admin.properties.noPropertiesFound}</h3>
                         <p className="text-muted-foreground mb-4">
