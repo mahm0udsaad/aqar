@@ -77,12 +77,12 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
                     
                     {/* Category title on image */}
                     <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
-                      <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary/90 transition-colors duration-300">
-                        {lng === "ar" ? category.name_ar : category.name_en}
-                      </h3>
-                      <p className="text-white/90 text-sm line-clamp-2 leading-relaxed">
-                        {lng === "ar" ? category.description_ar : category.description_en}
-                      </p>
+                                          <h3 className="text-2xl font-bold text-white mb-2 group-hover:text-primary/90 transition-colors duration-300">
+                      {category.name}
+                    </h3>
+                                              <p className="text-white/90 text-sm line-clamp-2 leading-relaxed">
+                          {category.description}
+                        </p>
                     </div>
                   </div>
 
