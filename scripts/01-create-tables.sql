@@ -15,6 +15,7 @@ CREATE TABLE categories (
   description TEXT,
   description_ar TEXT,
   icon VARCHAR(255),
+  image_url VARCHAR(1000), -- New column for category image
   order_index INTEGER DEFAULT 0,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

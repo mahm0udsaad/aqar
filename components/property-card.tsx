@@ -43,6 +43,7 @@ export function PropertyCard({
   }
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false);
   const mainImage =
     property.property_images && property.property_images.length > 0
       ? property.property_images.find((img) => img.is_main) ||
@@ -58,11 +59,17 @@ export function PropertyCard({
       <div className="relative">
         <Link href={`/properties/${property.id}`}>
           <div className="relative h-48 overflow-hidden">
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gray-200 animate-pulse"></div> // Simple skeleton
+            )}
             <Image
               src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400"}
               alt={mainImage?.alt_text || property.title}
               fill
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
+              className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
+                imageLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onLoad={() => setImageLoaded(true)}
             />
 
             {/* Image Count */}
@@ -76,6 +83,11 @@ export function PropertyCard({
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {property.categories?.name && (
+            <Badge className="category-badge text-white text-xs bg-blue-600">
+              {property.categories.name}
+            </Badge>
+          )}
           {property.is_new && (
             <Badge className="new-badge text-white text-xs">New</Badge>
           )}
@@ -108,7 +120,7 @@ export function PropertyCard({
 
       <CardContent className="p-4">
         {/* Price */}
-        <div className="mb-3">
+        <div className="mb-3 min-h-[4.5rem]">
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-foreground">
               {property.price ? formatPriceDetailed(property.price) : "N/A"} EGP
@@ -126,7 +138,7 @@ export function PropertyCard({
 
         {/* Title & Location */}
         <Link href={`/properties/${property.id}`}>
-          <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-2">
+          <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-2 min-h-[3rem]">
             {property.title}
           </h3>
         </Link>

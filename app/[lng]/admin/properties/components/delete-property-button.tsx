@@ -28,6 +28,7 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
   const [isPending, startTransition] = useTransition()
 
   const handleDelete = () => {
+    console.log('Delete confirmed for property:', propertyId)
     startTransition(async () => {
       try {
         const result = await deleteProperty(propertyId)
@@ -38,10 +39,19 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
         } else {
           toast.error(result.message)
         }
-      } catch (error) {
-        toast.error(dict.admin.properties.delete.error)
-      }
+              } catch (error) {
+          console.error('Error deleting property:', error)
+          toast.error(dict.admin.properties.delete.error)
+        }
     })
+  }
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    // Prevent the drag event from interfering
+    e.preventDefault()
+    e.stopPropagation()
+    console.log('Delete button clicked, opening dialog')
+    setOpen(true)
   }
 
   return (
@@ -51,24 +61,37 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
           variant="ghost" 
           size="sm" 
           className="text-red-600 hover:text-red-700 hover:bg-red-50"
+          type="button"
+          onClick={handleButtonClick}
+          onPointerDown={(e) => e.stopPropagation()} // Prevent drag from starting
+          onMouseDown={(e) => e.stopPropagation()} // Prevent drag from starting
         >
           <Trash2 className="w-4 h-4" />
         </Button>
       </AlertDialogTrigger>
-      <AlertDialogContent>
+      
+      <AlertDialogContent 
+        onPointerDown={(e) => e.stopPropagation()}
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         <AlertDialogHeader>
-          <AlertDialogTitle>{dict.admin.properties.delete.title}</AlertDialogTitle>
+          <AlertDialogTitle>
+            {dict.admin.properties.delete.title}
+          </AlertDialogTitle>
           <AlertDialogDescription>
             {dict.admin.properties.delete.confirmation}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>{dict.admin.properties.delete.cancel}</AlertDialogCancel>
-          <AlertDialogAction
-            onClick={handleDelete}
-            disabled={isPending}
-            className="bg-red-600 hover:bg-red-700"
-          >
+          <AlertDialogCancel>
+            {dict.admin.properties.delete.cancel}
+          </AlertDialogCancel>
+                      <AlertDialogAction
+              onClick={handleDelete}
+              disabled={isPending}
+              className="bg-red-600 hover:bg-red-700"
+            >
             {isPending ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -85,4 +108,4 @@ export function DeletePropertyButton({ propertyId, dict }: DeletePropertyButtonP
       </AlertDialogContent>
     </AlertDialog>
   )
-} 
+}

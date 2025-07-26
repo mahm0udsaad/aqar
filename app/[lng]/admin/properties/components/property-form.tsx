@@ -19,6 +19,11 @@ import { toast } from "sonner"
 import type { Database } from "@/lib/supabase/types"
 import { ImageUploadCrop, PropertyImage } from "@/components/admin/image-upload-crop"
 
+function extractSrcFromIframe(iframe: string): string | null {
+  const match = iframe.match(/src="([^"]+)"/);
+  return match ? match[1] : null;
+}
+
 type Property = Database["public"]["Tables"]["properties"]["Row"]
 type PropertyImageDB = Database["public"]["Tables"]["property_images"]["Row"]
 
@@ -108,6 +113,7 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
     isNew: property?.is_new || false,
     isFeatured: property?.is_featured || false,
     isVerified: property?.is_verified || false,
+    locationIframeUrl: property?.location_iframe_url || "",
   })
 
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(property?.features || [])
@@ -184,8 +190,15 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
       
       // Add all form fields
       Object.entries(formData).forEach(([key, value]) => {
-        formDataObj.append(key, value.toString())
-      })
+        if (key !== 'locationIframeUrl') {
+          formDataObj.append(key, value.toString());
+        }
+      });
+
+      const iframeSrc = extractSrcFromIframe(formData.locationIframeUrl);
+      if (iframeSrc) {
+        formDataObj.append("locationIframeUrl", iframeSrc);
+      }
       
       // Add features and amenities
       selectedFeatures.forEach(feature => formDataObj.append("features", feature))
@@ -482,6 +495,18 @@ export function PropertyForm({ categories, lng, mode, property }: PropertyFormPr
                   />
                   {errors.area && <p className="text-sm text-red-500 mt-1">{errors.area[0]}</p>}
                 </div>
+              </div>
+              <div className="md:col-span-2">
+                <Label htmlFor="locationIframeUrl">Google Maps Iframe</Label>
+                <Textarea
+                  id="locationIframeUrl"
+                  value={formData.locationIframeUrl}
+                  onChange={(e) => handleInputChange("locationIframeUrl", e.target.value)}
+                  placeholder="Paste Google Maps iframe code here"
+                  className={errors.locationIframeUrl ? "border-red-500" : ""}
+                  rows={5}
+                />
+                {errors.locationIframeUrl && <p className="text-sm text-red-500 mt-1">{errors.locationIframeUrl[0]}</p>}
               </div>
             </CardContent>
           </Card>

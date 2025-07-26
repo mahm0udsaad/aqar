@@ -245,24 +245,24 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
           </Card>
 
           {/* Location Map */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Location</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-64 bg-muted rounded-lg flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="w-12 h-12 text-muted-foreground mx-auto mb-2" />
-                  <p className="text-muted-foreground">
-                    Interactive map will be displayed here
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {property.location}, {property.area}
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+          {property.location_iframe_url && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Location</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <iframe
+                  src={property.location_iframe_url}
+                  width="100%"
+                  height="450"
+                  style={{ border: 0 }}
+                  allowFullScreen={true}
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                ></iframe>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Area Ratings */}
           <Card>

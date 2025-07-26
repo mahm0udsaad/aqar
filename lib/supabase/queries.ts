@@ -160,7 +160,7 @@ export async function getPropertyById(id: string) {
 
   // Sort property images by order_index
   if (data.property_images) {
-    data.property_images.sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+    data.property_images.sort((a: PropertyImage, b: PropertyImage) => (a.order_index || 0) - (b.order_index || 0))
   }
 
   return data as PropertyWithDetails
@@ -576,4 +576,45 @@ export async function searchProperties(query: string, filters?: SearchFilters) {
   })
 
   return data as PropertyWithDetails[]
+}
+
+export async function getPopularAreasWithCounts() {
+  const { data, error } = await supabase
+    .from("properties")
+    .select("area, count", { count: "exact" }) // Select area and get exact count
+    .eq("status", "active") // Only count active properties
+    .group("area") // Group by area
+    .order("count", { ascending: false }); // Order by count descending
+
+  if (error) {
+    console.error("Error fetching popular areas with counts:", error);
+    return [];
+  }
+
+  // Map the data to a more usable format, e.g., { name: "Area Name", count: 123 }
+  return data.map(item => ({
+    name: item.area,
+    count: item.count,
+    // Add a placeholder trend for now, will need to be dynamic later if required
+    trend: "+XX%"
+  }));
+}
+
+// Admin: Get all properties (including inactive)
+export async function getAllPropertiesForAdmin() {
+  const { data, error } = await supabase
+    .from("properties")
+    .select(`
+      *,
+      categories (id, name),
+      property_images (id, url, alt_text, is_main, order_index)
+    `)
+    .order("created_at", { ascending: false })
+
+  if (error) {
+    console.error("Error fetching properties for admin:", error)
+    throw error
+  }
+
+  return data
 }

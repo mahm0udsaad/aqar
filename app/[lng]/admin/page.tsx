@@ -70,8 +70,8 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
       <div className="p-6">
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => (
-            <Card key={stat.title}>
+          {stats.map((stat, index) => (
+            <Card key={`stat-${index}`}>
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
@@ -96,8 +96,8 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
             <CardContent>
               <div className="space-y-4">
                 {featuredProperties && featuredProperties.length > 0 ? (
-                  featuredProperties.map((property) => (
-                    <div key={property.id} className="flex items-center justify-between">
+                  featuredProperties.map((property, index) => (
+                    <div key={`featured-${property.id}-${index}`} className="flex items-center justify-between">
                       <div>
                         <p className="font-medium">{property.title}</p>
                         <p className="text-sm text-muted-foreground">{property.location}</p>
@@ -122,10 +122,10 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
             <CardContent>
               <div className="space-y-4">
                 {categories && categories.length > 0 ? (
-                  categories.map((category) => {
+                  categories.map((category, index) => {
                     const categoryCount = properties?.filter((p) => p.category_id === category.id).length || 0
                     return (
-                      <div key={category.id} className="flex items-center justify-between">
+                      <div key={`category-${category.id}-${index}`} className="flex items-center justify-between">
                         <div>
                           <p className="font-medium">{category.name}</p>
                         </div>

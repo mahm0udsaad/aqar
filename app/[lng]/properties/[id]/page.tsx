@@ -5,6 +5,47 @@ import { Navbar } from "@/components/navbar"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
+export async function generateMetadata({ params }: { params: { id: string; lng: Locale } }) {
+  const { id, lng } = params;
+  const dict = await getDictionary(lng);
+  const property = await getPropertyById(id);
+
+  if (!property) {
+    return {
+      title: dict.seo.propertyNotFoundTitle,
+      description: dict.seo.propertyNotFoundDescription,
+    };
+  }
+
+  const title = `${property.title} - ${property.location}, ${property.area}`;
+  const description = property.description.substring(0, 160);
+  const imageUrl = property.thumbnail_url || property.property_images?.[0]?.url || '/placeholder.svg';
+
+  return {
+    title: title,
+    description: description,
+    openGraph: {
+      title: title,
+      description: description,
+      images: [{
+        url: imageUrl,
+        width: 1200,
+        height: 630,
+        alt: property.title,
+      }],
+      type: 'website',
+      locale: lng,
+      url: `/${lng}/properties/${id}`,
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: title,
+      description: description,
+      images: [imageUrl],
+    },
+  };
+}
+
 interface PropertyPageProps {
   params: Promise<{ id: string; lng: Locale }>
 }

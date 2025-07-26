@@ -789,7 +789,7 @@ export function ImageUploadCrop({
                 Drag & drop high-quality images here, or click to browse
               </p>
               <p className="text-sm text-gray-500">
-                Supports JPG, PNG, WebP, GIF • Max {maxImages} images • Each will be cropped to perfection
+                Supports JPG, PNG, WebP, GIF • Max {maxImages} images • Recommended: 1200x800px
               </p>
             </div>
           </div>

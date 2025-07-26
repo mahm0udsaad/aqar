@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -31,6 +31,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
   const [properties, setProperties] = useState<PropertyWithDetails[]>(initialProperties)
   const [loading, setLoading] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
+  const hasInitialized = useRef(false)
 
   // Search state
   const [searchQuery, setSearchQuery] = useState(searchParams?.q ? String(searchParams.q) : "")
@@ -50,40 +51,48 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
   
   const [filters, setFilters] = useState<SearchFiltersType>(initialFilters)
 
-  // Load properties
-  useEffect(() => {
-    const loadProperties = async () => {
-      setLoading(true)
-      try {
-        console.log("Loading properties with filters:", filters)
-        const searchFilters = {
-          category: filters.category,
-          minPrice: filters.minPrice,
-          maxPrice: filters.maxPrice,
-          area: filters.area,
-          bedrooms: filters.bedrooms,
-          bathrooms: filters.bathrooms,
-        }
-        
-        const data = searchQuery 
-          ? await searchProperties(searchQuery, searchFilters)
-          : await getProperties(searchFilters)
+  // Separate function to load properties (not memoized to avoid dependency issues)
+  const loadProperties = async (query: string, currentFilters: SearchFiltersType) => {
+    setLoading(true)
+    try {
+      console.log("Loading properties with filters:", currentFilters)
+      const searchFilters = {
+        category: currentFilters.category,
+        minPrice: currentFilters.minPrice,
+        maxPrice: currentFilters.maxPrice,
+        area: currentFilters.area,
+        bedrooms: currentFilters.bedrooms,
+        bathrooms: currentFilters.bathrooms,
+      }
+      
+      const data = query 
+        ? await searchProperties(query, searchFilters)
+        : await getProperties(searchFilters)
 
-        console.log("Properties loaded:", data?.length || 0)
-        setProperties(data || [])
-      } catch (error) {
-        console.error("Error loading properties:", error)
-        setProperties([])
-      } finally {
-        setLoading(false)
+      console.log("Properties loaded:", data?.length || 0)
+      setProperties(data || [])
+    } catch (error) {
+      console.error("Error loading properties:", error)
+      setProperties([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load properties only on initial mount
+  useEffect(() => {
+    if (!hasInitialized.current) {
+      hasInitialized.current = true
+      // Only load if we don't have initial properties or if there are search params
+      const hasSearchParams = Object.keys(searchParams || {}).length > 0
+      if (initialProperties.length === 0 || hasSearchParams) {
+        loadProperties(searchQuery, filters)
       }
     }
-
-    loadProperties()
-  }, [searchQuery, filters, sortBy])
+  }, []) // No dependencies - only run once
 
   // Update URL when filters change
-  const updateURL = () => {
+  const updateURL = useCallback(() => {
     const params = new URLSearchParams()
     if (searchQuery) params.set("q", searchQuery)
     if (sortBy !== "newest") params.set("sort", sortBy)
@@ -100,9 +109,10 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
 
     const newURL = `/${lng}/search${params.toString() ? `?${params.toString()}` : ""}`
     router.push(newURL, { scroll: false })
-  }
+  }, [searchQuery, sortBy, filters, lng, router])
 
-  const handleSearch = () => {
+  const handleSearch = async () => {
+    await loadProperties(searchQuery, filters)
     updateURL()
   }
 
@@ -110,10 +120,19 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
     setFilters(newFilters)
   }
 
-  const clearFilters = () => {
-    setFilters({})
+  const handleApplyFilters = async () => {
+    await loadProperties(searchQuery, filters)
+    updateURL()
+  }
+
+  const clearFilters = async () => {
+    const clearedFilters = {}
+    setFilters(clearedFilters)
     setSearchQuery("")
     setSortBy("newest")
+    // Reload properties with cleared filters
+    await loadProperties("", clearedFilters)
+    updateURL()
   }
 
   // Calculate active filters count more robustly
@@ -169,6 +188,9 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
             onFiltersChange={handleFilterChange}
             onClearFilters={clearFilters}
           />
+          <Button onClick={handleApplyFilters} className="w-full mt-4">
+            {dict.search.applyFilters || "Apply Filters"}
+          </Button>
         </div>
 
         {/* Results */}
@@ -271,9 +293,11 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
                 <div>
                   <h3 className="text-lg font-semibold mb-2">{dict.search.noResults}</h3>
                   <p className="text-muted-foreground mb-4">{dict.search.noResultsDescription}</p>
-                  <Button onClick={clearFilters} variant="outline">
-                    {dict.search.clearFilters}
-                  </Button>
+                  {(activeFiltersCount > 0 || searchQuery) && (
+                    <Button onClick={clearFilters} variant="outline">
+                      {dict.search.clearFilters}
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -289,7 +313,7 @@ export function SearchContent({ dict, lng, searchParams, initialProperties }: Se
         onOpenChange={setShowFilters}
         filters={filters}
         onFiltersChange={handleFilterChange}
-        onApply={updateURL}
+        onApply={handleApplyFilters}
       />
     </div>
   )

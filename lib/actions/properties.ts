@@ -1,62 +1,92 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
+import sharp from "sharp"
 
-// Helper function to upload image to Supabase Storage
-async function uploadImageToStorage(file: File, propertyId: string, index: number): Promise<string | null> {
+// Updated uploadImageToStorage function with thumbnail generation
+async function uploadImageToStorage(
+  imageFile: File, 
+  propertyId: string, 
+  index: number
+): Promise<{ originalUrl: string; thumbnailUrl: string } | null> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createServerComponentClient<Database>({ cookies });
     
-    // Generate unique filename
-    const fileExt = file.name.split('.').pop()
-    const fileName = `${propertyId}_${index}_${Date.now()}.${fileExt}`
-    const filePath = `properties/${fileName}`
-
-    // Upload file to storage
-    const { error: uploadError } = await supabase.storage
-      .from('property-images')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
+    // Convert File to Buffer
+    const arrayBuffer = await imageFile.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Get file extension
+    const fileExtension = imageFile.name.split('.').pop() || 'jpg';
+    const fileName = `${propertyId}_${index}`;
+    
+    // Create original image (optimized but full-size)
+    const optimizedBuffer = await sharp(buffer)
+      .jpeg({ quality: 85, progressive: true })
+      .resize(1920, 1080, { 
+        fit: 'inside', 
+        withoutEnlargement: true 
       })
-
-    if (uploadError) {
-      console.error('Upload error:', uploadError)
-      return null
-    }
-
-    // Get public URL
-    const { data: { publicUrl } } = supabase.storage
-      .from('property-images')
-      .getPublicUrl(filePath)
-
-    return publicUrl
-  } catch (error) {
-    console.error('Error uploading image:', error)
-    return null
-  }
-}
-
-// Helper function to delete image from storage
-async function deleteImageFromStorage(url: string): Promise<void> {
-  try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+      .toBuffer();
     
-    // Extract file path from URL
-    const urlParts = url.split('/')
-    const fileName = urlParts[urlParts.length - 1]
-    const filePath = `properties/${fileName}`
-
-    await supabase.storage
+    // Create thumbnail (small, optimized for listing views)
+    const thumbnailBuffer = await sharp(buffer)
+      .jpeg({ quality: 80, progressive: true })
+      .resize(400, 300, { 
+        fit: 'cover',
+        position: 'center'
+      })
+      .toBuffer();
+    
+    // Upload original image
+    const originalPath = `properties/${fileName}.jpg`;
+    const { error: originalError } = await supabase.storage
       .from('property-images')
-      .remove([filePath])
+      .upload(originalPath, optimizedBuffer, {
+        contentType: 'image/jpeg',
+        upsert: true
+      });
+    
+    if (originalError) {
+      console.error('Error uploading original image:', originalError);
+      return null;
+    }
+    
+    // Upload thumbnail
+    const thumbnailPath = `properties/thumbnails/${fileName}_thumb.jpg`;
+    const { error: thumbnailError } = await supabase.storage
+      .from('property-images')
+      .upload(thumbnailPath, thumbnailBuffer, {
+        contentType: 'image/jpeg',
+        upsert: true
+      });
+    
+    if (thumbnailError) {
+      console.error('Error uploading thumbnail:', thumbnailError);
+      // Continue without thumbnail if it fails
+    }
+    
+    // Get public URLs
+    const { data: originalData } = supabase.storage
+      .from('property-images')
+      .getPublicUrl(originalPath);
+    
+    const { data: thumbnailData } = supabase.storage
+      .from('property-images')
+      .getPublicUrl(thumbnailPath);
+    
+    return {
+      originalUrl: originalData.publicUrl,
+      thumbnailUrl: thumbnailError ? originalData.publicUrl : thumbnailData.publicUrl
+    };
+    
   } catch (error) {
-    console.error('Error deleting image:', error)
+    console.error('Error in uploadImageToStorage:', error);
+    return null;
   }
 }
 
@@ -88,6 +118,7 @@ const PropertyFormSchema = z.object({
   contactWhatsapp: z.string().optional(),
   contactEmail: z.string().email("Invalid email").optional(),
   responseTime: z.string().default("1 hour"),
+  locationIframeUrl: z.string().optional(),
 })
 
 type PropertyFormData = z.infer<typeof PropertyFormSchema>
@@ -152,9 +183,9 @@ export async function createProperty(
       contactWhatsapp: formData.get("contactWhatsapp") as string,
       contactEmail: formData.get("contactEmail") as string,
       responseTime: formData.get("responseTime") as string,
+      locationIframeUrl: formData.get("locationIframeUrl") as string,
     }
 
-    // Validate the form data
     const validatedFields = PropertyFormSchema.safeParse(rawFormData)
 
     if (!validatedFields.success) {
@@ -166,9 +197,10 @@ export async function createProperty(
     }
 
     const data = validatedFields.data
-
-    // Calculate price per meter if not provided
     const pricePerMeter = data.pricePerMeter || data.price / data.size
+
+    // Extract the URL from the iframe
+    const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
     // Insert property into database
     const { data: property, error } = await supabase
@@ -200,6 +232,7 @@ export async function createProperty(
         contact_whatsapp: data.contactWhatsapp,
         contact_email: data.contactEmail,
         response_time: data.responseTime,
+        location_iframe_url: locationIframeUrl,
       })
       .select()
       .single()
@@ -212,11 +245,12 @@ export async function createProperty(
       }
     }
 
-    // Handle image uploads
+    // Handle image uploads with thumbnail generation
     const totalImages = parseInt(formData.get("total_images") as string) || 0
     
     if (totalImages > 0) {
       const imageUploads = []
+      let mainImageThumbnailUrl: string | null = null;
       
       for (let i = 0; i < totalImages; i++) {
         const imageFile = formData.get(`image_${i}`) as File
@@ -225,35 +259,49 @@ export async function createProperty(
         const isMain = formData.get(`image_${i}_is_main`) === "true"
         
         if (imageFile && imageFile.size > 0) {
-          // Upload image to storage
-          const imageUrl = await uploadImageToStorage(imageFile, property.id, i)
+          // Upload image and generate thumbnail
+          const uploadResult = await uploadImageToStorage(imageFile, property.id, i)
           
-          if (imageUrl) {
+          if (uploadResult) {
             // Insert into property_images table
             const imageInsert = supabase
               .from("property_images")
               .insert({
                 property_id: property.id,
-                url: imageUrl,
+                url: uploadResult.originalUrl,
+                thumbnail_url: uploadResult.thumbnailUrl, // Add this field to your DB schema
                 alt_text: altText || null,
                 order_index: orderIndex,
                 is_main: isMain
               })
             
             imageUploads.push(imageInsert)
+            
+            // Store the main image thumbnail URL
+            if (isMain || (i === 0 && !mainImageThumbnailUrl)) {
+              mainImageThumbnailUrl = uploadResult.thumbnailUrl;
+            }
           }
         }
       }
       
       // Execute all image uploads
       if (imageUploads.length > 0) {
-        const results = await Promise.all(imageUploads)
-        const hasErrors = results.some(result => result.error)
+        const results = await Promise.all(imageUploads);
+        const hasErrors = results.some(result => result.error);
         
         if (hasErrors) {
-          console.error("Some images failed to upload")
+          console.error("Some images failed to upload");
           // Continue anyway, don't fail the entire operation
         }
+      }
+
+      // Update property with thumbnail_url (now points to optimized thumbnail)
+      if (mainImageThumbnailUrl) {
+        await supabase
+          .from("properties")
+          .update({ thumbnail_url: mainImageThumbnailUrl })
+          .eq("id", property.id);
       }
     }
 
@@ -270,6 +318,54 @@ export async function createProperty(
     }
   }
 }
+// Helper function to delete image from storage
+async function deleteImageFromStorage(url: string): Promise<void> {
+  try {
+    const supabase = createServerComponentClient<Database>({ cookies })
+    
+    // Extract file path from URL
+    const urlParts = url.split('/')
+    const fileName = urlParts[urlParts.length - 1]
+    
+    // Handle both original images and thumbnails
+    let filePath: string;
+    if (fileName.includes('_thumb')) {
+      // This is a thumbnail
+      filePath = `properties/thumbnails/${fileName}`
+    } else {
+      // This is an original image
+      filePath = `properties/${fileName}`
+    }
+
+    await supabase.storage
+      .from('property-images')
+      .remove([filePath])
+  } catch (error) {
+    console.error('Error deleting image:', error)
+  }
+}
+
+// Helper function to extract URL from iframe
+function extractSrcFromIframe(iframe: string): string | null {
+  if (!iframe || iframe.trim() === '') return null;
+  
+  // Try to match src attribute
+  const srcMatch = iframe.match(/src="([^"]+)"/);
+  if (srcMatch) return srcMatch[1];
+  
+  // Try to match src attribute with single quotes
+  const srcMatchSingle = iframe.match(/src='([^']+)'/);
+  if (srcMatchSingle) return srcMatchSingle[1];
+  
+  // If it's already a URL (not wrapped in iframe), return as is
+  if (iframe.includes('maps.google.com') || iframe.includes('google.com/maps')) {
+    return iframe.trim();
+  }
+  
+  return null;
+}
+
+
 
 export async function updateProperty(
   id: string,
@@ -326,6 +422,7 @@ export async function updateProperty(
       contactWhatsapp: formData.get("contactWhatsapp") as string,
       contactEmail: formData.get("contactEmail") as string,
       responseTime: formData.get("responseTime") as string,
+      locationIframeUrl: formData.get("locationIframeUrl") as string,
     }
 
     const validatedFields = PropertyFormSchema.safeParse(rawFormData)
@@ -340,6 +437,9 @@ export async function updateProperty(
 
     const data = validatedFields.data
     const pricePerMeter = data.pricePerMeter || data.price / data.size
+
+    // Extract the URL from the iframe
+    const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
     // Update property in database
     const { error } = await supabase
@@ -372,6 +472,7 @@ export async function updateProperty(
         contact_email: data.contactEmail,
         response_time: data.responseTime,
         updated_at: new Date().toISOString(),
+        location_iframe_url: locationIframeUrl,
       })
       .eq("id", id)
 
@@ -406,14 +507,15 @@ export async function updateProperty(
         
         if (imageFile && imageFile.size > 0) {
           // New image upload
-          const imageUrl = await uploadImageToStorage(imageFile, id, i)
+          const uploadResult = await uploadImageToStorage(imageFile, id, i)
           
-          if (imageUrl) {
+          if (uploadResult) {
             const imageInsert = supabase
               .from("property_images")
               .insert({
                 property_id: id,
-                url: imageUrl,
+                url: uploadResult.originalUrl,
+                thumbnail_url: uploadResult.thumbnailUrl,
                 alt_text: altText || null,
                 order_index: orderIndex,
                 is_main: isMain
@@ -442,8 +544,11 @@ export async function updateProperty(
       if (currentImages) {
         for (const image of currentImages) {
           if (!existingImageIds.has(image.id)) {
-            // Delete from storage
+            // Delete both original and thumbnail from storage
             await deleteImageFromStorage(image.url)
+            if (image.thumbnail_url && image.thumbnail_url !== image.url) {
+              await deleteImageFromStorage(image.thumbnail_url)
+            }
             
             // Delete from database
             const imageDelete = supabase
@@ -457,14 +562,44 @@ export async function updateProperty(
       }
       
       // Execute all image operations
+      let mainImageThumbnailUrl: string | null = null;
       if (imageOperations.length > 0) {
-        const results = await Promise.all(imageOperations)
-        const hasErrors = results.some(result => result.error)
+        const results = await Promise.all(imageOperations);
+        const hasErrors = results.some(result => result.error);
         
         if (hasErrors) {
-          console.error("Some image operations failed")
+          console.error("Some image operations failed");
           // Continue anyway, don't fail the entire operation
         }
+
+        // Find the main image thumbnail URL from the results
+        // We need to check the actual data returned from the database operations
+        const mainImageResult = results.find(result => {
+          const data = result.data as any;
+          return data && Array.isArray(data) && data.length > 0 && data[0].is_main;
+        });
+        
+        if (mainImageResult) {
+          const data = mainImageResult.data as any;
+          if (data && Array.isArray(data) && data.length > 0) {
+            mainImageThumbnailUrl = data[0].thumbnail_url;
+          }
+        } else if (results.length > 0) {
+          // Fallback: if no main image explicitly set, use the first image in the updated list
+          const firstResult = results[0];
+          const data = firstResult.data as any;
+          if (data && Array.isArray(data) && data.length > 0) {
+            mainImageThumbnailUrl = data[0].thumbnail_url;
+          }
+        }
+      }
+
+      // Update property with thumbnail_url if a main image was found
+      if (mainImageThumbnailUrl) {
+        await supabase
+          .from("properties")
+          .update({ thumbnail_url: mainImageThumbnailUrl })
+          .eq("id", id);
       }
     }
 
@@ -506,11 +641,28 @@ export async function deleteProperty(id: string): Promise<{ success: boolean; me
       return { success: false, message: "Admin access required" }
     }
 
+    // First, get all images associated with this property
+    const { data: propertyImages } = await supabase
+      .from("property_images")
+      .select("url, thumbnail_url")
+      .eq("property_id", id)
+
+    // Delete the property (this will cascade delete property_images due to foreign key)
     const { error } = await supabase.from("properties").delete().eq("id", id)
 
     if (error) {
       console.error("Error deleting property:", error)
       return { success: false, message: "Failed to delete property" }
+    }
+
+    // Delete images from storage
+    if (propertyImages) {
+      for (const image of propertyImages) {
+        await deleteImageFromStorage(image.url)
+        if (image.thumbnail_url && image.thumbnail_url !== image.url) {
+          await deleteImageFromStorage(image.thumbnail_url)
+        }
+      }
     }
 
     revalidatePath("/admin/properties")
@@ -560,5 +712,45 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
   } catch (error) {
     console.error("Error in togglePropertyFeatured:", error)
     return { success: false, message: "An unexpected error occurred" }
+  }
+}
+
+export async function updatePropertyOrder(updates: { id: string; order_index: number }[]): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createServerComponentClient<Database>({ cookies });
+
+    // Check if user is authenticated and is admin
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session) {
+      return { success: false, message: "Authentication required" };
+    }
+
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single();
+
+    if (!profile || profile.role !== "admin") {
+      return { success: false, message: "Admin access required" };
+    }
+
+    // Perform batch update
+    const { error } = await supabase.from("properties").upsert(updates, { onConflict: "id" });
+
+    if (error) {
+      console.error("Error updating property order:", error);
+      return { success: false, message: "Failed to update property order." };
+    }
+
+    revalidatePath("/admin/properties");
+    revalidatePath("/"); // Revalidate homepage as well if order affects featured/new properties
+    return { success: true, message: "Property order updated successfully!" };
+  } catch (error) {
+    console.error("Error in updatePropertyOrder:", error);
+    return { success: false, message: "An unexpected error occurred." };
   }
 } 
