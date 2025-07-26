@@ -11,6 +11,7 @@ export interface Database {
           description: string | null
           icon: string | null
           order_index: number | null
+          image_url: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -21,6 +22,7 @@ export interface Database {
           description?: string | null
           icon?: string | null
           order_index?: number | null
+          image_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -31,6 +33,7 @@ export interface Database {
           description?: string | null
           icon?: string | null
           order_index?: number | null
+          image_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -70,6 +73,7 @@ export interface Database {
           contact_is_verified: boolean | null
           response_time: string | null
           thumbnail_url: string | null
+          location_iframe_url: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -107,6 +111,7 @@ export interface Database {
           contact_is_verified?: boolean | null
           response_time?: string | null
           thumbnail_url?: string | null
+          location_iframe_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -144,6 +149,7 @@ export interface Database {
           contact_is_verified?: boolean | null
           response_time?: string | null
           thumbnail_url?: string | null
+          location_iframe_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -153,6 +159,7 @@ export interface Database {
           id: string
           property_id: string | null
           url: string
+          thumbnail_url: string | null
           alt_text: string | null
           order_index: number | null
           is_main: boolean | null
@@ -162,6 +169,7 @@ export interface Database {
           id?: string
           property_id?: string | null
           url: string
+          thumbnail_url?: string | null
           alt_text?: string | null
           order_index?: number | null
           is_main?: boolean | null
@@ -171,6 +179,7 @@ export interface Database {
           id?: string
           property_id?: string | null
           url?: string
+          thumbnail_url?: string | null
           alt_text?: string | null
           order_index?: number | null
           is_main?: boolean | null

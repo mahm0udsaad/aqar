@@ -12,16 +12,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Loader2 } from "lucide-react"
+import { Loader2, Image as ImageIcon, X } from "lucide-react"
 import { createCategory, updateCategory } from "@/lib/actions/categories"
 import { toast } from "sonner"
 import { Dictionary } from "@/lib/i18n/types"
+import Image from "next/image"
+import { CategoryImageUpload, CategoryImage } from "@/components/admin/category-image-upload"
 
 interface Category {
   id: string
   name: string
   description: string | null
   order_index: number | null
+  image_url?: string | null
+  slug?: string
 }
 
 interface CategoryDialogProps {
@@ -38,8 +42,24 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
   const [formData, setFormData] = useState({
     name: category?.name || "",
     description: category?.description || "",
+    image_url: category?.image_url || "",
   })
+  const [categoryImage, setCategoryImage] = useState<CategoryImage | null>(
+    category?.image_url ? {
+      id: category.id,
+      url: category.image_url,
+      alt_text: null
+    } : null
+  )
   const [errors, setErrors] = useState<Record<string, string[]>>({})
+
+  const handleImageChange = (image: CategoryImage | null) => {
+    setCategoryImage(image)
+    setFormData(prev => ({ 
+      ...prev, 
+      image_url: image?.url || "" 
+    }))
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +68,11 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
       const formDataObj = new FormData()
       formDataObj.append("name", formData.name)
       formDataObj.append("description", formData.description)
+      formDataObj.append("image_url", formData.image_url || "") // Pass existing URL
+
+      if (categoryImage?.file) {
+        formDataObj.append("image", categoryImage.file)
+      }
 
       try {
         let result
@@ -60,7 +85,8 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
         if (result?.success) {
           toast.success(result.message)
           setOpen(false)
-          setFormData({ name: "", description: "" })
+          setFormData({ name: "", description: "", image_url: "" })
+          setCategoryImage(null)
           setErrors({})
         } else {
           if (result?.errors) {
@@ -120,6 +146,16 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
               rows={3}
             />
             {errors.description && <p className="text-sm text-red-500">{errors.description[0]}</p>}
+          </div>
+
+          {/* Category Image Upload */}
+          <div className="space-y-2">
+            <Label>{dict.admin.categories.dialog.imageLabel}</Label>
+            <CategoryImageUpload
+              image={categoryImage}
+              onImageChange={handleImageChange}
+              cropAspectRatio={16/9}
+            />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

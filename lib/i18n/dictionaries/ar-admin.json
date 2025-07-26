@@ -28,6 +28,15 @@
     "categories": {
       "title": "الفئات",
       "addButton": "إضافة فئة",
+      "cancel": "إلغاء",
+      "delete": "حذف",
+      "deleteTitleDialog": "حذف الفئة",
+      "deleteConfirmation": "هل أنت متأكد من حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.",
+      "deleteWarning": "تحذير: هذه الفئة تحتوي على",
+      "properties": "عقارات",
+      "deleteError": "فشل حذف الفئة",
+      "updateOrderError": "فشل تحديث ترتيب الفئات",
+      "order": "الترتيب",
       "grid": {
         "name": "الاسم",
         "actions": "الإجراءات",
@@ -39,10 +48,19 @@
         "editTitle": "تعديل الفئة",
         "nameLabel": "الاسم",
         "namePlaceholder": "أدخل اسم الفئة",
+        "descriptionLabel": "الوصف",
+        "descriptionPlaceholder": "أدخل وصف الفئة",
+        "imageLabel": "صورة الفئة",
         "slugLabel": "المعرّف (Slug)",
         "slugPlaceholder": "أدخل معرّف الفئة",
         "cancel": "إلغاء",
-        "save": "حفظ"
+        "save": "حفظ",
+        "creating": "جاري الإنشاء...",
+        "updating": "جاري التحديث...",
+        "createButton": "إنشاء الفئة",
+        "updateButton": "تحديث الفئة",
+        "anErrorOccurred": "حدث خطأ",
+        "unexpectedError": "حدث خطأ غير متوقع"
       }
     },
     "featured": {

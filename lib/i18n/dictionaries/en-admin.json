@@ -28,6 +28,15 @@
     "categories": {
       "title": "Categories",
       "addButton": "Add Category",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleteTitleDialog": "Delete Category",
+      "deleteConfirmation": "Are you sure you want to delete this category? This action cannot be undone.",
+      "deleteWarning": "Warning: This category has",
+      "properties": "properties",
+      "deleteError": "Failed to delete category",
+      "updateOrderError": "Failed to update category order",
+      "order": "Order",
       "grid": {
         "name": "Name",
         "actions": "Actions",
@@ -39,10 +48,19 @@
         "editTitle": "Edit Category",
         "nameLabel": "Name",
         "namePlaceholder": "Enter category name",
+        "descriptionLabel": "Description",
+        "descriptionPlaceholder": "Enter category description",
+        "imageLabel": "Category Image",
         "slugLabel": "Slug",
         "slugPlaceholder": "Enter category slug",
         "cancel": "Cancel",
-        "save": "Save"
+        "save": "Save",
+        "creating": "Creating...",
+        "updating": "Updating...",
+        "createButton": "Create Category",
+        "updateButton": "Update Category",
+        "anErrorOccurred": "An error occurred",
+        "unexpectedError": "An unexpected error occurred"
       }
     },
     "featured": {

@@ -1,3 +1,5 @@
+export const revalidate = 0; // Ensure dynamic rendering
+
 import Image from "next/image"
 import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
@@ -6,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
-import { getProperties, getFeaturedProperties, getCategories } from "@/lib/supabase/queries"
+import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts } from "@/lib/supabase/queries"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
 import { TrendingUp, MapPin, Building, Home, Warehouse, Users, Shield, Award } from "lucide-react"
@@ -20,7 +22,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const dict = await getDictionary(lng)
 
   // Fetch data from Supabase with fallback
-  const [featuredProperties, saleProperties, rentProperties, categories] = await Promise.all([
+  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas] = await Promise.all([
     getFeaturedProperties().catch(() => []),
     getProperties({ propertyType: "sale" })
       .then((data) => data.slice(0, 3))
@@ -29,6 +31,7 @@ export default async function HomePage({ params }: HomePageProps) {
       .then((data) => data.slice(0, 3))
       .catch(() => []),
     getCategories().catch(() => []),
+    getPopularAreasWithCounts().catch(() => []),
   ])
 
   const stats = [
@@ -58,14 +61,7 @@ export default async function HomePage({ params }: HomePageProps) {
     },
   ]
 
-  const popularAreas = [
-    { name: dict.areas.newCairo, count: dict.areas.newCairoCount, trend: "+15%" },
-    { name: dict.areas.sixthOfOctober, count: dict.areas.sixthOfOctoberCount, trend: "+12%" },
-    { name: dict.areas.sheikhZayed, count: dict.areas.sheikhZayedCount, trend: "+18%" },
-    { name: dict.areas.newCapital, count: dict.areas.newCapitalCount, trend: "+25%" },
-    { name: dict.areas.maadi, count: dict.areas.maadiCount, trend: "+8%" },
-    { name: dict.areas.heliopolis, count: dict.areas.heliopolisCount, trend: "+10%" },
-  ]
+  
 
   return (
     <div className={`min-h-screen bg-background ${lng === "ar" ? "rtl" : "ltr"}`}>
@@ -243,7 +239,7 @@ export default async function HomePage({ params }: HomePageProps) {
                       className={`flex items-center text-muted-foreground ${lng === "ar" ? "flex-row-reverse" : ""}`}
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{area.count}</span>
+                      <span className="text-sm">{area.count} {dict.home.propertiesLabel}</span>
                     </div>
                   </CardContent>
                 </Card>

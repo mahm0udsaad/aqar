@@ -32,28 +32,39 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
   }
 
   return (
-    <section className="relative min-h-[600px] flex items-center justify-center">
-      {/* Background with Gradient Overlay */}
+    <section className="relative min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden">
+      {/* Background with Apartment Image */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 hero-gradient z-10" />
-        <div className="w-full h-full bg-cover bg-center bg-black" />
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60 z-10" />
+        {/* Background image */}
+        <div 
+          className="w-full h-full bg-cover bg-center bg-no-repeat transform scale-105"
+          style={{
+            backgroundImage: `url('/images/hero-apartment-balcony.jpg')`,
+          }}
+        />
       </div>
 
       {/* Content */}
-      <div className="relative z-20 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        <div className="mb-8">
-          <h1 className="text-4xl md:text-6xl font-bold text-white mb-4">{dict.hero.heroTitleFull}</h1>
-          <p className="text-xl text-white/90 mb-8">{dict.hero.heroSubtitleFull}</p>
+      <div className="relative z-20 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="mb-12">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight drop-shadow-2xl">
+            {dict.hero.heroTitleFull}
+          </h1>
+          <p className="text-lg md:text-xl lg:text-2xl text-white/95 mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-lg">
+            {dict.hero.heroSubtitleFull}
+          </p>
         </div>
 
         {/* Search Card */}
-        <Card className="bg-white shadow-2xl border-0">
-          <CardContent className="p-6">
+        <Card className="bg-white/95 backdrop-blur-sm shadow-2xl border-0 max-w-5xl mx-auto">
+          <CardContent className="p-6 md:p-8">
             {/* Property Type Tabs */}
             <div className="flex mb-6 bg-slate-100 rounded-lg p-1">
               <button
                 onClick={() => setSearchData((prev) => ({ ...prev, type: "sale" }))}
-                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md font-medium transition-all duration-200 ${
                   searchData.type === "sale"
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -63,7 +74,7 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
               </button>
               <button
                 onClick={() => setSearchData((prev) => ({ ...prev, type: "rent" }))}
-                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md font-medium transition-all ${
+                className={`flex-1 flex items-center justify-center py-3 px-4 rounded-md font-medium transition-all duration-200 ${
                   searchData.type === "rent"
                     ? "bg-white text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -74,7 +85,7 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
             </div>
 
             {/* Search Form */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Location Input */}
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
@@ -121,24 +132,27 @@ export function HeroSection({ lng, dict }: HeroSectionProps) {
               </Select>
 
               {/* Search Button */}
-              <Button onClick={handleSearch} className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground">
+              <Button 
+                onClick={handleSearch} 
+                className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-105"
+              >
                 <Search className="w-4 h-4 mr-2" />
                 Search
               </Button>
             </div>
 
             {/* Quick Stats */}
-            <div className="flex flex-wrap justify-center gap-6 mt-6 pt-6 border-t border-slate-200">
+            <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-slate-200">
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">250K+</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">250K+</div>
                 <div className="text-sm text-muted-foreground">Properties for Sale</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">109K+</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">109K+</div>
                 <div className="text-sm text-muted-foreground">Properties for Rent</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl font-bold text-foreground">15K+</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">15K+</div>
                 <div className="text-sm text-muted-foreground">New Projects</div>
               </div>
             </div>

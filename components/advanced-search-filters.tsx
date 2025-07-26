@@ -38,7 +38,10 @@ const amenitiesList = [
   { id: "pool", label: "Swimming Pool", icon: Home },
 ]
 
-const propertyTypes = ["For Sale", "For Rent", "New Construction", "Foreclosure", "Investment Property"]
+const propertyTypes = [
+  { value: "sale", label: "For Sale" },
+  { value: "rent", label: "For Rent" },
+]
 
 export function AdvancedSearchFilters({
   filters,
@@ -153,8 +156,8 @@ export function AdvancedSearchFilters({
             <SelectContent>
               <SelectItem value="all">All Types</SelectItem>
               {propertyTypes.map((type) => (
-                <SelectItem key={type} value={type}>
-                  {type}
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
                 </SelectItem>
               ))}
             </SelectContent>

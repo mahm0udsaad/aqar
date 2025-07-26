@@ -16,18 +16,15 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { getCategoryBySlug, getProperties, getCategories } from "@/lib/supabase/queries"
-import { Home, Building, TreePine, Store, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
 interface CategoryPageProps {
   params: { lng: Locale; slug: string }
 }
 
-const categoryIcons = {
-  apartments: Home,
-  villas: Building,
-  land: TreePine,
-  commercial: Store,
+const categoryImages = {
+  default: "/public/placeholder.png",
 }
 
 export default async function CategoryPage({ params: { lng, slug } }: CategoryPageProps) {
@@ -42,7 +39,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
   const allCategories = await getCategories()
   const relatedCategories = allCategories.filter((cat) => cat.slug !== slug).slice(0, 3)
 
-  const IconComponent = categoryIcons[category.slug as keyof typeof categoryIcons] || Home
+  const imagePath = category.image_url || categoryImages.default
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,18 +62,33 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
           </BreadcrumbList>
         </Breadcrumb>
 
-        {/* Category Header */}
-        <div className="text-center mb-12">
-          <div className="mx-auto w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
-            <IconComponent className="h-10 w-10 text-primary" />
+        {/* Category Header with Image Background */}
+        <div className="relative mb-12 rounded-lg overflow-hidden">
+          <div className="relative h-64 md:h-80">
+            <div 
+              className="w-full h-full bg-cover bg-center bg-no-repeat"
+              style={{
+                backgroundImage: `url('${imagePath}')`,
+              }}
+            />
+            {/* Gradient overlay */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/20" />
+            
+            {/* Category content */}
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="text-center text-white">
+                <h1 className="text-4xl md:text-5xl font-bold mb-4">
+                  {lng === "ar" ? category.name_ar : category.name_en}
+                </h1>
+                <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-6">
+                  {lng === "ar" ? category.description_ar : category.description_en}
+                </p>
+                <Badge variant="secondary" className="text-lg px-6 py-3 bg-white/20 text-white border-white/30">
+                  {properties.length} {dict.categories.properties}
+                </Badge>
+              </div>
+            </div>
           </div>
-          <h1 className="text-4xl font-bold mb-4">{lng === "ar" ? category.name_ar : category.name_en}</h1>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-6">
-            {lng === "ar" ? category.description_ar : category.description_en}
-          </p>
-          <Badge variant="secondary" className="text-lg px-4 py-2">
-            {properties.length} {dict.categories.properties}
-          </Badge>
         </div>
 
         {/* Properties Grid */}
@@ -90,7 +102,12 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
           <Card className="p-12 text-center mb-12">
             <div className="space-y-4">
               <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center">
-                <IconComponent className="h-8 w-8 text-muted-foreground" />
+                <div 
+                  className="w-12 h-12 bg-cover bg-center rounded-full"
+                  style={{
+                    backgroundImage: `url('${imagePath}')`,
+                  }}
+                />
               </div>
               <div>
                 <h3 className="text-lg font-semibold mb-2">{dict.categories.noProperties}</h3>
@@ -109,21 +126,30 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
             <h2 className="text-2xl font-bold mb-6">{dict.categories.relatedCategories}</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedCategories.map((relatedCategory) => {
-                const RelatedIcon = categoryIcons[relatedCategory.slug as keyof typeof categoryIcons] || Home
+                const relatedImagePath = relatedCategory.image_url || categoryImages.default
 
                 return (
                   <Link key={relatedCategory.id} href={`/${lng}/categories/${relatedCategory.slug}`}>
-                    <Card className="hover:shadow-lg transition-shadow cursor-pointer group">
-                      <CardContent className="p-6 text-center">
-                        <div className="mx-auto w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                          <RelatedIcon className="h-6 w-6 text-primary" />
-                        </div>
+                    <Card className="hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden">
+                      {/* Image Background */}
+                      <div className="relative h-32 overflow-hidden">
+                        <div 
+                          className="w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110"
+                          style={{
+                            backgroundImage: `url('${relatedImagePath}')`,
+                          }}
+                        />
+                        {/* Gradient overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                      </div>
+                      
+                      <CardContent className="p-4">
                         <h3 className="font-semibold mb-2">
                           {lng === "ar" ? relatedCategory.name_ar : relatedCategory.name_en}
                         </h3>
                         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                           <span>{dict.categories.explore}</span>
-                          <ArrowRight className="h-3 w-3 group-hover:text-primary transition-colors" />
+                          <ArrowRight className="h-3 w-3 group-hover:text-primary transition-colors group-hover:translate-x-1" />
                         </div>
                       </CardContent>
                     </Card>

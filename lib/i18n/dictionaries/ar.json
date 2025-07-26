@@ -423,6 +423,10 @@
     }
   },
   "general": {
-    "title": "عنوان عام"
+    "title": "العنوان العام"
+  },
+  "seo": {
+    "propertyNotFoundTitle": "العقار غير موجود",
+    "propertyNotFoundDescription": "العقار الذي تبحث عنه غير موجود. قد يكون قد تم إزالته أو قد يكون الرابط غير صحيح."
   }
 }

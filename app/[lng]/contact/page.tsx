@@ -165,7 +165,6 @@ export default async function ContactPage({ params }: ContactPageProps) {
           </div>
         </div>
       </main>
-      <Footer dict={dict} lng={lng} />
     </div>
   )
 }

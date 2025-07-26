@@ -403,5 +403,9 @@
   },
   "general": {
     "title": "General Title"
+  },
+  "seo": {
+    "propertyNotFoundTitle": "Property Not Found",
+    "propertyNotFoundDescription": "The property you're looking for could not be found. It may have been removed or the link may be incorrect."
   }
 }

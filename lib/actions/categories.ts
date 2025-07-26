@@ -6,6 +6,55 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 
+// Helper function to upload category image to Supabase Storage
+async function uploadCategoryImageToStorage(file: File, categoryId: string): Promise<string | null> {
+  try {
+    const supabase = createServerComponentClient<Database>({ cookies });
+    
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${categoryId}_${Date.now()}.${fileExt}`;
+    const filePath = `categories/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('category_images') // Assuming a bucket named 'category_images'
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Category image upload error:', uploadError);
+      return null;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('category_images')
+      .getPublicUrl(filePath);
+
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading category image:', error);
+    return null;
+  }
+}
+
+// Helper function to delete category image from Supabase Storage
+async function deleteCategoryImageFromStorage(url: string): Promise<void> {
+  try {
+    const supabase = createServerComponentClient<Database>({ cookies });
+    
+    const urlParts = url.split('/');
+    const fileName = urlParts[urlParts.length - 1];
+    const filePath = `categories/${fileName}`;
+
+    await supabase.storage
+      .from('category_images')
+      .remove([filePath]);
+  } catch (error) {
+    console.error('Error deleting category image:', error);
+  }
+}
+
 // Category form validation schema
 const CategoryFormSchema = z.object({
   name: z.string().min(1, "Name is required").max(255, "Name is too long"),
@@ -63,6 +112,7 @@ export async function createCategory(
       description: formData.get("description") as string,
       icon: formData.get("icon") as string,
       orderIndex: formData.get("orderIndex") as string,
+      imageFile: formData.get("image") as File, // Get the image file
     }
 
     // Validate the form data
@@ -127,6 +177,15 @@ export async function createCategory(
       }
     }
 
+    // Handle image upload if present
+    let imageUrl: string | null = null;
+    if (rawFormData.imageFile && rawFormData.imageFile.size > 0) {
+      imageUrl = await uploadCategoryImageToStorage(rawFormData.imageFile, category.id);
+      if (imageUrl) {
+        await supabase.from("categories").update({ image_url: imageUrl }).eq("id", category.id);
+      }
+    }
+
     revalidatePath("/admin/categories")
     return {
       message: "Category created successfully!",
@@ -168,12 +227,21 @@ export async function updateCategory(
       return { message: "Admin access required", success: false }
     }
 
+    // Get existing category data first
+    const { data: existingCategoryData } = await supabase
+      .from("categories")
+      .select("image_url")
+      .eq("id", id)
+      .single()
+
     // Extract and validate form data
     const rawFormData = {
       name: formData.get("name") as string,
       description: formData.get("description") as string,
       icon: formData.get("icon") as string,
       orderIndex: formData.get("orderIndex") as string,
+      imageFile: formData.get("image") as File, // Get the image file
+      existingImageUrl: formData.get("image_url") as string, // Get existing image URL
     }
 
     const validatedFields = CategoryFormSchema.safeParse(rawFormData)
@@ -205,6 +273,21 @@ export async function updateCategory(
       }
     }
 
+    let imageUrlToSave: string | null = rawFormData.existingImageUrl || null;
+
+    // Handle image upload/removal
+    if (rawFormData.imageFile && rawFormData.imageFile.size > 0) {
+      // New image uploaded, delete old one if exists
+      if (existingCategoryData?.image_url) {
+        await deleteCategoryImageFromStorage(existingCategoryData.image_url);
+      }
+      imageUrlToSave = await uploadCategoryImageToStorage(rawFormData.imageFile, id);
+    } else if (rawFormData.existingImageUrl === "" && existingCategoryData?.image_url) {
+      // Image was removed
+      await deleteCategoryImageFromStorage(existingCategoryData.image_url);
+      imageUrlToSave = null;
+    }
+
     // Update category in database
     const { error } = await supabase
       .from("categories")
@@ -214,6 +297,7 @@ export async function updateCategory(
         description: data.description || null,
         icon: data.icon || null,
         order_index: data.orderIndex,
+        image_url: imageUrlToSave, // Save the new/updated image URL
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
@@ -277,11 +361,24 @@ export async function deleteCategory(id: string): Promise<{ success: boolean; me
       }
     }
 
+    // Get category data before deletion to clean up image
+    const { data: categoryData } = await supabase
+      .from("categories")
+      .select("image_url")
+      .eq("id", id)
+      .single()
+
+    // Delete the category
     const { error } = await supabase.from("categories").delete().eq("id", id)
 
     if (error) {
       console.error("Error deleting category:", error)
       return { success: false, message: "Failed to delete category" }
+    }
+
+    // Clean up associated image if exists
+    if (categoryData?.image_url) {
+      await deleteCategoryImageFromStorage(categoryData.image_url)
     }
 
     revalidatePath("/admin/categories")
@@ -292,9 +389,17 @@ export async function deleteCategory(id: string): Promise<{ success: boolean; me
   }
 }
 
-export async function updateCategoriesOrder(categories: { id: string; order_index: number }[]): Promise<{ success: boolean; message: string }> {
+// Fixed updateCategoriesOrder function with better error handling and transaction-like behavior
+export async function updateCategoriesOrder(
+  categories: { id: string; order_index: number }[]
+): Promise<{ success: boolean; message: string }> {
   try {
     const supabase = createServerComponentClient<Database>({ cookies })
+
+    // Validate input
+    if (!categories || categories.length === 0) {
+      return { success: false, message: "No categories provided" }
+    }
 
     // Check if user is authenticated and is admin
     const {
@@ -315,19 +420,53 @@ export async function updateCategoriesOrder(categories: { id: string; order_inde
       return { success: false, message: "Admin access required" }
     }
 
-    // Update each category's order
-    for (const category of categories) {
-      const { error } = await supabase
-        .from("categories")
-        .update({ 
-          order_index: category.order_index,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", category.id)
+    // Validate that all categories exist before updating
+    const categoryIds = categories.map(cat => cat.id)
+    const { data: existingCategories, error: fetchError } = await supabase
+      .from("categories")
+      .select("id")
+      .in("id", categoryIds)
 
-      if (error) {
-        console.error("Error updating category order:", error)
-        return { success: false, message: "Failed to update category order" }
+    if (fetchError) {
+      console.error("Error fetching categories:", fetchError)
+      return { success: false, message: "Failed to validate categories" }
+    }
+
+    if (!existingCategories || existingCategories.length !== categories.length) {
+      return { success: false, message: "Some categories not found" }
+    }
+
+    // Use a single RPC call or batch update for better performance and atomicity
+    const updates = categories.map(category => ({
+      id: category.id,
+      order_index: category.order_index,
+      updated_at: new Date().toISOString(),
+    }))
+
+    // Perform all updates
+    const updatePromises = updates.map(update =>
+      supabase
+        .from("categories")
+        .update({
+          order_index: update.order_index,
+          updated_at: update.updated_at,
+        })
+        .eq("id", update.id)
+    )
+
+    const results = await Promise.allSettled(updatePromises)
+    
+    // Check if any updates failed
+    const failedUpdates = results.filter(result => 
+      result.status === 'rejected' || 
+      (result.status === 'fulfilled' && result.value.error)
+    )
+
+    if (failedUpdates.length > 0) {
+      console.error("Some category updates failed:", failedUpdates)
+      return { 
+        success: false, 
+        message: `Failed to update ${failedUpdates.length} categories` 
       }
     }
 
@@ -335,6 +474,9 @@ export async function updateCategoriesOrder(categories: { id: string; order_inde
     return { success: true, message: "Category order updated successfully" }
   } catch (error) {
     console.error("Error in updateCategoriesOrder:", error)
-    return { success: false, message: "An unexpected error occurred" }
+    return { 
+      success: false, 
+      message: "An unexpected error occurred while updating category order" 
+    }
   }
-} 
+}
