@@ -2,7 +2,6 @@
 
 import React, { useState } from "react"
 import { notFound } from "next/navigation"
-import { Navbar } from "@/components/navbar"
 import { PropertyCard } from "@/components/property-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -10,7 +9,6 @@ import { Badge } from "@/components/ui/badge"
 import {
   formatPriceDetailed,
   formatPricePerMeter,
-  getRatingColor,
 } from "@/lib/utils"
 import {
   Phone,
@@ -24,19 +22,21 @@ import {
   Square,
   Share2,
 } from "lucide-react"
-import Image from "next/image"
 import { PropertyGallery } from "@/components/property-gallery"
 import { ShareModal } from "@/components/share-modal"
 import { LoveButton } from "@/components/love-button"
+import { PropertyComparisonButton } from "@/components/property-comparison-button"
 import { PropertyWithDetails } from "@/lib/supabase/queries"
 import { getProperties } from "@/lib/supabase/queries"
 import { PropertyImage } from "@/lib/types"
+import { AreaRatingsDisplay } from "@/components/area-ratings-display"
 
 interface PropertyDetailsProps {
   property: PropertyWithDetails
+  lng: string
 }
 
-export function PropertyDetails({ property }: PropertyDetailsProps) {
+export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [relatedProperties, setRelatedProperties] = React.useState<
     PropertyWithDetails[]
@@ -265,42 +265,13 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
           )}
 
           {/* Area Ratings */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Area Ratings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                {Object.entries(ratings)
-                  .filter(
-                    ([key]) =>
-                      ![
-                        "id",
-                        "property_id",
-                        "created_at",
-                        "updated_at",
-                      ].includes(key),
-                  )
-                  .map(([key, rating]) => {
-                    if (typeof rating !== "number") return null
-                    return (
-                      <div key={key} className="text-center">
-                        <div
-                          className={`rating-circle mx-auto mb-2 ${getRatingColor(
-                            rating,
-                          )}`}
-                        >
-                          {rating.toFixed(1)}
-                        </div>
-                        <div className="text-sm font-medium capitalize">
-                          {key}
-                        </div>
-                      </div>
-                    )
-                  })}
-              </div>
-            </CardContent>
-          </Card>
+          {property.areas && (
+            <AreaRatingsDisplay 
+              areaId={property.areas.id}
+              areaName={property.areas.name}
+              showAddButton={true}
+            />
+          )}
         </div>
 
         {/* Sidebar */}
@@ -308,7 +279,7 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
           {/* Contact Agent */}
           <Card>
             <CardHeader>
-              <CardTitle>Contact Agent</CardTitle>
+              <CardTitle>Contact Owner</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
@@ -334,16 +305,34 @@ export function PropertyDetails({ property }: PropertyDetailsProps) {
               <Button size="lg" variant="outline" className="w-full">
                 <MessageCircle className="w-4 h-4 mr-2" /> Send Message
               </Button>
-              <div className="flex items-center gap-2 pt-2">
-                <LoveButton propertyId={property.id} className="w-full" />
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => setIsShareModalOpen(true)}
-                >
-                  <Share2 className="w-4 h-4 mr-2" />
-                  Share
-                </Button>
+              <div className="flex flex-col gap-2 pt-2">
+                <div className="flex items-center gap-2">
+                  <LoveButton propertyId={property.id} className="w-full" />
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={() => setIsShareModalOpen(true)}
+                  >
+                    <Share2 className="w-4 h-4 mr-2" />
+                    Share
+                  </Button>
+                </div>
+                <PropertyComparisonButton 
+                  property={{
+                    id: property.id,
+                    title: property.title,
+                    price: property.price,
+                    location: property.location,
+                    area: property.area,
+                    bedrooms: property.bedrooms,
+                    bathrooms: property.bathrooms,
+                    size: property.size,
+                    property_type: property.property_type,
+                    thumbnail_url: property.thumbnail_url
+                  }}
+                  size="lg"
+                  lng={lng}
+                />
               </div>
             </CardContent>
           </Card>

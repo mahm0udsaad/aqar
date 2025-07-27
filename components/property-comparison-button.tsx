@@ -19,6 +19,8 @@ interface PropertyComparisonButtonProps {
     size: number
     property_type: "sale" | "rent"
     thumbnail_url?: string
+    property_images?: { url: string; alt_text?: string }[] // Add this field
+    location_iframe_url?: string // Add this field
   }
   size?: "sm" | "lg" | "default"
   lng: string
@@ -40,7 +42,9 @@ export function PropertyComparisonButton({ property, size = "sm", lng }: Propert
       bathrooms: property.bathrooms,
       size: property.size,
       property_type: property.property_type,
-      thumbnail_url: property.thumbnail_url
+      thumbnail_url: property.thumbnail_url,
+      property_images: property.property_images, // Pass the property_images
+      location_iframe_url: property.location_iframe_url // Pass the location_iframe_url
     }
 
     if (isAdded) {
@@ -101,4 +105,4 @@ export function PropertyComparisonButton({ property, size = "sm", lng }: Propert
       )}
     </div>
   )
-} 
+}

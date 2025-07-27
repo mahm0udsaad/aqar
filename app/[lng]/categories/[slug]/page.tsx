@@ -32,8 +32,13 @@ export async function generateMetadata({ params }: { params: { lng: Locale; slug
   }
 
   const properties = await getProperties({ category: category.id });
-  const categoryName = lng === "ar" ? category.name_ar : category.name_en;
-  const categoryDescription = lng === "ar" ? category.description_ar : category.description_en;
+  // Use i18n fields with fallback to single fields for backward compatibility
+  const categoryName = lng === "ar" 
+    ? (category.name_ar || category.name || "Unknown Category")
+    : (category.name_en || category.name || "Unknown Category");
+  const categoryDescription = lng === "ar" 
+    ? (category.description_ar || category.description || "")
+    : (category.description_en || category.description || "");
   
   const title = `${categoryName} Properties for Sale & Rent in Egypt`;
   const description = `Browse ${properties.length} ${categoryName.toLowerCase()} properties in Egypt. ${categoryDescription}`;
@@ -103,7 +108,12 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
             </BreadcrumbItem>
             <BreadcrumbSeparator />
             <BreadcrumbItem>
-              <BreadcrumbPage>{lng === "ar" ? category.name_ar : category.name_en}</BreadcrumbPage>
+              <BreadcrumbPage>
+                {lng === "ar" 
+                  ? (category.name_ar || category.name || "Unknown Category")
+                  : (category.name_en || category.name || "Unknown Category")
+                }
+              </BreadcrumbPage>
             </BreadcrumbItem>
           </BreadcrumbList>
         </Breadcrumb>
@@ -124,10 +134,16 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
             <div className="absolute inset-0 flex items-center justify-center">
               <div className="text-center text-white">
                 <h1 className="text-4xl md:text-5xl font-bold mb-4">
-                  {lng === "ar" ? category.name_ar : category.name_en}
+                  {lng === "ar" 
+                    ? (category.name_ar || category.name || "Unknown Category")
+                    : (category.name_en || category.name || "Unknown Category")
+                  }
                 </h1>
                 <p className="text-xl md:text-2xl text-white/90 max-w-2xl mx-auto mb-6">
-                  {lng === "ar" ? category.description_ar : category.description_en}
+                  {lng === "ar" 
+                    ? (category.description_ar || category.description || "")
+                    : (category.description_en || category.description || "")
+                  }
                 </p>
                 <Badge variant="secondary" className="text-lg px-6 py-3 bg-white/20 text-white border-white/30">
                   {properties.length} {dict.categories.properties}
@@ -191,7 +207,10 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
                       
                       <CardContent className="p-4">
                         <h3 className="font-semibold mb-2">
-                          {lng === "ar" ? relatedCategory.name_ar : relatedCategory.name_en}
+                          {lng === "ar" 
+                            ? (relatedCategory.name_ar || relatedCategory.name || "Unknown Category")
+                            : (relatedCategory.name_en || relatedCategory.name || "Unknown Category")
+                          }
                         </h3>
                         <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
                           <span>{dict.categories.explore}</span>
