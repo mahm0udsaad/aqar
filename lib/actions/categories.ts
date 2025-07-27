@@ -57,8 +57,10 @@ async function deleteCategoryImageFromStorage(url: string): Promise<void> {
 
 // Category form validation schema
 const CategoryFormSchema = z.object({
-  name: z.string().min(1, "Name is required").max(255, "Name is too long"),
-  description: z.string().optional(),
+  name_en: z.string().min(1, "English name is required").max(255, "English name is too long"),
+  name_ar: z.string().min(1, "Arabic name is required").max(255, "Arabic name is too long"),
+  description_en: z.string().optional(),
+  description_ar: z.string().optional(),
   icon: z.string().optional(),
   orderIndex: z.coerce.number().min(0, "Order must be 0 or greater").default(0),
 })
@@ -108,8 +110,10 @@ export async function createCategory(
 
     // Extract and validate form data
     const rawFormData = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
+      name_en: formData.get("name_en") as string,
+      name_ar: formData.get("name_ar") as string,
+      description_en: formData.get("description_en") as string,
+      description_ar: formData.get("description_ar") as string,
       icon: formData.get("icon") as string,
       orderIndex: formData.get("orderIndex") as string,
       imageFile: formData.get("image") as File, // Get the image file
@@ -127,7 +131,7 @@ export async function createCategory(
     }
 
     const data = validatedFields.data
-    const slug = generateSlug(data.name)
+    const slug = generateSlug(data.name_en)
 
     // Check if slug already exists
     const { data: existingCategory } = await supabase
@@ -138,7 +142,7 @@ export async function createCategory(
 
     if (existingCategory) {
       return {
-        errors: { name: ["A category with this name already exists"] },
+        errors: { name_en: ["A category with this name already exists"] },
         message: "Category name must be unique",
         success: false,
       }
@@ -160,9 +164,13 @@ export async function createCategory(
     const { data: category, error } = await supabase
       .from("categories")
       .insert({
-        name: data.name,
+        name: data.name_en, // Keep backward compatibility
         slug: slug,
-        description: data.description || null,
+        description: data.description_en || null, // Keep backward compatibility
+        name_en: data.name_en,
+        name_ar: data.name_ar,
+        description_en: data.description_en || null,
+        description_ar: data.description_ar || null,
         icon: data.icon || null,
         order_index: finalOrderIndex,
       })
@@ -236,8 +244,10 @@ export async function updateCategory(
 
     // Extract and validate form data
     const rawFormData = {
-      name: formData.get("name") as string,
-      description: formData.get("description") as string,
+      name_en: formData.get("name_en") as string,
+      name_ar: formData.get("name_ar") as string,
+      description_en: formData.get("description_en") as string,
+      description_ar: formData.get("description_ar") as string,
       icon: formData.get("icon") as string,
       orderIndex: formData.get("orderIndex") as string,
       imageFile: formData.get("image") as File, // Get the image file
@@ -255,7 +265,7 @@ export async function updateCategory(
     }
 
     const data = validatedFields.data
-    const slug = generateSlug(data.name)
+    const slug = generateSlug(data.name_en)
 
     // Check if slug already exists for other categories
     const { data: existingCategory } = await supabase
@@ -267,7 +277,7 @@ export async function updateCategory(
 
     if (existingCategory) {
       return {
-        errors: { name: ["A category with this name already exists"] },
+        errors: { name_en: ["A category with this name already exists"] },
         message: "Category name must be unique",
         success: false,
       }
@@ -292,9 +302,13 @@ export async function updateCategory(
     const { error } = await supabase
       .from("categories")
       .update({
-        name: data.name,
+        name: data.name_en, // Keep backward compatibility
         slug: slug,
-        description: data.description || null,
+        description: data.description_en || null, // Keep backward compatibility
+        name_en: data.name_en,
+        name_ar: data.name_ar,
+        description_en: data.description_en || null,
+        description_ar: data.description_ar || null,
         icon: data.icon || null,
         order_index: data.orderIndex,
         image_url: imageUrlToSave, // Save the new/updated image URL

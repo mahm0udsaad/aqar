@@ -75,7 +75,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           <span className="mx-2">/</span>
           <span className="text-foreground">{property.title}</span>
         </div>
-        <PropertyDetails property={property} />
+        <PropertyDetails property={property} lng={lng} />
       </div>
     </div>
   )

@@ -20,7 +20,7 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
   const { comparisonList, removeFromComparison, clearComparison } = useComparison()
   const [mounted, setMounted] = useState(false)
   const [selectedProperty, setSelectedProperty] = useState<PropertyForComparison | null>(null)
-
+  console.log(comparisonList)
   const handleViewMap = (property: PropertyForComparison) => {
     setSelectedProperty(property)
   }

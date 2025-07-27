@@ -186,7 +186,9 @@ export function PropertyCard({
               bathrooms: property.bathrooms,
               size: property.size,
               property_type: property.property_type,
-              thumbnail_url: property.thumbnail_url || undefined
+              thumbnail_url: property.thumbnail_url || undefined,
+              property_images: property.property_images || undefined, // Pass the property images
+              location_iframe_url: property.location_iframe_url || undefined, // Pass the location iframe URL
             }}
             lng="en"
             size="sm"

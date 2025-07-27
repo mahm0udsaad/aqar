@@ -26,6 +26,10 @@ interface Category {
   order_index: number | null
   image_url?: string | null
   slug?: string
+  name_en?: string | null
+  name_ar?: string | null
+  description_en?: string | null
+  description_ar?: string | null
 }
 
 interface CategoryDialogProps {
@@ -40,8 +44,10 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
   const [open, setOpen] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [formData, setFormData] = useState({
-    name: category?.name || "",
-    description: category?.description || "",
+    name_en: category?.name_en || category?.name || "",
+    name_ar: category?.name_ar || "",
+    description_en: category?.description_en || category?.description || "",
+    description_ar: category?.description_ar || "",
     image_url: category?.image_url || "",
   })
   const [categoryImage, setCategoryImage] = useState<CategoryImage | null>(
@@ -66,8 +72,10 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
     
     startTransition(async () => {
       const formDataObj = new FormData()
-      formDataObj.append("name", formData.name)
-      formDataObj.append("description", formData.description)
+      formDataObj.append("name_en", formData.name_en)
+      formDataObj.append("name_ar", formData.name_ar)
+      formDataObj.append("description_en", formData.description_en)
+      formDataObj.append("description_ar", formData.description_ar)
       formDataObj.append("image_url", formData.image_url || "") // Pass existing URL
 
       if (categoryImage?.file) {
@@ -85,7 +93,7 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
         if (result?.success) {
           toast.success(result.message)
           setOpen(false)
-          setFormData({ name: "", description: "", image_url: "" })
+          setFormData({ name_en: "", name_ar: "", description_en: "", description_ar: "", image_url: "" })
           setCategoryImage(null)
           setErrors({})
         } else {
@@ -120,32 +128,64 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* English Fields */}
           <div className="space-y-2">
-            <Label htmlFor="name">{dict.admin.categories.dialog.nameLabel} *</Label>
+            <Label htmlFor="name_en">English Name *</Label>
             <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              placeholder={dict.admin.categories.dialog.namePlaceholder}
-              className={errors.name ? "border-red-500" : ""}
+              id="name_en"
+              value={formData.name_en}
+              onChange={(e) => handleInputChange("name_en", e.target.value)}
+              placeholder="Enter category name in English"
+              className={errors.name_en ? "border-red-500" : ""}
               disabled={isPending}
               required
             />
-            {errors.name && <p className="text-sm text-red-500">{errors.name[0]}</p>}
+            {errors.name_en && <p className="text-sm text-red-500">{errors.name_en[0]}</p>}
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="description">{dict.admin.categories.dialog.descriptionLabel}</Label>
+            <Label htmlFor="description_en">English Description</Label>
             <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder={dict.admin.categories.dialog.descriptionPlaceholder}
-              className={errors.description ? "border-red-500" : ""}
+              id="description_en"
+              value={formData.description_en}
+              onChange={(e) => handleInputChange("description_en", e.target.value)}
+              placeholder="Enter category description in English"
+              className={errors.description_en ? "border-red-500" : ""}
               disabled={isPending}
               rows={3}
             />
-            {errors.description && <p className="text-sm text-red-500">{errors.description[0]}</p>}
+            {errors.description_en && <p className="text-sm text-red-500">{errors.description_en[0]}</p>}
+          </div>
+
+          {/* Arabic Fields */}
+          <div className="space-y-2">
+            <Label htmlFor="name_ar">Arabic Name *</Label>
+            <Input
+              id="name_ar"
+              value={formData.name_ar}
+              onChange={(e) => handleInputChange("name_ar", e.target.value)}
+              placeholder="أدخل اسم الفئة بالعربية"
+              className={errors.name_ar ? "border-red-500" : ""}
+              disabled={isPending}
+              required
+              dir="rtl"
+            />
+            {errors.name_ar && <p className="text-sm text-red-500">{errors.name_ar[0]}</p>}
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="description_ar">Arabic Description</Label>
+            <Textarea
+              id="description_ar"
+              value={formData.description_ar}
+              onChange={(e) => handleInputChange("description_ar", e.target.value)}
+              placeholder="أدخل وصف الفئة بالعربية"
+              className={errors.description_ar ? "border-red-500" : ""}
+              disabled={isPending}
+              rows={3}
+              dir="rtl"
+            />
+            {errors.description_ar && <p className="text-sm text-red-500">{errors.description_ar[0]}</p>}
           </div>
 
           {/* Category Image Upload */}

@@ -7,11 +7,14 @@ type PropertyImage = Database["public"]["Tables"]["property_images"]["Row"]
 type PropertyRating = Database["public"]["Tables"]["property_ratings"]["Row"]
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"]
 type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"]
+type Area = Database["public"]["Tables"]["areas"]["Row"]
 
 export interface PropertyWithDetails extends Property {
   categories: Category | null
   property_images: PropertyImage[]
   property_ratings: PropertyRating | null
+  areas: Area | null
+  location_iframe_url: string | null
 }
 
 export interface SearchFilters {
@@ -45,7 +48,8 @@ export async function getProperties(filters?: SearchFilters) {
       *,
       categories (*),
       property_images (*),
-      property_ratings (*)
+      property_ratings (*),
+      areas (*)
     `)
     .eq("status", "active")
     .order("order_index", { ascending: true })
@@ -147,7 +151,8 @@ export async function getPropertyById(id: string) {
       *,
       categories (*),
       property_images (*),
-      property_ratings (*)
+      property_ratings (*),
+      areas (*)
     `)
     .eq("id", id)
     .eq("status", "active")
@@ -467,7 +472,8 @@ export async function searchProperties(query: string, filters?: SearchFilters) {
       *,
       categories (*),
       property_images (*),
-      property_ratings (*)
+      property_ratings (*),
+      areas (*)
     `)
     .eq("status", "active")
 

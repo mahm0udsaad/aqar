@@ -35,6 +35,115 @@ export interface Database {
           updated_at?: string | null
         }
       }
+      area_ratings: {
+        Row: {
+          id: string
+          area_id: string
+          user_id: string | null
+          overall_rating: number
+          schools_rating: number | null
+          transportation_rating: number | null
+          shopping_rating: number | null
+          restaurants_rating: number | null
+          safety_rating: number | null
+          quietness_rating: number | null
+          walkability_rating: number | null
+          nightlife_rating: number | null
+          healthcare_rating: number | null
+          parks_rating: number | null
+          comment: string | null
+          ip_address: string | null
+          created_at: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          id?: string
+          area_id: string
+          user_id?: string | null
+          overall_rating: number
+          schools_rating?: number | null
+          transportation_rating?: number | null
+          shopping_rating?: number | null
+          restaurants_rating?: number | null
+          safety_rating?: number | null
+          quietness_rating?: number | null
+          walkability_rating?: number | null
+          nightlife_rating?: number | null
+          healthcare_rating?: number | null
+          parks_rating?: number | null
+          comment?: string | null
+          ip_address?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          id?: string
+          area_id?: string
+          user_id?: string | null
+          overall_rating?: number
+          schools_rating?: number | null
+          transportation_rating?: number | null
+          shopping_rating?: number | null
+          restaurants_rating?: number | null
+          safety_rating?: number | null
+          quietness_rating?: number | null
+          walkability_rating?: number | null
+          nightlife_rating?: number | null
+          healthcare_rating?: number | null
+          parks_rating?: number | null
+          comment?: string | null
+          ip_address?: string | null
+          created_at?: string | null
+          updated_at?: string | null
+        }
+      }
+      area_ratings_summary: {
+        Row: {
+          area_id: string
+          total_ratings: number
+          avg_overall_rating: number | null
+          avg_schools_rating: number | null
+          avg_transportation_rating: number | null
+          avg_shopping_rating: number | null
+          avg_restaurants_rating: number | null
+          avg_safety_rating: number | null
+          avg_quietness_rating: number | null
+          avg_walkability_rating: number | null
+          avg_nightlife_rating: number | null
+          avg_healthcare_rating: number | null
+          avg_parks_rating: number | null
+        }
+        Insert: {
+          area_id: string
+          total_ratings: number
+          avg_overall_rating?: number | null
+          avg_schools_rating?: number | null
+          avg_transportation_rating?: number | null
+          avg_shopping_rating?: number | null
+          avg_restaurants_rating?: number | null
+          avg_safety_rating?: number | null
+          avg_quietness_rating?: number | null
+          avg_walkability_rating?: number | null
+          avg_nightlife_rating?: number | null
+          avg_healthcare_rating?: number | null
+          avg_parks_rating?: number | null
+        }
+        Update: {
+          area_id?: string
+          total_ratings?: number
+          avg_overall_rating?: number | null
+          avg_schools_rating?: number | null
+          avg_transportation_rating?: number | null
+          avg_shopping_rating?: number | null
+          avg_restaurants_rating?: number | null
+          avg_safety_rating?: number | null
+          avg_quietness_rating?: number | null
+          avg_walkability_rating?: number | null
+          avg_nightlife_rating?: number | null
+          avg_healthcare_rating?: number | null
+          avg_parks_rating?: number | null
+        }
+      }
       categories: {
         Row: {
           id: string
@@ -44,6 +153,10 @@ export interface Database {
           icon: string | null
           order_index: number | null
           image_url: string | null
+          name_en: string | null
+          name_ar: string | null
+          description_en: string | null
+          description_ar: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -55,6 +168,10 @@ export interface Database {
           icon?: string | null
           order_index?: number | null
           image_url?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          description_en?: string | null
+          description_ar?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -66,6 +183,10 @@ export interface Database {
           icon?: string | null
           order_index?: number | null
           image_url?: string | null
+          name_en?: string | null
+          name_ar?: string | null
+          description_en?: string | null
+          description_ar?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
