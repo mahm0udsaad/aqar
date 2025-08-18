@@ -91,43 +91,43 @@ export default async function HomePage({ params }: HomePageProps) {
 
       {/* Featured Properties */}
       <section className="py-16 bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className={`flex items-center justify-between mb-8 ${lng === "ar" ? "flex-row-reverse" : ""}`}>
-            <div>
-              <h2 className="text-3xl font-bold text-foreground mb-2">{dict.home.featuredProperties}</h2>
-              <p className="text-muted-foreground">
-                {dict.home.featuredPropertiesSubtitle}
-              </p>
-            </div>
-            <Link href={`/${lng}/search?featured=true`}>
-              <Button variant="outline">{dict.home.viewAllFeatured}</Button>
-            </Link>
-          </div>
+  <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div
+      className={`flex items-center justify-between mb-8 ${
+        lng === "ar" ? "flex-row-reverse" : ""
+      }`}
+    >
+      <div>
+        <h2 className="text-3xl font-bold text-foreground mb-2">
+          {dict.home.featuredProperties}
+        </h2>
+        <p className="text-muted-foreground">
+          {dict.home.featuredPropertiesSubtitle}
+        </p>
+      </div>
+      <Link href={`/${lng}/search?featured=true`}>
+        <Button variant="outline">{dict.home.viewAllFeatured}</Button>
+      </Link>
+    </div>
 
-          {/* Main featured (wide) + others */}
-          {featuredProperties && featuredProperties.length > 0 && (
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left: main featured spans two cols on desktop */}
-              <div className="lg:col-span-2">
-                <PropertyCard property={featuredProperties[0]} lng={lng} />
-              </div>
-              {/* Right: two stacked items if available */}
-              <div className="space-y-6">
-                {featuredProperties.slice(1, 3).map((p) => (
-                  <PropertyCard key={p.id} property={p} lng={lng} />
-                ))}
-              </div>
-            </div>
-          )}
-          {featuredProperties.length > 3 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-              {featuredProperties.slice(3, 6).map((p) => (
-                <PropertyCard key={p.id} property={p} lng={lng} />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+    {/* Main featured property on top */}
+    {featuredProperties && featuredProperties.length > 0 && (
+      <div className="mb-6">
+        <PropertyCard property={featuredProperties[0]} lng={lng} />
+      </div>
+    )}
+
+    {/* The rest of the featured properties underneath */}
+    {featuredProperties.length > 1 && (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {featuredProperties.slice(1, 6).map((p) => (
+          <PropertyCard key={p.id} property={p} lng={lng} />
+        ))}
+      </div>
+    )}
+  </div>
+</section>
+
 
       {/* Properties by Type */}
       <section className="py-16 bg-card">
