@@ -1,602 +1,742 @@
 [
   {
-    "table_name": "categories",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()",
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "name",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "slug",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "description",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "icon",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "order_index",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": "0",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "categories",
-    "column_name": "image_url",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "loved_properties",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()",
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "loved_properties",
-    "column_name": "user_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "loved_properties",
-    "column_name": "property_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "loved_properties",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()",
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "title",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "description",
-    "data_type": "text",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "price",
-    "data_type": "numeric",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "price_per_meter",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "location",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "area",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "bedrooms",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "0",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "bathrooms",
-    "data_type": "integer",
-    "is_nullable": "NO",
-    "column_default": "0",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "size",
-    "data_type": "numeric",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "floor",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "total_floors",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "year_built",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "category_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "property_type",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "owner_type",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "YES",
-    "column_default": "'owner'::owner_type",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "status",
-    "data_type": "USER-DEFINED",
-    "is_nullable": "YES",
-    "column_default": "'active'::property_status",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "features",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "amenities",
-    "data_type": "ARRAY",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "is_new",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "is_featured",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "is_verified",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "views",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": "0",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "location_lat",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "location_lng",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_name",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_phone",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_whatsapp",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_email",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_avatar",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "contact_is_verified",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "response_time",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": "'1 hour'::character varying",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "thumbnail_url",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "properties",
-    "column_name": "location_iframe_url",
-    "data_type": "text",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()",
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "property_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "url",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "alt_text",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "order_index",
-    "data_type": "integer",
-    "is_nullable": "YES",
-    "column_default": "0",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "is_main",
-    "data_type": "boolean",
-    "is_nullable": "YES",
-    "column_default": "false",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_images",
-    "column_name": "thumbnail_url",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": "uuid_generate_v4()",
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "property_id",
-    "data_type": "uuid",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "schools",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "transportation",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "shopping",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "restaurants",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "safety",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "quietness",
-    "data_type": "numeric",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "property_ratings",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "id",
-    "data_type": "uuid",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "YES"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "email",
-    "data_type": "character varying",
-    "is_nullable": "NO",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "full_name",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "avatar_url",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "phone",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": null,
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "created_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "updated_at",
-    "data_type": "timestamp with time zone",
-    "is_nullable": "YES",
-    "column_default": "now()",
-    "is_primary_key": "NO"
-  },
-  {
-    "table_name": "user_profiles",
-    "column_name": "role",
-    "data_type": "character varying",
-    "is_nullable": "YES",
-    "column_default": "'user'::character varying",
-    "is_primary_key": "NO"
+    "schema_json": [
+      {
+        "table_name": "areas",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "name",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "slug",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "order_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "is_active",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "true",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "areas",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "name",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "slug",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "icon",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "order_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "categories",
+        "column_name": "image_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "loved_properties",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "loved_properties",
+        "column_name": "user_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "loved_properties",
+        "column_name": "property_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "loved_properties",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "title",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "description",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "price",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "price_per_meter",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "location",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "area",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "bedrooms",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "bathrooms",
+        "data_type": "integer",
+        "is_nullable": "NO",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "size",
+        "data_type": "numeric",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "floor",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "total_floors",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "year_built",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "category_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "property_type",
+        "data_type": "property_type",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "owner_type",
+        "data_type": "owner_type",
+        "is_nullable": "YES",
+        "column_default": "'owner'::owner_type",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "status",
+        "data_type": "property_status",
+        "is_nullable": "YES",
+        "column_default": "'active'::property_status",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "features",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "amenities",
+        "data_type": "ARRAY",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "is_new",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "is_featured",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "is_verified",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "views",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "location_lat",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "location_lng",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_name",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_phone",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_whatsapp",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_email",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_avatar",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "contact_is_verified",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "response_time",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": "'1 hour'::character varying",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "thumbnail_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "location_iframe_url",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "area_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "properties",
+        "column_name": "order_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "property_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "url",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "alt_text",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "order_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": "0",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "is_main",
+        "data_type": "boolean",
+        "is_nullable": "YES",
+        "column_default": "false",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "thumbnail_url",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_images",
+        "column_name": "caption",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "uuid_generate_v4()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "property_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "schools",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "transportation",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "shopping",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "restaurants",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "safety",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "quietness",
+        "data_type": "numeric",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_ratings",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": "gen_random_uuid()",
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "property_id",
+        "data_type": "uuid",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "url",
+        "data_type": "text",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "caption",
+        "data_type": "text",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "order_index",
+        "data_type": "integer",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "property_videos",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "id",
+        "data_type": "uuid",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "YES"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "email",
+        "data_type": "character varying",
+        "is_nullable": "NO",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "full_name",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "avatar_url",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "phone",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": null,
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "created_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "updated_at",
+        "data_type": "timestamp with time zone",
+        "is_nullable": "YES",
+        "column_default": "now()",
+        "is_primary_key": "NO"
+      },
+      {
+        "table_name": "user_profiles",
+        "column_name": "role",
+        "data_type": "character varying",
+        "is_nullable": "YES",
+        "column_default": "'user'::character varying",
+        "is_primary_key": "NO"
+      }
+    ]
   }
 ]

@@ -104,11 +104,28 @@ export default async function HomePage({ params }: HomePageProps) {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredProperties.slice(0, 6).map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
+          {/* Main featured (wide) + others */}
+          {featuredProperties && featuredProperties.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Left: main featured spans two cols on desktop */}
+              <div className="lg:col-span-2">
+                <PropertyCard property={featuredProperties[0]} lng={lng} />
+              </div>
+              {/* Right: two stacked items if available */}
+              <div className="space-y-6">
+                {featuredProperties.slice(1, 3).map((p) => (
+                  <PropertyCard key={p.id} property={p} lng={lng} />
+                ))}
+              </div>
+            </div>
+          )}
+          {featuredProperties.length > 3 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
+              {featuredProperties.slice(3, 6).map((p) => (
+                <PropertyCard key={p.id} property={p} lng={lng} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -144,11 +161,11 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="flex-1 min-w-0">
                       <Link href={`/${lng}/properties/${property.id}`}>
                         <h4 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                          {property.title}
+                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}
                         </h4>
                       </Link>
                       <p className="text-sm text-muted-foreground mb-1">
-                        {`${property.location}, ${property.area}`}
+                        {`${(lng === "ar" ? (property as any).location_ar : (property as any).location_en) || property.location}, ${property.area}`}
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-foreground">
@@ -192,11 +209,11 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="flex-1 min-w-0">
                       <Link href={`/${lng}/properties/${property.id}`}>
                         <h4 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                          {property.title}
+                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}
                         </h4>
                       </Link>
                       <p className="text-sm text-muted-foreground mb-1">
-                        {`${property.location}, ${property.area}`}
+                        {`${(lng === "ar" ? (property as any).location_ar : (property as any).location_en) || property.location}, ${property.area}`}
                       </p>
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-foreground">

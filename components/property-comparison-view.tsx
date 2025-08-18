@@ -112,14 +112,16 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
             </Button>
             
             <CardContent className="p-4">
-              <div className="relative h-32 mb-3 overflow-hidden rounded">
-                <Image
-                  src={property.thumbnail_url || property.property_images?.[0]?.url || "/placeholder.svg"}
-                  alt={property.title}
-                  fill
-                  className="object-cover"
-                />
-              </div>
+              <Link href={`/${lng}/properties/${property.id}`}>
+                <div className="relative h-32 mb-3 overflow-hidden rounded cursor-pointer">
+                  <Image
+                    src={property.thumbnail_url || property.property_images?.[0]?.url || "/placeholder.svg"}
+                    alt={property.title}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              </Link>
               
               <h3 className="font-medium text-sm mb-2 line-clamp-2">{property.title}</h3>
               
@@ -137,9 +139,11 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
                       <ExternalLink className="w-3 h-3" />
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => handleViewMap(property)}>
-                    <Eye className="w-3 h-3" />
-                  </Button>
+                  {property.location_iframe_url && (
+                    <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => handleViewMap(property)}>
+                      <Eye className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             </CardContent>

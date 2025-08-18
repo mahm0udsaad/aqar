@@ -19,7 +19,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
     .from("properties")
     .select(`
       *,
-      categories (id, name),
+      categories (id, name, name_en, name_ar),
       property_images (id, url, alt_text, is_main, order_index)
     `)
     .eq("id", id)

@@ -146,7 +146,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
                   }
                 </p>
                 <Badge variant="secondary" className="text-lg px-6 py-3 bg-white/20 text-white border-white/30">
-                  {properties.length} {dict.categories.properties}
+                  {properties.length} {properties.length <= 1 ? (lng === "ar" ? "عقار" : "Property") : dict.categories.properties}
                 </Badge>
               </div>
             </div>
@@ -157,7 +157,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
         {properties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
             {properties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
+              <PropertyCard key={property.id} property={property} lng={lng} />
             ))}
           </div>
         ) : (

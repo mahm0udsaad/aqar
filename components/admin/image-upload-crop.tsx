@@ -31,7 +31,8 @@ import {
   Image as ImageIcon,
   Eye,
   Download,
-  Maximize2
+  Maximize2,
+  CheckCircle
 } from "lucide-react"
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -46,6 +47,7 @@ export interface PropertyImage {
   is_main: boolean
   file?: File
   originalFile?: File
+  isUploading?: boolean
 }
 
 interface ImageUploadCropProps {
@@ -459,6 +461,51 @@ function ImageEditor({
   )
 }
 
+// Loading Skeleton Component
+function ImageSkeleton() {
+  return (
+    <Card className="relative group">
+      <CardContent className="p-0">
+        <div className="relative overflow-hidden rounded-t-lg">
+          {/* Skeleton image area */}
+          <div className="w-full h-48 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full animate-[shimmer_2s_infinite]" 
+                 style={{
+                   animation: 'shimmer 2s infinite',
+                   background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                 }} />
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <div className="w-12 h-12 rounded-full bg-gray-300 flex items-center justify-center">
+                <ImageIcon className="w-6 h-6 text-gray-400" />
+              </div>
+            </div>
+          </div>
+          
+          {/* Skeleton badges */}
+          <div className="absolute top-3 right-3 w-8 h-6 bg-gray-300 rounded animate-pulse" />
+          
+          {/* Loading spinner overlay */}
+          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+            <div className="bg-white/90 rounded-lg p-3 flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+              <span className="text-sm font-medium">Processing...</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Skeleton info panel */}
+        <div className="p-4 space-y-3">
+          <div className="h-8 bg-gray-200 rounded animate-pulse" />
+          <div className="space-y-2">
+            <div className="h-4 bg-gray-200 rounded animate-pulse" />
+            <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse" />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 // Enhanced Sortable Image Item Component
 function SortableImageItem({ 
   image, 
@@ -493,6 +540,11 @@ function SortableImageItem({
   const handleAltTextSave = () => {
     onUpdateAltText(altText)
     setIsEditingAlt(false)
+  }
+
+  // Show skeleton if image is uploading
+  if (image.isUploading) {
+    return <ImageSkeleton />
   }
 
   return (
@@ -631,10 +683,7 @@ export function ImageUploadCrop({
   cropAspectRatio = 16/9 
 }: ImageUploadCropProps) {
   const [cropDialogOpen, setCropDialogOpen] = useState(false)
-  const [currentFile, setCurrentFile] = useState<File | null>(null)
-  const [currentImageUrl, setCurrentImageUrl] = useState("")
   const [currentEditingImage, setCurrentEditingImage] = useState<PropertyImage | null>(null)
-  const [isProcessing, setIsProcessing] = useState(false)
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -643,69 +692,133 @@ export function ImageUploadCrop({
     })
   )
 
-  const onDrop = useCallback((acceptedFiles: File[]) => {
-    if (images.length >= maxImages) {
+  // Simulate async upload process
+  const processImageAsync = async (file: File): Promise<PropertyImage> => {
+    return new Promise((resolve) => {
+      // Simulate processing time (1-3 seconds)
+      const processingTime = Math.random() * 2000 + 1000
+      
+      setTimeout(() => {
+        const url = URL.createObjectURL(file)
+        const processedImage: PropertyImage = {
+          id: `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          url: url,
+          alt_text: "",
+          order_index: 0, // Will be set correctly later
+          is_main: false, // Will be set correctly later
+          originalFile: file,
+          isUploading: false
+        }
+        resolve(processedImage)
+      }, processingTime)
+    })
+  }
+
+  const onDrop = useCallback(async (acceptedFiles: File[]) => {
+    if (images.length + acceptedFiles.length > maxImages) {
       toast.error(`Maximum ${maxImages} images allowed`)
       return
     }
 
-    const file = acceptedFiles[0]
-    if (!file) return
+    const validFiles = acceptedFiles.filter(file => {
+      if (!file.type.startsWith('image/')) {
+        toast.error(`${file.name} is not a valid image file`)
+        return false
+      }
+      return true
+    })
 
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please upload only image files')
-      return
-    }
+    if (validFiles.length === 0) return
 
-    // Create URL for the image
-    const url = URL.createObjectURL(file)
-    setCurrentFile(file)
-    setCurrentImageUrl(url)
-    
-    // Create temporary image for editing
-    const tempImage: PropertyImage = {
-      id: `temp_${Date.now()}`,
-      url: url,
+    // Create skeleton placeholders immediately
+    const skeletonImages: PropertyImage[] = validFiles.map((file, index) => ({
+      id: `skeleton_${Date.now()}_${index}`,
+      url: '',
       alt_text: "",
-      order_index: images.length,
-      is_main: images.length === 0,
-      originalFile: file
-    }
-    
-    setCurrentEditingImage(tempImage)
-    setCropDialogOpen(true)
-  }, [images.length, maxImages])
+      order_index: images.length + index,
+      is_main: images.length === 0 && index === 0,
+      originalFile: file,
+      isUploading: true
+    }))
+
+    // Add skeleton images immediately
+    const currentImages = [...images, ...skeletonImages]
+    onImagesChange(currentImages)
+
+    toast.success(`Uploading ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}...`)
+
+    // Process each file asynchronously
+    validFiles.forEach(async (file, index) => {
+      try {
+        const processedImage = await processImageAsync(file)
+        
+        // Update the specific skeleton with the processed image
+        const skeletonId = skeletonImages[index].id
+        
+        onImagesChange(prevImages => {
+          const updatedImages = prevImages.map(img => {
+            if (img.id === skeletonId) {
+              return {
+                ...processedImage,
+                order_index: img.order_index,
+                is_main: img.is_main
+              }
+            }
+            return img
+          })
+          return updatedImages
+        })
+
+        toast.success(`${file.name} uploaded successfully!`)
+      } catch (error) {
+        console.error('Error processing image:', error)
+        toast.error(`Failed to process ${file.name}`)
+        
+        // Remove the failed skeleton
+        const skeletonId = skeletonImages[index].id
+        onImagesChange(prevImages => 
+          prevImages.filter(img => img.id !== skeletonId)
+        )
+      }
+    })
+  }, [images, maxImages, onImagesChange])
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
       'image/*': ['.jpeg', '.jpg', '.png', '.webp', '.gif']
     },
-    multiple: false,
+    multiple: true,
     disabled: images.length >= maxImages
   })
 
   const handleCropSave = (croppedImage: { file: File; url: string }, altText: string) => {
     if (!currentEditingImage) return
 
-    const newImage: PropertyImage = {
-      ...currentEditingImage,
-      url: croppedImage.url,
-      alt_text: altText,
-      file: croppedImage.file
-    }
+    const updatedImages = images.map(img => 
+      img.id === currentEditingImage.id 
+        ? {
+            ...img,
+            url: croppedImage.url,
+            alt_text: altText,
+            file: croppedImage.file
+          }
+        : img
+    )
 
-    onImagesChange([...images, newImage])
+    onImagesChange(updatedImages)
     
     setCropDialogOpen(false)
     setCurrentEditingImage(null)
-    setCurrentFile(null)
-    setCurrentImageUrl("")
     
-    toast.success('Image added successfully!')
+    toast.success('Image updated successfully!')
   }
 
   const handleEditImage = (image: PropertyImage) => {
+    if (image.isUploading) {
+      toast.error('Please wait for the image to finish uploading')
+      return
+    }
     setCurrentEditingImage(image)
     setCropDialogOpen(true)
   }
@@ -717,7 +830,12 @@ export function ImageUploadCrop({
     if (filteredImages.length > 0) {
       const hasMain = filteredImages.some(img => img.is_main)
       if (!hasMain) {
-        filteredImages[0].is_main = true
+        const firstNonUploading = filteredImages.find(img => !img.isUploading)
+        if (firstNonUploading) {
+          firstNonUploading.is_main = true
+        } else {
+          filteredImages[0].is_main = true
+        }
       }
     }
     
@@ -732,6 +850,12 @@ export function ImageUploadCrop({
   }
 
   const handleSetMainImage = (imageId: string) => {
+    const targetImage = images.find(img => img.id === imageId)
+    if (targetImage?.isUploading) {
+      toast.error('Please wait for the image to finish uploading')
+      return
+    }
+
     const updatedImages = images.map(img => ({
       ...img,
       is_main: img.id === imageId
@@ -754,6 +878,12 @@ export function ImageUploadCrop({
       const oldIndex = images.findIndex(img => img.id === active.id)
       const newIndex = images.findIndex(img => img.id === over.id)
       
+      // Don't allow dragging uploading images
+      if (images[oldIndex]?.isUploading) {
+        toast.error('Cannot reorder images while uploading')
+        return
+      }
+      
       const reorderedImages = arrayMove(images, oldIndex, newIndex).map((img, index) => ({
         ...img,
         order_index: index
@@ -762,6 +892,9 @@ export function ImageUploadCrop({
       onImagesChange(reorderedImages)
     }
   }
+
+  const uploadingCount = images.filter(img => img.isUploading).length
+  const completedCount = images.filter(img => !img.isUploading).length
 
   return (
     <div className="space-y-6">
@@ -773,19 +906,26 @@ export function ImageUploadCrop({
             isDragActive
               ? 'border-blue-500 bg-blue-50 scale-[1.02]'
               : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-          }`}
+          } ${uploadingCount > 0 ? 'opacity-75' : ''}`}
         >
           <input {...getInputProps()} />
           <div className="flex flex-col items-center space-y-4">
             <div className={`p-4 rounded-full ${isDragActive ? 'bg-blue-100' : 'bg-gray-100'}`}>
-              <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
+              {uploadingCount > 0 ? (
+                <Loader2 className="h-8 w-8 text-blue-500 animate-spin" />
+              ) : (
+                <Upload className={`h-8 w-8 ${isDragActive ? 'text-blue-500' : 'text-gray-400'}`} />
+              )}
             </div>
             <div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">
                 {isDragActive ? 'Drop your images here' : 'Upload Property Images'}
               </h3>
               <p className="text-gray-600 mb-2">
-                Drag & drop high-quality images here, or click to browse
+                {uploadingCount > 0 
+                  ? `Processing ${uploadingCount} image${uploadingCount > 1 ? 's' : ''}...`
+                  : 'Drag & drop high-quality images here, or click to browse'
+                }
               </p>
               <p className="text-sm text-gray-500">
                 Supports JPG, PNG, WebP, GIF • Max {maxImages} images • Recommended: 1200x800px
@@ -795,18 +935,62 @@ export function ImageUploadCrop({
         </div>
       )}
 
+      {/* Upload Progress */}
+      {uploadingCount > 0 && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-blue-500 animate-spin" />
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-blue-900">
+                    Uploading Images...
+                  </span>
+                  <span className="text-sm text-blue-700">
+                    {completedCount}/{completedCount + uploadingCount}
+                  </span>
+                </div>
+                <div className="w-full bg-blue-200 rounded-full h-2">
+                  <div 
+                    className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+                    style={{ 
+                      width: `${(completedCount / (completedCount + uploadingCount)) * 100}%` 
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Images Grid */}
       {images.length > 0 && (
         <div>
           <div className="flex items-center justify-between mb-6">
             <div>
               <h3 className="text-lg font-semibold text-gray-900">
-                Property Images ({images.length}/{maxImages})
+                Property Images ({completedCount}/{maxImages})
+                {uploadingCount > 0 && (
+                  <span className="text-blue-600 font-normal ml-2">
+                    • {uploadingCount} uploading
+                  </span>
+                )}
               </h3>
               <p className="text-sm text-gray-500 mt-1">
-                Drag to reorder • Click edit to crop • First image is the main thumbnail
+                {uploadingCount > 0 
+                  ? 'Images will appear below as they finish processing'
+                  : 'Drag to reorder • Click edit to crop • First image is the main thumbnail'
+                }
               </p>
             </div>
+            
+            {completedCount > 0 && uploadingCount === 0 && (
+              <Badge variant="secondary" className="bg-green-100 text-green-800">
+                <CheckCircle className="w-3 h-3 mr-1" />
+                All images ready
+              </Badge>
+            )}
           </div>
           
           <DndContext
@@ -839,11 +1023,20 @@ export function ImageUploadCrop({
         onClose={() => {
           setCropDialogOpen(false)
           setCurrentEditingImage(null)
-          setCurrentFile(null)
-          setCurrentImageUrl("")
         }}
         onSave={handleCropSave}
       />
+
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+      `}</style>
     </div>
   )
-} 
+}

@@ -136,6 +136,12 @@ export function Navbar({ lng, dict }: NavbarProps) {
               {dict.nav.categories}
             </Link>
             <Link
+              href={`/${lng}/areas`}
+              className={`text-sm font-medium transition-colors hover:text-primary`}
+            >
+              {lng === "ar" ? "المناطق" : "Areas"}
+            </Link>
+            <Link
               href={`/${lng}/contact`}
               className={`text-sm font-medium transition-colors hover:text-primary`}
             >
@@ -146,7 +152,9 @@ export function Navbar({ lng, dict }: NavbarProps) {
             <Link href={`/${lng}/compare`} className="relative">
               <Button variant="ghost" size="sm" className="flex items-center gap-2">
                 <GitCompare className="h-4 w-4" />
-                <span className="hidden lg:inline">Compare</span>
+                <span className="hidden lg:inline">
+                  {lng === "ar" ? "المقارنة" : "Compare"}
+                </span>
                 {comparisonCount > 0 && (
                   <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
                     {comparisonCount}
@@ -155,10 +163,10 @@ export function Navbar({ lng, dict }: NavbarProps) {
               </Button>
             </Link>
 
-            {/* Language Toggle */}
+            {/* Language Toggle - show target language code for clarity */}
             <Button variant="ghost" size="sm" onClick={toggleLanguage}>
               <Globe className="h-4 w-4 mr-2" />
-              {lng.toUpperCase()}
+              {lng === "ar" ? "EN" : "AR"}
             </Button>
 
             {/* User Menu */}
@@ -250,6 +258,9 @@ export function Navbar({ lng, dict }: NavbarProps) {
                     >
                       {dict.nav.categories}
                     </Link>
+                    <Link href={`/${lng}/areas`} className="text-lg font-medium py-2 px-3 rounded-md hover:bg-accent">
+                      {lng === "ar" ? "المناطق" : "Areas"}
+                    </Link>
                     <Link href={`/${lng}/contact`} className="text-lg font-medium py-2 px-3 rounded-md hover:bg-accent">
                       {dict.nav.contact}
                     </Link>
@@ -269,7 +280,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
                   {/* Language Toggle */}
                   <Button variant="outline" onClick={toggleLanguage} className="justify-start bg-transparent text-lg">
                     <Globe className="h-5 w-5 mr-2" />
-                    {lng.toUpperCase()}
+                    {lng === "ar" ? "EN" : "AR"}
                   </Button>
 
                   {/* User Section */}

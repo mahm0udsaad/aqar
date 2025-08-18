@@ -3,24 +3,40 @@
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { cookies, headers } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
+
+// Helper to normalize optional numeric fields: drop invalid/out-of-range values entirely
+const optionalRating = z
+  .preprocess((v) => {
+    if (v === null || v === '' || v === 'NaN' || v === undefined) return undefined
+    const n = typeof v === 'number' ? v : Number(String(v).trim())
+    if (!Number.isFinite(n)) return undefined
+    if (n < 1 || n > 5) return undefined
+    return n
+  }, z.number())
+  .optional()
 
 // Area rating form validation schema
 const AreaRatingSchema = z.object({
   areaId: z.string().uuid("Invalid area ID"),
-  overallRating: z.coerce.number().min(1, "Rating must be at least 1").max(5, "Rating must be at most 5"),
-  schoolsRating: z.coerce.number().min(1).max(5).optional(),
-  transportationRating: z.coerce.number().min(1).max(5).optional(),
-  shoppingRating: z.coerce.number().min(1).max(5).optional(),
-  restaurantsRating: z.coerce.number().min(1).max(5).optional(),
-  safetyRating: z.coerce.number().min(1).max(5).optional(),
-  quietnessRating: z.coerce.number().min(1).max(5).optional(),
-  walkabilityRating: z.coerce.number().min(1).max(5).optional(),
-  nightlifeRating: z.coerce.number().min(1).max(5).optional(),
-  healthcareRating: z.coerce.number().min(1).max(5).optional(),
-  parksRating: z.coerce.number().min(1).max(5).optional(),
-  comment: z.string().max(1000, "Comment too long").optional(),
+  overallRating: z
+    .coerce
+    .number()
+    .min(1, "Rating must be at least 1")
+    .max(5, "Rating must be at most 5")
+    .refine((n) => Number.isFinite(n), { message: "Invalid rating value" }),
+  schoolsRating: optionalRating,
+  transportationRating: optionalRating,
+  shoppingRating: optionalRating,
+  restaurantsRating: optionalRating,
+  safetyRating: optionalRating,
+  quietnessRating: optionalRating,
+  walkabilityRating: optionalRating,
+  nightlifeRating: optionalRating,
+  healthcareRating: optionalRating,
+  parksRating: optionalRating,
+  comment: z.preprocess((v) => (v === null || v === '' ? undefined : v), z.string().max(1000, "Comment too long").optional()),
 })
 
 export type AreaRatingFormData = z.infer<typeof AreaRatingSchema>
@@ -58,24 +74,42 @@ export async function createOrUpdateAreaRating(
     const { data: { user } } = await supabase.auth.getUser()
     
     // Get client IP for anonymous users
-    const forwardedFor = (await import('next/headers')).headers().get('x-forwarded-for')
-    const realIp = (await import('next/headers')).headers().get('x-real-ip')
+    const hdrs = await headers()
+    const forwardedFor = hdrs.get('x-forwarded-for')
+    const realIp = hdrs.get('x-real-ip')
     const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || null
+
+    // Coercion helpers to sanitize incoming FormData
+    const coerceOptional = (v: FormDataEntryValue | null) => {
+      if (v === null || v === undefined) return undefined
+      const s = typeof v === 'string' ? v.trim() : String(v)
+      if (s === '' || s === 'NaN') return undefined
+      const n = Number(s)
+      if (!Number.isFinite(n)) return undefined
+      if (n < 1 || n > 5) return undefined
+      return n
+    }
+
+    const coerceRequired = (v: FormDataEntryValue | null) => {
+      const s = typeof v === 'string' ? v.trim() : String(v)
+      const n = Number(s)
+      return n
+    }
 
     // Validate form data
     const validatedFields = AreaRatingSchema.safeParse({
       areaId: formData.get("areaId"),
-      overallRating: formData.get("overallRating"),
-      schoolsRating: formData.get("schoolsRating"),
-      transportationRating: formData.get("transportationRating"),
-      shoppingRating: formData.get("shoppingRating"),
-      restaurantsRating: formData.get("restaurantsRating"),
-      safetyRating: formData.get("safetyRating"),
-      quietnessRating: formData.get("quietnessRating"),
-      walkabilityRating: formData.get("walkabilityRating"),
-      nightlifeRating: formData.get("nightlifeRating"),
-      healthcareRating: formData.get("healthcareRating"),
-      parksRating: formData.get("parksRating"),
+      overallRating: coerceRequired(formData.get("overallRating")),
+      schoolsRating: coerceOptional(formData.get("schoolsRating")),
+      transportationRating: coerceOptional(formData.get("transportationRating")),
+      shoppingRating: coerceOptional(formData.get("shoppingRating")),
+      restaurantsRating: coerceOptional(formData.get("restaurantsRating")),
+      safetyRating: coerceOptional(formData.get("safetyRating")),
+      quietnessRating: coerceOptional(formData.get("quietnessRating")),
+      walkabilityRating: coerceOptional(formData.get("walkabilityRating")),
+      nightlifeRating: coerceOptional(formData.get("nightlifeRating")),
+      healthcareRating: coerceOptional(formData.get("healthcareRating")),
+      parksRating: coerceOptional(formData.get("parksRating")),
       comment: formData.get("comment"),
     })
 
@@ -107,34 +141,56 @@ export async function createOrUpdateAreaRating(
       ip_address: !user ? ipAddress : null,
     }
 
-    // Check if user already has a rating for this area
-    const { data: existingRating } = await supabase
-      .from("area_ratings")
-      .select("id")
-      .eq("area_id", data.areaId)
-      .eq(user ? "user_id" : "ip_address", user?.id || ipAddress)
-      .single()
-
-    let result
-    if (existingRating) {
-      // Update existing rating
-      result = await supabase
+    // Check if a rating already exists for this user/IP
+    let existingRatingId: string | null = null
+    if (user) {
+      const { data: existing } = await supabase
         .from("area_ratings")
-        .update(ratingData)
-        .eq("id", existingRating.id)
-        .select()
+        .select("id")
+        .eq("area_id", data.areaId)
+        .eq("user_id", user.id)
         .single()
-    } else {
-      // Create new rating
-      result = await supabase
+      existingRatingId = existing?.id ?? null
+    } else if (ipAddress) {
+      const { data: existing } = await supabase
         .from("area_ratings")
-        .insert([ratingData])
-        .select()
+        .select("id")
+        .eq("area_id", data.areaId)
+        .eq("ip_address", ipAddress)
+        .is("user_id", null)
         .single()
+      existingRatingId = existing?.id ?? null
     }
 
-    if (result.error) {
-      console.error("Database error:", result.error)
+    let dbError: any = null
+
+    if (existingRatingId) {
+      if (user) {
+        // Authenticated users can update their own ratings (allowed by RLS)
+        const { error } = await supabase
+          .from("area_ratings")
+          .update(ratingData)
+          .eq("id", existingRatingId)
+        dbError = error
+      } else {
+        // Anonymous users cannot update due to RLS; show friendly message
+        return {
+          errors: {
+            _form: ["You have already rated this area. Sign in to update your rating."],
+          },
+          success: false,
+        }
+      }
+    } else {
+      // Create new rating
+      const { error } = await supabase
+        .from("area_ratings")
+        .insert([ratingData])
+      dbError = error
+    }
+
+    if (dbError) {
+      console.error("Database error:", dbError)
       return {
         errors: {
           _form: ["Failed to save rating. Please try again."],
@@ -144,7 +200,7 @@ export async function createOrUpdateAreaRating(
 
     revalidatePath("/")
     return {
-      message: existingRating ? "Rating updated successfully!" : "Rating submitted successfully!",
+      message: existingRatingId ? "Rating updated successfully!" : "Rating submitted successfully!",
       success: true,
     }
   } catch (error) {
@@ -190,8 +246,9 @@ export async function getUserAreaRating(areaId: string) {
     
     if (!user) {
       // For anonymous users, check by IP
-      const forwardedFor = (await import('next/headers')).headers().get('x-forwarded-for')
-      const realIp = (await import('next/headers')).headers().get('x-real-ip')
+      const hdrs2 = await headers()
+      const forwardedFor = hdrs2.get('x-forwarded-for')
+      const realIp = hdrs2.get('x-real-ip')
       const ipAddress = forwardedFor?.split(',')[0]?.trim() || realIp || null
       
       if (!ipAddress) return null

@@ -8,17 +8,19 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
-import { Save, FileText, X, Upload, MapPin, Star, Phone, Plus, Info, Loader2, ArrowLeft, Camera } from "lucide-react"
+import { Save, X, MapPin, Phone, Plus, Info, Loader2, ArrowLeft, Camera, VideoIcon } from "lucide-react"
 import Link from "next/link"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
 import { createArea, getAreas } from "@/lib/actions/areas"
 import { toast } from "sonner"
 import type { Database } from "@/lib/supabase/types"
 import { ImageUploadCrop, PropertyImage } from "@/components/admin/image-upload-crop"
+import { VideoUploader, VideoFile } from "@/components/admin/video-uploader"
 
 function extractSrcFromIframe(iframe: string): string | null {
   const match = iframe.match(/src="([^"]+)"/);
@@ -27,6 +29,7 @@ function extractSrcFromIframe(iframe: string): string | null {
 
 type Property = Database["public"]["Tables"]["properties"]["Row"]
 type PropertyImageDB = Database["public"]["Tables"]["property_images"]["Row"]
+type PropertyVideoDB = Database["public"]["Tables"]["property_videos"]["Row"]
 
 interface Category {
   id: string
@@ -47,7 +50,7 @@ interface PropertyFormProps {
   areas: Area[]
   lng: string
   mode: "create" | "edit"
-  property?: Property & { property_images?: PropertyImageDB[] }
+  property?: Property & { property_images?: PropertyImageDB[], property_videos?: PropertyVideoDB[] }
 }
 
 const COMMON_FEATURES = [
@@ -84,7 +87,6 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
-  // Initialize images from existing property
   const initializeImages = (): PropertyImage[] => {
     if (!property?.property_images) return []
     
@@ -97,14 +99,35 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
     }))
   }
 
-  // Form state
+  const initializeVideos = (): VideoFile[] => {
+    if (!property?.property_videos) return []
+    
+    return property.property_videos.map((vid) => ({
+      id: vid.id,
+      url: vid.url,
+      caption: vid.caption || "",
+      order: vid.order_index || 0,
+    }))
+  }
+
+  // Form state - English and Arabic content separated
   const [images, setImages] = useState<PropertyImage[]>(initializeImages())
+  const [videos, setVideos] = useState<VideoFile[]>(initializeVideos())
   const [formData, setFormData] = useState({
+    // English content
     title: property?.title || "",
     description: property?.description || "",
+    location: property?.location || "",
+    // Arabic content
+    title_en: (property as any)?.title_en || "",
+    title_ar: (property as any)?.title_ar || "",
+    description_en: (property as any)?.description_en || "",
+    description_ar: (property as any)?.description_ar || "",
+    location_en: (property as any)?.location_en || "",
+    location_ar: (property as any)?.location_ar || "",
+    // Other fields
     price: property?.price?.toString() || "",
     pricePerMeter: property?.price_per_meter?.toString() || "",
-    location: property?.location || "",
     area: property?.area || "",
     areaId: property?.area_id || "",
     bedrooms: property?.bedrooms?.toString() || "0",
@@ -158,10 +181,11 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
     ]
     const filledFields = requiredFields.filter(field => field && field.trim() !== "").length
     const hasImages = images.length > 0
+    const hasVideos = videos.length > 0
     
-    // Include images in progress calculation (worth 1 field)
-    const totalFields = requiredFields.length + 1
-    const completedFields = filledFields + (hasImages ? 1 : 0)
+    // Include images and videos in progress calculation
+    const totalFields = requiredFields.length + 2
+    const completedFields = filledFields + (hasImages ? 1 : 0) + (hasVideos ? 1 : 0)
     
     return Math.round((completedFields / totalFields) * 100)
   }
@@ -308,9 +332,10 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
       
       // Add images
       images.forEach((image, index) => {
-        if (image.file) {
-          // New image file to upload
-          formDataObj.append(`image_${index}`, image.file)
+        const fileToUpload = image.file ?? image.originalFile
+        if (fileToUpload) {
+          // New image file to upload (supports original or cropped file)
+          formDataObj.append(`image_${index}`, fileToUpload)
           formDataObj.append(`image_${index}_alt`, image.alt_text || "")
           formDataObj.append(`image_${index}_order`, image.order_index.toString())
           formDataObj.append(`image_${index}_is_main`, image.is_main.toString())
@@ -322,8 +347,21 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
           formDataObj.append(`existing_image_${index}_is_main`, image.is_main.toString())
         }
       })
-      
       formDataObj.append("total_images", images.length.toString())
+
+      // Add videos (support file uploads and URLs)
+      videos.forEach((video, index) => {
+        if (video.file) {
+          formDataObj.append(`video_file_${index}`, video.file)
+        }
+        formDataObj.append(`video_${index}_url`, video.url)
+        formDataObj.append(`video_${index}_caption`, video.caption || "")
+        formDataObj.append(`video_${index}_order`, video.order.toString())
+        if (video.id) {
+          formDataObj.append(`video_${index}_id`, video.id)
+        }
+      });
+      formDataObj.append("total_videos", videos.length.toString());
       
       try {
         let result
@@ -367,32 +405,113 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
           <Card>
             <CardHeader>
               <CardTitle>Basic Information</CardTitle>
+              <p className="text-sm text-muted-foreground">
+                Provide property details in both English and Arabic for better reach
+              </p>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <Tabs defaultValue="en">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="en">English</TabsTrigger>
+                  <TabsTrigger value="ar">العربية</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="en" className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6">
+                    <div>
+                      <Label htmlFor="title_en">Title (English) *</Label>
+                      <Input
+                        id="title_en"
+                        value={formData.title_en}
+                        onChange={(e) => handleInputChange("title_en", e.target.value)}
+                        placeholder="e.g., Modern 3BR Apartment in Downtown"
+                        className={errors.title_en ? "border-red-500" : ""}
+                      />
+                      {errors.title_en && <p className="text-sm text-red-500 mt-1">{errors.title_en[0]}</p>}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="description_en">Description (English) *</Label>
+                      <Textarea
+                        id="description_en"
+                        value={formData.description_en}
+                        onChange={(e) => handleInputChange("description_en", e.target.value)}
+                        rows={4}
+                        placeholder="Describe the property, its features, and what makes it special..."
+                        className={errors.description_en ? "border-red-500" : ""}
+                      />
+                      {errors.description_en && <p className="text-sm text-red-500 mt-1">{errors.description_en[0]}</p>}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="location_en">Address (English) *</Label>
+                      <Input
+                        id="location_en"
+                        value={formData.location_en}
+                        onChange={(e) => handleInputChange("location_en", e.target.value)}
+                        placeholder="e.g., 123 Main Street, Downtown"
+                        className={errors.location_en ? "border-red-500" : ""}
+                      />
+                      {errors.location_en && <p className="text-sm text-red-500 mt-1">{errors.location_en[0]}</p>}
+                    </div>
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="ar" className="space-y-6">
+                  <div className="grid grid-cols-1 gap-6">
+                    <div>
+                      <Label htmlFor="title_ar">العنوان (العربية) *</Label>
+                      <Input
+                        id="title_ar"
+                        dir="rtl"
+                        value={formData.title_ar}
+                        onChange={(e) => handleInputChange("title_ar", e.target.value)}
+                        placeholder="مثال: شقة ٣ غرف حديثة في وسط المدينة"
+                        className={errors.title_ar ? "border-red-500" : ""}
+                      />
+                      {errors.title_ar && <p className="text-sm text-red-500 mt-1">{errors.title_ar[0]}</p>}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="description_ar">الوصف (العربية) *</Label>
+                      <Textarea
+                        id="description_ar"
+                        dir="rtl"
+                        value={formData.description_ar}
+                        onChange={(e) => handleInputChange("description_ar", e.target.value)}
+                        rows={4}
+                        placeholder="صف العقار ومميزاته وما يجعله خاصًا..."
+                        className={errors.description_ar ? "border-red-500" : ""}
+                      />
+                      {errors.description_ar && <p className="text-sm text-red-500 mt-1">{errors.description_ar[0]}</p>}
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="location_ar">العنوان (العربية) *</Label>
+                      <Input
+                        id="location_ar"
+                        dir="rtl"
+                        value={formData.location_ar}
+                        onChange={(e) => handleInputChange("location_ar", e.target.value)}
+                        placeholder="مثال: ١٢٣ شارع رئيسي، وسط المدينة"
+                        className={errors.location_ar ? "border-red-500" : ""}
+                      />
+                      {errors.location_ar && <p className="text-sm text-red-500 mt-1">{errors.location_ar[0]}</p>}
+                    </div>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              {/* Legacy fields for backward compatibility */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t">
                 <div className="md:col-span-2">
-                  <Label htmlFor="title">Property Title *</Label>
+                  <Label htmlFor="title">Legacy Title (for compatibility)</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    placeholder="e.g., Modern 3BR Apartment in Downtown"
-                    className={errors.title ? "border-red-500" : ""}
+                    placeholder="Will be synced with English title"
                   />
-                  {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title[0]}</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
-                    rows={4}
-                    placeholder="Describe the property, its features, and what makes it special..."
-                    className={errors.description ? "border-red-500" : ""}
-                  />
-                  {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description[0]}</p>}
                 </div>
 
                 <div>
@@ -575,15 +694,13 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="location">Full Address *</Label>
+                  <Label htmlFor="location">Legacy Location (for compatibility)</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange("location", e.target.value)}
-                    placeholder="e.g., 123 Main Street, Downtown"
-                    className={errors.location ? "border-red-500" : ""}
+                    placeholder="Will be synced with English location"
                   />
-                  {errors.location && <p className="text-sm text-red-500 mt-1">{errors.location[0]}</p>}
                 </div>
 
                 <div>
@@ -769,6 +886,23 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
             </CardContent>
           </Card>
 
+          {/* Videos */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <VideoIcon className="w-5 h-5" />
+                Property Videos
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <VideoUploader
+                initialVideos={videos}
+                onVideosChange={setVideos}
+                maxFiles={5}
+              />
+            </CardContent>
+          </Card>
+
           {/* Features */}
           <Card>
             <CardHeader>
@@ -944,11 +1078,11 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
       {/* Sticky Sidebar */}
       <div className="w-80 space-y-6">
         {/* Actions Card */}
-        <Card className="sticky top-6">
+        <Card className="sticky top-16">
           <CardHeader>
             <CardTitle>Actions</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="flex flex-col gap-4">
             <Button onClick={handleSubmit} className="w-full" disabled={isPending}>
               {isPending ? (
                 <>
@@ -999,6 +1133,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="text-sm space-y-2">
+              <p>• Fill both English and Arabic content for better reach</p>
               <p>• Use high-quality images for better engagement</p>
               <p>• Write detailed descriptions highlighting unique features</p>
               <p>• Set competitive pricing based on market research</p>
@@ -1007,7 +1142,28 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
             </div>
           </CardContent>
         </Card>
+
+        {/* Language Status */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Content Status</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm">English Content</span>
+              <Badge variant={formData.title_en && formData.description_en && formData.location_en ? "default" : "secondary"}>
+                {formData.title_en && formData.description_en && formData.location_en ? "Complete" : "Incomplete"}
+              </Badge>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">Arabic Content</span>
+              <Badge variant={formData.title_ar && formData.description_ar && formData.location_ar ? "default" : "secondary"}>
+                {formData.title_ar && formData.description_ar && formData.location_ar ? "Complete" : "Incomplete"}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   )
-} 
+}

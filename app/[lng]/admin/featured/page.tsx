@@ -4,13 +4,14 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatPrice } from "@/lib/utils"
-import { Star, StarOff, Eye, Edit } from "lucide-react"
+import { Star, Eye, Edit } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 import { ToggleFeaturedButton } from "../properties/components/toggle-featured-button"
+import { FeaturedReorderTable } from "./components/featured-reorder-table"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
@@ -32,7 +33,8 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
       property_images (id, url, alt_text, is_main, order_index)
     `)
     .eq("is_featured", true)
-    .order("created_at", { ascending: false })
+    .order("is_main_featured", { ascending: false })
+    .order("order_index", { ascending: true })
 
   if (error) {
     console.error("Error fetching featured properties:", error)
@@ -72,98 +74,8 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
             </div>
           </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{dict.admin.featured.table.property}</TableHead>
-                      <TableHead>{dict.admin.featured.table.category}</TableHead>
-                      <TableHead>{dict.admin.featured.table.price}</TableHead>
-                      <TableHead>{dict.admin.featured.table.status}</TableHead>
-                      <TableHead>{dict.admin.featured.table.actions}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {featuredProperties && featuredProperties.length > 0 ? (
-                      featuredProperties.map((property) => {
-                        const mainImage = property.property_images?.find((img: any) => img.is_main) || property.property_images?.[0]
-
-                        return (
-                          <TableRow key={property.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <div className="relative w-12 h-12 rounded-md overflow-hidden">
-                                  <Image
-                                    src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
-                                    alt={property.title}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{property.title}</p>
-                                  <p className="text-sm text-muted-foreground">{property.location}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">{property.categories?.name || dict.admin.featured.noCategory}</Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">{formatPrice(property.price)}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Badge
-                                  variant="outline"
-                                  className="text-green-600 border-green-600"
-                                >
-                                  {property.status?.charAt(0).toUpperCase() + (property.status?.slice(1) || "")}
-                                </Badge>
-                                <Badge className="bg-primary text-primary-foreground">
-                                  <Star className="w-3 h-3 mr-1" />
-                                  {dict.admin.featured.featured}
-                                </Badge>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Link href={`/${lng}/properties/${property.id}`} target="_blank">
-                                  <Button variant="ghost" size="sm">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </Link>
-                                <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                </Link>
-                                <ToggleFeaturedButton 
-                                  propertyId={property.id} 
-                                  isFeatured={true}
-                                  dict={dict}
-                                />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-12">
-                          <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                          <h3 className="text-lg font-semibold mb-2">{dict.admin.featured.noFeaturedProperties}</h3>
-                          <p className="text-muted-foreground mb-4">
-                            {dict.admin.featured.noFeaturedPropertiesSubtitle}
-                          </p>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Client-side DnD table for reordering */}
+          <FeaturedReorderTable initialItems={featuredProperties} lng={lng} dict={dict} />
         </div>
 
         {/* Available Properties to Feature */}
@@ -295,3 +207,4 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
     </div>
   )
 }
+

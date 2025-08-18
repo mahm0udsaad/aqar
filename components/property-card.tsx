@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { PropertyWithDetails } from "@/lib/supabase/queries"
+import type { Locale } from "@/lib/i18n/config"
 import {
   formatPrice,
   formatPriceDetailed,
@@ -33,11 +34,13 @@ interface PropertyCardProps {
   property: PropertyWithDetails
   showContactButtons?: boolean
   view?: "grid" | "list"
+  lng: Locale
 }
 
 export function PropertyCard({
   property,
   showContactButtons = false,
+  lng,
 }: PropertyCardProps) {
   if (!property) {
     return null // Don't render anything if no property is passed
@@ -45,6 +48,17 @@ export function PropertyCard({
 
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false);
+  const displayTitle = lng === "ar"
+    ? (property as any).title_ar || (property as any).title_en || property.title
+    : (property as any).title_en || (property as any).title_ar || property.title
+  const displayLocation = lng === "ar"
+    ? (property as any).location_ar || (property as any).location_en || property.location
+    : (property as any).location_en || (property as any).location_ar || property.location
+  const categoryName = (() => {
+    const cat: any = property.categories
+    if (!cat) return undefined
+    return lng === "ar" ? (cat.name_ar || cat.name || undefined) : (cat.name_en || cat.name || undefined)
+  })()
   const mainImage =
     property.property_images && property.property_images.length > 0
       ? property.property_images.find((img) => img.is_main) ||
@@ -58,14 +72,14 @@ export function PropertyCard({
   return (
     <Card className="property-card overflow-hidden group">
       <div className="relative">
-        <Link href={`/properties/${property.id}`}>
+        <Link href={`/${lng}/properties/${property.id}`}>
           <div className="relative h-48 overflow-hidden">
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div> // Simple skeleton
             )}
             <Image
               src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400"}
-              alt={mainImage?.alt_text || property.title}
+              alt={mainImage?.alt_text || displayTitle}
               fill
               className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
                 imageLoaded ? "opacity-100" : "opacity-0"
@@ -84,9 +98,9 @@ export function PropertyCard({
 
         {/* Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {property.categories?.name && (
+          {categoryName && (
             <Badge className="category-badge text-white text-xs bg-blue-600">
-              {property.categories.name}
+              {categoryName}
             </Badge>
           )}
           {property.is_new && (
@@ -138,16 +152,16 @@ export function PropertyCard({
         </div>
 
         {/* Title & Location */}
-        <Link href={`/properties/${property.id}`}>
+        <Link href={`/${lng}/properties/${property.id}`}>
           <h3 className="font-semibold text-lg mb-2 hover:text-primary transition-colors line-clamp-2 min-h-[3rem]">
-            {property.title}
+            {displayTitle}
           </h3>
         </Link>
 
         <div className="flex items-center text-slate-600 mb-3">
           <MapPin className="w-4 h-4 mr-1" />
           <span className="text-sm">
-            {property.location}, {property.area}
+            {displayLocation}, {property.area}
           </span>
         </div>
 
@@ -178,9 +192,9 @@ export function PropertyCard({
           <PropertyComparisonButton 
             property={{
               id: property.id,
-              title: property.title,
+              title: displayTitle,
               price: property.price,
-              location: property.location,
+              location: displayLocation,
               area: property.area,
               bedrooms: property.bedrooms,
               bathrooms: property.bathrooms,
@@ -190,7 +204,7 @@ export function PropertyCard({
               property_images: property.property_images || undefined, // Pass the property images
               location_iframe_url: property.location_iframe_url || undefined, // Pass the location iframe URL
             }}
-            lng="en"
+            lng={lng}
             size="sm"
           />
         </div>

@@ -195,10 +195,16 @@ export interface Database {
         Row: {
           id: string
           title: string
+          title_en: string | null
+          title_ar: string | null
           description: string
+          description_en: string | null
+          description_ar: string | null
           price: number
           price_per_meter: number | null
           location: string
+          location_en: string | null
+          location_ar: string | null
           area: string
           area_id: string | null
           bedrooms: number
@@ -215,6 +221,7 @@ export interface Database {
           amenities: string[] | null
           is_new: boolean | null
           is_featured: boolean | null
+          is_main_featured: boolean | null
           is_verified: boolean | null
           views: number | null
           location_lat: number | null
@@ -235,10 +242,16 @@ export interface Database {
         Insert: {
           id?: string
           title: string
+          title_en?: string | null
+          title_ar?: string | null
           description: string
+          description_en?: string | null
+          description_ar?: string | null
           price: number
           price_per_meter?: number | null
           location: string
+          location_en?: string | null
+          location_ar?: string | null
           area: string
           area_id?: string | null
           bedrooms?: number
@@ -255,6 +268,7 @@ export interface Database {
           amenities?: string[] | null
           is_new?: boolean | null
           is_featured?: boolean | null
+          is_main_featured?: boolean | null
           is_verified?: boolean | null
           views?: number | null
           location_lat?: number | null
@@ -275,10 +289,16 @@ export interface Database {
         Update: {
           id?: string
           title?: string
+          title_en?: string | null
+          title_ar?: string | null
           description?: string
+          description_en?: string | null
+          description_ar?: string | null
           price?: number
           price_per_meter?: number | null
           location?: string
+          location_en?: string | null
+          location_ar?: string | null
           area?: string
           area_id?: string | null
           bedrooms?: number
@@ -295,6 +315,7 @@ export interface Database {
           amenities?: string[] | null
           is_new?: boolean | null
           is_featured?: boolean | null
+          is_main_featured?: boolean | null
           is_verified?: boolean | null
           views?: number | null
           location_lat?: number | null
@@ -342,6 +363,32 @@ export interface Database {
           alt_text?: string | null
           order_index?: number | null
           is_main?: boolean | null
+          created_at?: string | null
+        }
+      }
+      property_videos: {
+        Row: {
+          id: string
+          property_id: string | null
+          url: string
+          caption: string | null
+          order_index: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          property_id?: string | null
+          url: string
+          caption?: string | null
+          order_index?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          property_id?: string | null
+          url?: string
+          caption?: string | null
+          order_index?: number | null
           created_at?: string | null
         }
       }

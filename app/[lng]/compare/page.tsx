@@ -32,13 +32,12 @@ export default async function ComparePage({ params }: ComparePageProps) {
     <div className="min-h-screen bg-background">
       <Navbar dict={dict} lng={lng} />
       <main className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Compare Properties</h1>
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2">{lng === "ar" ? "قارن العقارات" : "Compare Properties"}</h1>
           <p className="text-muted-foreground">
-            Compare up to 4 properties side by side to help you make the best decision.
+            {lng === "ar" ? "أضف عقارات من صفحات النتائج ثم انتقل هنا لعرض المقارنة. يمكنك مقارنة حتى 4 عقارات." : "Add properties from listings, then come here to view the comparison. You can compare up to 4 properties."}
           </p>
         </div>
-        
         <PropertyComparisonView lng={lng} dict={dict} />
       </main>
       <Footer dict={dict} lng={lng} />

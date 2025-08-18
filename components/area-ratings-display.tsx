@@ -33,7 +33,21 @@ interface RatingSummary {
   avg_parks_rating: number | null
 }
 
-const ratingCategories = [
+type SummaryKey =
+  | "avg_schools_rating"
+  | "avg_transportation_rating"
+  | "avg_shopping_rating"
+  | "avg_restaurants_rating"
+  | "avg_safety_rating"
+  | "avg_quietness_rating"
+  | "avg_walkability_rating"
+  | "avg_nightlife_rating"
+  | "avg_healthcare_rating"
+  | "avg_parks_rating"
+
+type SummaryCategory = { key: SummaryKey; label: string; icon: string }
+
+const ratingCategories: Readonly<SummaryCategory[]> = [
   { key: "avg_schools_rating", label: "Schools & Education", icon: "🎓" },
   { key: "avg_transportation_rating", label: "Transportation", icon: "🚌" },
   { key: "avg_shopping_rating", label: "Shopping & Retail", icon: "🛍️" },
@@ -78,6 +92,9 @@ export function AreaRatingsDisplay({
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
+  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'en'
+  const isAr = lang?.startsWith('ar')
+
   const loadRatingsSummary = async () => {
     setIsLoading(true)
     try {
@@ -106,7 +123,7 @@ export function AreaRatingsDisplay({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5" />
-            Area Ratings
+            {isAr ? 'تقييمات المنطقة' : 'Area Ratings'}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -129,7 +146,7 @@ export function AreaRatingsDisplay({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <MapPin className="w-5 h-5" />
-            Area Ratings
+            {isAr ? 'تقييمات المنطقة' : 'Area Ratings'}
           </CardTitle>
         </CardHeader>
         <CardContent className="text-center py-6">
@@ -138,14 +155,14 @@ export function AreaRatingsDisplay({
               <Star className="w-8 h-8 text-muted-foreground" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold mb-2">No Ratings Yet</h3>
+              <h3 className="text-lg font-semibold mb-2">{isAr ? 'لا توجد تقييمات بعد' : 'No Ratings Yet'}</h3>
               <p className="text-muted-foreground mb-4">
-                Be the first to rate this area and help others make informed decisions.
+                {isAr ? 'كن أول من يقيم هذه المنطقة وساعد الآخرين في اتخاذ قرارات مدروسة.' : 'Be the first to rate this area and help others make informed decisions.'}
               </p>
               {showAddButton && (
                 <Button onClick={() => setIsModalOpen(true)}>
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Rating
+                  {isAr ? 'أضف تقييماً' : 'Add Rating'}
                 </Button>
               )}
             </div>
@@ -155,7 +172,7 @@ export function AreaRatingsDisplay({
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           areaId={areaId}
-          areaName={areaName || "Area"}
+          areaName={areaName || (isAr ? 'المنطقة' : 'Area')}
           onRatingSubmitted={handleRatingSubmitted}
         />
       </Card>
@@ -171,12 +188,12 @@ export function AreaRatingsDisplay({
           <CardTitle className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <MapPin className="w-5 h-5" />
-              Area Ratings
+              {isAr ? 'تقييمات المنطقة' : 'Area Ratings'}
             </div>
             {showAddButton && (
               <Button variant="outline" size="sm" onClick={() => setIsModalOpen(true)}>
                 <MessageSquare className="w-4 h-4 mr-2" />
-                Rate Area
+                {isAr ? 'قيّم المنطقة' : 'Rate Area'}
               </Button>
             )}
           </CardTitle>
@@ -190,11 +207,11 @@ export function AreaRatingsDisplay({
                 <StarRating value={Math.round(overallRating)} size="lg" />
                 <Badge variant="secondary" className="text-xs">
                   <Users className="w-3 h-3 mr-1" />
-                  {ratingsSummary.total_ratings} {ratingsSummary.total_ratings === 1 ? 'rating' : 'ratings'}
+                  {ratingsSummary.total_ratings} {ratingsSummary.total_ratings === 1 ? (isAr ? 'تقييم' : 'rating') : (isAr ? 'تقييمات' : 'ratings')}
                 </Badge>
               </div>
             </div>
-            <p className="text-muted-foreground">Overall Experience</p>
+            <p className="text-muted-foreground">{isAr ? 'التجربة العامة' : 'Overall Experience'}</p>
           </div>
 
           <Separator />
@@ -202,7 +219,7 @@ export function AreaRatingsDisplay({
           {/* Category Ratings */}
           <div className="space-y-4">
             <h4 className="font-medium text-sm text-muted-foreground uppercase tracking-wider">
-              Category Breakdown
+              {isAr ? 'تفصيل الفئات' : 'Category Breakdown'}
             </h4>
             <div className="grid grid-cols-1 gap-3">
               {ratingCategories.map((category) => {
@@ -215,7 +232,18 @@ export function AreaRatingsDisplay({
                       <span className="text-lg">{category.icon}</span>
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-medium">{category.label}</span>
+                          <span className="text-sm font-medium">{isAr ? (
+                            category.key === 'avg_schools_rating' ? 'المدارس والتعليم' :
+                            category.key === 'avg_transportation_rating' ? 'المواصلات' :
+                            category.key === 'avg_shopping_rating' ? 'التسوق والبيع بالتجزئة' :
+                            category.key === 'avg_restaurants_rating' ? 'المطاعم' :
+                            category.key === 'avg_safety_rating' ? 'الأمان' :
+                            category.key === 'avg_quietness_rating' ? 'الهدوء' :
+                            category.key === 'avg_walkability_rating' ? 'قابلية المشي' :
+                            category.key === 'avg_nightlife_rating' ? 'الحياة الليلية' :
+                            category.key === 'avg_healthcare_rating' ? 'الرعاية الصحية' :
+                            category.key === 'avg_parks_rating' ? 'الحدائق والترفيه' : category.label
+                          ) : category.label}</span>
                           <span className="text-sm text-muted-foreground">
                             {rating.toFixed(1)}
                           </span>
@@ -235,7 +263,7 @@ export function AreaRatingsDisplay({
           {/* Rating Distribution hint */}
           <div className="text-center pt-2">
             <p className="text-xs text-muted-foreground">
-              Based on {ratingsSummary.total_ratings} community {ratingsSummary.total_ratings === 1 ? 'review' : 'reviews'}
+              {isAr ? 'استنادًا إلى ' : 'Based on '} {ratingsSummary.total_ratings} {ratingsSummary.total_ratings === 1 ? (isAr ? 'مراجعة' : 'review') : (isAr ? 'مراجعات' : 'reviews')}
             </p>
           </div>
         </CardContent>
@@ -245,7 +273,7 @@ export function AreaRatingsDisplay({
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         areaId={areaId}
-        areaName={areaName || "Area"}
+        areaName={areaName || (isAr ? 'المنطقة' : 'Area')}
         onRatingSubmitted={handleRatingSubmitted}
       />
     </>

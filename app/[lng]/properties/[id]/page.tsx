@@ -17,13 +17,35 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
     };
   }
 
-  const title = `${property.title} - ${property.location}, ${property.area}`;
-  const description = property.description.substring(0, 160);
+  const localizedTitle = lng === "ar"
+    ? ((property as any).title_ar || (property as any).title_en || property.title)
+    : ((property as any).title_en || (property as any).title_ar || property.title)
+  const localizedLocation = lng === "ar"
+    ? ((property as any).location_ar || (property as any).location_en || property.location)
+    : ((property as any).location_en || (property as any).location_ar || property.location)
+  const localizedDescription = lng === "ar"
+    ? ((property as any).description_ar || (property as any).description_en || property.description)
+    : ((property as any).description_en || (property as any).description_ar || property.description)
+
+  const title = `${localizedTitle} - ${localizedLocation}, ${property.area}`;
+  const description = localizedDescription.substring(0, 160);
+  const keywords = [
+    localizedTitle,
+    localizedLocation,
+    property.area,
+    (property.categories as any)?.name || (property.categories as any)?.name_en || (property.categories as any)?.name_ar,
+    property.property_type === "rent" ? (lng === "ar" ? "إيجار" : "rent") : (lng === "ar" ? "بيع" : "sale"),
+    "Egypt",
+    "real estate",
+  ]
+    .filter(Boolean)
+    .join(", ");
   const imageUrl = property.thumbnail_url || property.property_images?.[0]?.url || '/placeholder.svg';
 
   return {
     title: title,
     description: description,
+    keywords,
     openGraph: {
       title: title,
       description: description,
@@ -31,7 +53,7 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
         url: imageUrl,
         width: 1200,
         height: 630,
-        alt: property.title,
+        alt: localizedTitle,
       }],
       type: 'website',
       locale: lng,
@@ -67,13 +89,13 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center text-sm text-muted-foreground mb-6">
-          <span>Home</span>
+          <span>{lng === "ar" ? "الصفحة الرئيسية" : "Home"}</span>
           <span className="mx-2">/</span>
-          <span>{category?.name}</span>
+          <span>{lng === "ar" ? (category as any)?.name_ar || category?.name : (category as any)?.name_en || category?.name}</span>
           <span className="mx-2">/</span>
           <span>{property.area}</span>
           <span className="mx-2">/</span>
-          <span className="text-foreground">{property.title}</span>
+          <span className="text-foreground">{(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}</span>
         </div>
         <PropertyDetails property={property} lng={lng} />
       </div>

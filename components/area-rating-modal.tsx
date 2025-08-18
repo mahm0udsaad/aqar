@@ -25,19 +25,31 @@ import {
   type AreaRatingActionState,
 } from "@/lib/actions/area-ratings"
 
+// Enhanced validation with better number handling - SIMPLIFIED
+const optionalStar = z
+  .number()
+  .min(1)
+  .max(5)
+  .optional()
+
+const requiredStar = z
+  .number()
+  .min(1, "Rating must be at least 1")
+  .max(5, "Rating must be at most 5")
+
 const ratingSchema = z.object({
   areaId: z.string(),
-  overallRating: z.number().min(1).max(5),
-  schoolsRating: z.number().min(1).max(5).optional(),
-  transportationRating: z.number().min(1).max(5).optional(),
-  shoppingRating: z.number().min(1).max(5).optional(),
-  restaurantsRating: z.number().min(1).max(5).optional(),
-  safetyRating: z.number().min(1).max(5).optional(),
-  quietnessRating: z.number().min(1).max(5).optional(),
-  walkabilityRating: z.number().min(1).max(5).optional(),
-  nightlifeRating: z.number().min(1).max(5).optional(),
-  healthcareRating: z.number().min(1).max(5).optional(),
-  parksRating: z.number().min(1).max(5).optional(),
+  overallRating: requiredStar,
+  schoolsRating: optionalStar,
+  transportationRating: optionalStar,
+  shoppingRating: optionalStar,
+  restaurantsRating: optionalStar,
+  safetyRating: optionalStar,
+  quietnessRating: optionalStar,
+  walkabilityRating: optionalStar,
+  nightlifeRating: optionalStar,
+  healthcareRating: optionalStar,
+  parksRating: optionalStar,
   comment: z.string().max(1000).optional(),
 })
 
@@ -67,6 +79,14 @@ function StarRating({ value, onChange, size = "md", readonly = false }: StarRati
     lg: "w-6 h-6"
   }
 
+  const handleStarClick = (star: number) => {
+    if (!readonly) {
+      // Ensure we're passing a proper number
+      const numericValue = Number(star)
+      onChange(numericValue)
+    }
+  }
+
   return (
     <div className="flex gap-1">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -77,7 +97,7 @@ function StarRating({ value, onChange, size = "md", readonly = false }: StarRati
           className={`${sizeClasses[size]} transition-colors ${
             readonly ? "cursor-default" : "cursor-pointer hover:scale-110"
           }`}
-          onClick={() => !readonly && onChange(star)}
+          onClick={() => handleStarClick(star)}
           onMouseEnter={() => !readonly && setHover(star)}
           onMouseLeave={() => !readonly && setHover(0)}
         >
@@ -94,7 +114,25 @@ function StarRating({ value, onChange, size = "md", readonly = false }: StarRati
   )
 }
 
-const ratingCategories = [
+type RatingCategory = {
+  key:
+    | "overallRating"
+    | "schoolsRating"
+    | "transportationRating"
+    | "shoppingRating"
+    | "restaurantsRating"
+    | "safetyRating"
+    | "quietnessRating"
+    | "walkabilityRating"
+    | "nightlifeRating"
+    | "healthcareRating"
+    | "parksRating"
+  label: string
+  icon: string
+  required?: boolean
+}
+
+const ratingCategories: Readonly<RatingCategory[]> = [
   { key: "overallRating", label: "Overall Experience", icon: "⭐", required: true },
   { key: "schoolsRating", label: "Schools & Education", icon: "🎓" },
   { key: "transportationRating", label: "Transportation", icon: "🚌" },
@@ -137,22 +175,26 @@ export function AreaRatingModal({
 
   // Load existing rating when modal opens
   useEffect(() => {
+    // keep areaId in sync with prop
+    if (areaId) {
+      setValue("areaId", areaId)
+    }
     if (isOpen && areaId) {
-      getUserAreaRating(areaId).then((rating) => {
+      getUserAreaRating(areaId).then((rating: any) => {
         if (rating) {
           setExistingRating(rating)
-          // Populate form with existing values
-          setValue("overallRating", rating.overall_rating)
-          if (rating.schools_rating) setValue("schoolsRating", rating.schools_rating)
-          if (rating.transportation_rating) setValue("transportationRating", rating.transportation_rating)
-          if (rating.shopping_rating) setValue("shoppingRating", rating.shopping_rating)
-          if (rating.restaurants_rating) setValue("restaurantsRating", rating.restaurants_rating)
-          if (rating.safety_rating) setValue("safetyRating", rating.safety_rating)
-          if (rating.quietness_rating) setValue("quietnessRating", rating.quietness_rating)
-          if (rating.walkability_rating) setValue("walkabilityRating", rating.walkability_rating)
-          if (rating.nightlife_rating) setValue("nightlifeRating", rating.nightlife_rating)
-          if (rating.healthcare_rating) setValue("healthcareRating", rating.healthcare_rating)
-          if (rating.parks_rating) setValue("parksRating", rating.parks_rating)
+          // Populate form with existing values - ensure all are numbers
+          setValue("overallRating", Number(rating.overall_rating))
+          if (rating.schools_rating) setValue("schoolsRating", Number(rating.schools_rating))
+          if (rating.transportation_rating) setValue("transportationRating", Number(rating.transportation_rating))
+          if (rating.shopping_rating) setValue("shoppingRating", Number(rating.shopping_rating))
+          if (rating.restaurants_rating) setValue("restaurantsRating", Number(rating.restaurants_rating))
+          if (rating.safety_rating) setValue("safetyRating", Number(rating.safety_rating))
+          if (rating.quietness_rating) setValue("quietnessRating", Number(rating.quietness_rating))
+          if (rating.walkability_rating) setValue("walkabilityRating", Number(rating.walkability_rating))
+          if (rating.nightlife_rating) setValue("nightlifeRating", Number(rating.nightlife_rating))
+          if (rating.healthcare_rating) setValue("healthcareRating", Number(rating.healthcare_rating))
+          if (rating.parks_rating) setValue("parksRating", Number(rating.parks_rating))
           if (rating.comment) setValue("comment", rating.comment)
         }
       })
@@ -160,15 +202,52 @@ export function AreaRatingModal({
   }, [isOpen, areaId, setValue])
 
   const onSubmit = async (data: RatingFormData) => {
+    
     setIsSubmitting(true)
     
     try {
       const formData = new FormData()
-      Object.entries(data).forEach(([key, value]) => {
-        if (value !== undefined && value !== null) {
-          formData.append(key, value.toString())
+      
+      // Always include areaId
+      formData.append("areaId", areaId)
+      
+      // CRITICAL FIX: Only include ratings that are actually set (not 0, null, undefined, or empty)
+      const numericKeys: Array<keyof RatingFormData> = [
+        "overallRating",
+        "schoolsRating",
+        "transportationRating",
+        "shoppingRating",
+        "restaurantsRating",
+        "safetyRating",
+        "quietnessRating",
+        "walkabilityRating",
+        "nightlifeRating",
+        "healthcareRating",
+        "parksRating",
+      ]
+      
+      numericKeys.forEach((k) => {
+        const v = data[k]
+        
+        // FIXED: Check if value is actually set and valid
+        if (v !== undefined && v !== null && v !== 0 && v !== '') {
+          const numValue = Number(v)
+          if (Number.isFinite(numValue) && numValue >= 1 && numValue <= 5) {
+            formData.append(String(k), String(numValue))
+          }
+        } else {
+          // CRITICAL: Don't append anything for unset optional fields
+          // This ensures the server receives nothing instead of empty strings
         }
       })
+      
+      if (data.comment && data.comment.trim()) {
+        formData.append("comment", data.comment.trim())
+      }
+
+      // Log all FormData entries
+      for (const [key, value] of formData.entries()) {
+      }
 
       const result = await createOrUpdateAreaRating({}, formData)
       
@@ -178,9 +257,17 @@ export function AreaRatingModal({
         onClose()
         reset()
       } else {
-        toast.error(result.errors?._form?.[0] || "Failed to submit rating")
+        console.error("❌ Server errors:", result.errors)
+        const firstFieldError = result.errors
+          ? Object.entries(result.errors)
+              .filter(([key]) => key !== "_form")
+              .flatMap(([, msgs]) => msgs || [])
+              .find(Boolean)
+          : undefined
+        toast.error(result.errors?._form?.[0] || firstFieldError || "Failed to submit rating")
       }
     } catch (error) {
+      console.error("💥 Unexpected error:", error)
       toast.error("An unexpected error occurred")
     } finally {
       setIsSubmitting(false)
@@ -191,6 +278,36 @@ export function AreaRatingModal({
     reset()
     setExistingRating(null)
     onClose()
+  }
+
+  const handleRatingChange = (category: keyof RatingFormData, value: number) => {
+    
+    // Ensure value is a proper number
+    const numericValue = Number(value)
+    if (isNaN(numericValue)) {
+      console.error(`❌ Invalid rating value for ${category}:`, value)
+      return
+    }
+    
+    
+    // For optional ratings, if the value is the same as current, clear it (toggle behavior)
+    const currentValue = Number(watchedValues[category])
+    if (category !== 'overallRating' && currentValue === numericValue) {
+      setValue(category, undefined as any, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+    } else {
+      setValue(category, numericValue as any, {
+        shouldValidate: true,
+        shouldDirty: true,
+      })
+    }
+    
+    // Verify the value was set correctly
+    setTimeout(() => {
+      const newValue = watchedValues[category]
+    }, 0)
   }
 
   return (
@@ -210,35 +327,39 @@ export function AreaRatingModal({
         </DialogHeader>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <input type="hidden" {...register("areaId")} value={areaId} />
+          <input type="hidden" {...register("areaId")} />
           
           {/* Rating Categories */}
           <div className="space-y-4">
-            {ratingCategories.map((category) => (
-              <div key={category.key} className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium flex items-center gap-2">
-                    <span className="text-lg">{category.icon}</span>
-                    {category.label}
-                    {category.required && <span className="text-red-500">*</span>}
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <StarRating
-                      value={watchedValues[category.key as keyof RatingFormData] as number || 0}
-                      onChange={(value) => setValue(category.key as keyof RatingFormData, value)}
-                    />
-                    <span className="text-sm text-muted-foreground min-w-[2rem]">
-                      {watchedValues[category.key as keyof RatingFormData] || "—"}
-                    </span>
+            {ratingCategories.map((category) => {
+              const currentValue = Number(watchedValues[category.key as keyof RatingFormData]) || 0
+              
+              return (
+                <div key={category.key} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium flex items-center gap-2">
+                      <span className="text-lg">{category.icon}</span>
+                      {category.label}
+                      {category.required && <span className="text-red-500">*</span>}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <StarRating
+                        value={currentValue}
+                        onChange={(value) => handleRatingChange(category.key as keyof RatingFormData, value)}
+                      />
+                      <span className="text-sm text-muted-foreground min-w-[2rem]">
+                        {currentValue || "—"}
+                      </span>
+                    </div>
                   </div>
+                  {errors[category.key as keyof RatingFormData] && (
+                    <p className="text-sm text-red-500">
+                      {errors[category.key as keyof RatingFormData]?.message}
+                    </p>
+                  )}
                 </div>
-                {errors[category.key as keyof RatingFormData] && (
-                  <p className="text-sm text-red-500">
-                    {errors[category.key as keyof RatingFormData]?.message}
-                  </p>
-                )}
-              </div>
-            ))}
+              )
+            })}
           </div>
 
           <Separator />
@@ -271,7 +392,7 @@ export function AreaRatingModal({
                   {watchedValues.overallRating || "—"}
                 </span>
                 <StarRating
-                  value={watchedValues.overallRating || 0}
+                  value={Number(watchedValues.overallRating) || 0}
                   onChange={() => {}}
                   readonly
                   size="sm"
@@ -300,4 +421,4 @@ export function AreaRatingModal({
       </DialogContent>
     </Dialog>
   )
-} 
+}

@@ -76,16 +76,16 @@ export function PropertyComparisonButton({ property, size = "sm", lng }: Propert
                 <Plus className="w-4 h-4" />
               )}
               <span className="ml-2 hidden sm:inline">
-                {isAdded ? "Remove" : "Compare"}
+                {isAdded ? (lng === "ar" ? "إزالة" : "Remove") : (lng === "ar" ? "أضف للمقارنة" : "Add to Compare")}
               </span>
             </Button>
           </TooltipTrigger>
           <TooltipContent>
             {isAdded 
-              ? "Remove from comparison" 
+              ? (lng === "ar" ? "إزالة من المقارنة" : "Remove from comparison")
               : canAddMore 
-                ? "Add to comparison" 
-                : "Maximum properties reached"
+                ? (lng === "ar" ? "أضف إلى المقارنة" : "Add to comparison")
+                : (lng === "ar" ? "تم بلوغ الحد الأقصى للعقارات" : "Maximum properties reached")
             }
           </TooltipContent>
         </Tooltip>

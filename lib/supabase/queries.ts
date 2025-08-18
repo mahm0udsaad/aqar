@@ -5,6 +5,7 @@ type Property = Database["public"]["Tables"]["properties"]["Row"]
 type Category = Database["public"]["Tables"]["categories"]["Row"]
 type PropertyImage = Database["public"]["Tables"]["property_images"]["Row"]
 type PropertyRating = Database["public"]["Tables"]["property_ratings"]["Row"]
+type PropertyVideo = Database["public"]["Tables"]["property_videos"]["Row"]
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"]
 type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"]
 type Area = Database["public"]["Tables"]["areas"]["Row"]
@@ -15,6 +16,7 @@ export interface PropertyWithDetails extends Property {
   property_ratings: PropertyRating | null
   areas: Area | null
   location_iframe_url: string | null
+  property_videos?: PropertyVideo[]
 }
 
 export interface SearchFilters {
@@ -152,7 +154,8 @@ export async function getPropertyById(id: string) {
       categories (*),
       property_images (*),
       property_ratings (*),
-      areas (*)
+      areas (*),
+      property_videos (*)
     `)
     .eq("id", id)
     .eq("status", "active")
@@ -168,6 +171,11 @@ export async function getPropertyById(id: string) {
     data.property_images.sort((a: PropertyImage, b: PropertyImage) => (a.order_index || 0) - (b.order_index || 0))
   }
 
+  // Sort property videos by order_index
+  if ((data as any).property_videos) {
+    ;(data as any).property_videos.sort((a: PropertyVideo, b: PropertyVideo) => (a.order_index || 0) - (b.order_index || 0))
+  }
+
   return data as PropertyWithDetails
 }
 
@@ -181,6 +189,7 @@ export async function getFeaturedProperties() {
     `)
     .eq("is_featured", true)
     .eq("status", "active")
+    .order("is_main_featured", { ascending: false })
     .order("order_index", { ascending: true })
     .limit(6)
 

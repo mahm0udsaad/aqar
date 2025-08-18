@@ -21,26 +21,50 @@ import {
   Bath,
   Square,
   Share2,
+  ChevronLeft,
+  ChevronRight,
+  Play,
 } from "lucide-react"
 import { PropertyGallery } from "@/components/property-gallery"
 import { ShareModal } from "@/components/share-modal"
 import { LoveButton } from "@/components/love-button"
 import { PropertyComparisonButton } from "@/components/property-comparison-button"
 import { PropertyWithDetails } from "@/lib/supabase/queries"
+import type { Locale } from "@/lib/i18n/config"
 import { getProperties } from "@/lib/supabase/queries"
 import { PropertyImage } from "@/lib/types"
 import { AreaRatingsDisplay } from "@/components/area-ratings-display"
 
 interface PropertyDetailsProps {
   property: PropertyWithDetails
-  lng: string
+  lng: Locale
 }
 
 export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
   const [relatedProperties, setRelatedProperties] = React.useState<
     PropertyWithDetails[]
   >([])
+
+  const translateFeature = (feature: string) => {
+    if (lng !== 'ar') return feature
+    const map: Record<string, string> = {
+      'Air Conditioning': 'تكييف هواء',
+      'Balcony': 'شرفة',
+      'Built-in Wardrobes': 'خزائن مدمجة',
+      'Dishwasher': 'جلاية صحون',
+      'Floorboards': 'أرضيات خشبية',
+      'Gas Cooking': 'طهي بالغاز',
+      'Internal Laundry': 'غسيل داخلي',
+      'Pets Allowed': 'مسموح بالحيوانات الأليفة',
+      'Parking': 'موقف سيارات',
+      'Garden': 'حديقة',
+      'Pool Access': 'وصول للمسبح',
+      'Gym Access': 'وصول لصالة الألعاب',
+    }
+    return map[feature] || feature
+  }
 
   React.useEffect(() => {
     async function fetchRelated() {
@@ -76,6 +100,26 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
     quietness: 6.5,
   }
 
+  const displayTitle = lng === "ar"
+    ? (property as any).title_ar || (property as any).title_en || property.title
+    : (property as any).title_en || (property as any).title_ar || property.title
+  const displayLocation = lng === "ar"
+    ? (property as any).location_ar || (property as any).location_en || property.location
+    : (property as any).location_en || (property as any).location_ar || property.location
+  const displayDescription = lng === "ar"
+    ? (property as any).description_ar || (property as any).description_en || property.description
+    : (property as any).description_en || (property as any).description_ar || property.description
+
+  const videos = (property as any).property_videos || []
+
+  const nextVideo = () => {
+    setCurrentVideoIndex((prev) => (prev + 1) % videos.length)
+  }
+
+  const prevVideo = () => {
+    setCurrentVideoIndex((prev) => (prev - 1 + videos.length) % videos.length)
+  }
+
   return (
     <>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -84,8 +128,107 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
           {/* Image Gallery */}
           <PropertyGallery
             images={property.property_images as unknown as PropertyImage[]}
-            title={property.title}
+            title={displayTitle}
           />
+
+          {/* Videos Section */}
+          {videos.length > 0 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Play className="w-5 h-5" />
+                  {lng === "ar" ? "الفيديوهات" : "Videos"}
+                  {videos.length > 1 && (
+                    <Badge variant="secondary" className="ml-2">
+                      {currentVideoIndex + 1} / {videos.length}
+                    </Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="relative">
+                  {/* Main Video Display */}
+                  <div className="relative group">
+                    <video 
+                      key={videos[currentVideoIndex].id}
+                      src={videos[currentVideoIndex].url} 
+                      controls 
+                      className="w-full h-[400px] object-cover rounded-lg border shadow-lg"
+                      poster={videos[currentVideoIndex].thumbnail_url}
+                    />
+                    
+                    {/* Navigation Arrows - Only show if multiple videos */}
+                    {videos.length > 1 && (
+                      <>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white border-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          onClick={prevVideo}
+                        >
+                          <ChevronLeft className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/70 hover:bg-black/90 text-white border-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                          onClick={nextVideo}
+                        >
+                          <ChevronRight className="w-4 h-4" />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Video Caption */}
+                  {videos[currentVideoIndex].caption && (
+                    <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                      <p className="text-sm text-muted-foreground font-medium">
+                        {videos[currentVideoIndex].caption}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Video Thumbnails - Only show if multiple videos */}
+                  {videos.length > 1 && (
+                    <div className="mt-6">
+                      <div className="flex gap-3 overflow-x-auto pb-2">
+                        {videos.map((video: any, index: number) => (
+                          <button
+                            key={video.id}
+                            onClick={() => setCurrentVideoIndex(index)}
+                            className={`relative flex-shrink-0 w-24 h-16 rounded-md overflow-hidden border-2 transition-all duration-200 ${
+                              index === currentVideoIndex
+                                ? 'border-primary shadow-md scale-105'
+                                : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            {video.thumbnail_url ? (
+                              <img
+                                src={video.thumbnail_url}
+                                alt={`Video ${index + 1}`}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-muted flex items-center justify-center">
+                                <Play className="w-4 h-4 text-muted-foreground" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
+                              <Play className="w-3 h-3 text-white" />
+                            </div>
+                            {index === currentVideoIndex && (
+                              <div className="absolute inset-0 bg-primary/20" />
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Property Info */}
           <Card>
@@ -122,13 +265,13 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                 </div>
 
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  {property.title}
+                  {displayTitle}
                 </h1>
 
                 <div className="flex items-center text-gray-600 mb-4">
                   <MapPin className="w-5 h-5 mr-2" />
                   <span className="text-lg">
-                    {property.location}, {property.area}
+                    {displayLocation}, {property.area}
                   </span>
                 </div>
 
@@ -154,7 +297,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                     <Bed className="w-6 h-6 mx-auto mb-2 text-foreground" />
                     <div className="font-semibold">{property.bedrooms}</div>
                     <div className="text-sm text-muted-foreground">
-                      Bedrooms
+                      {lng === "ar" ? "غرف النوم" : "Bedrooms"}
                     </div>
                   </div>
                 )}
@@ -163,60 +306,60 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                     <Bath className="w-6 h-6 mx-auto mb-2 text-foreground" />
                     <div className="font-semibold">{property.bathrooms}</div>
                     <div className="text-sm text-muted-foreground">
-                      Bathrooms
+                      {lng === "ar" ? "الحمامات" : "Bathrooms"}
                     </div>
                   </div>
                 )}
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Square className="w-6 h-6 mx-auto mb-2 text-foreground" />
                   <div className="font-semibold">{property.size}</div>
-                  <div className="text-sm text-muted-foreground">m²</div>
+                  <div className="text-sm text-muted-foreground">{lng === "ar" ? "م²" : "m²"}</div>
                 </div>
                 <div className="text-center p-4 bg-muted rounded-lg">
                   <Eye className="w-6 h-6 mx-auto mb-2 text-foreground" />
                   <div className="font-semibold">{property.views}</div>
-                  <div className="text-sm text-gray-600">Views</div>
+                  <div className="text-sm text-gray-600">{lng === "ar" ? "المشاهدات" : "Views"}</div>
                 </div>
               </div>
 
               {/* Description */}
               <div className="mb-6">
-                <h2 className="text-xl font-semibold mb-3">Description</h2>
+                <h2 className="text-xl font-semibold mb-3">{lng === "ar" ? "الوصف" : "Description"}</h2>
                 <p className="text-foreground leading-relaxed">
-                  {property.description}
+                  {displayDescription}
                 </p>
               </div>
 
               {/* Property Details */}
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-3">
-                  Property Details
+                  {lng === "ar" ? "تفاصيل العقار" : "Property Details"}
                 </h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Property Type</span>
+                    <span className="text-muted-foreground">{lng === "ar" ? "نوع العقار" : "Property Type"}</span>
                     <span className="font-medium">{category?.name}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Listing Type</span>
+                    <span className="text-muted-foreground">{lng === "ar" ? "نوع القائمة" : "Listing Type"}</span>
                     <span className="font-medium capitalize">
                       {property.property_type}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Owner Type</span>
+                    <span className="text-muted-foreground">{lng === "ar" ? "نوع المالك" : "Owner Type"}</span>
                     <span className="font-medium capitalize">
                       {property.owner_type}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Floor</span>
+                    <span className="text-muted-foreground">{lng === "ar" ? "الطابق" : "Floor"}</span>
                     <span className="font-medium">
-                      {property.floor || "Ground"}
+                      {property.floor || (lng === "ar" ? "أرضي" : "Ground")}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">Year Built</span>
+                    <span className="text-muted-foreground">{lng === "ar" ? "سنة البناء" : "Year Built"}</span>
                     <span className="font-medium">
                       {property.year_built || "2020"}
                     </span>
@@ -227,7 +370,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
               {/* Features */}
               <div className="mb-6">
                 <h2 className="text-xl font-semibold mb-3">
-                  Features & Amenities
+                  {lng === "ar" ? "المميزات والمرافق" : "Features & Amenities"}
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {property.features?.map((feature: string, index: number) => (
@@ -236,7 +379,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                       className="flex items-center p-3 bg-muted rounded-lg"
                     >
                       <div className="w-2 h-2 bg-primary rounded-full mr-3"></div>
-                      <span className="text-sm">{feature}</span>
+                      <span className="text-sm">{translateFeature(feature)}</span>
                     </div>
                   ))}
                 </div>
@@ -248,7 +391,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
           {property.location_iframe_url && (
             <Card>
               <CardHeader>
-                <CardTitle>Location</CardTitle>
+                <CardTitle>{lng === "ar" ? "الموقع" : "Location"}</CardTitle>
               </CardHeader>
               <CardContent>
                 <iframe
@@ -279,7 +422,11 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
           {/* Contact Agent */}
           <Card>
             <CardHeader>
-              <CardTitle>Contact Owner</CardTitle>
+              <CardTitle>
+                {property.owner_type === "broker"
+                  ? (lng === "ar" ? "اتصل بالوسيط" : "Contact Broker")
+                  : (lng === "ar" ? "اتصل بالمالك" : "Contact Owner")}
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="text-center">
@@ -295,15 +442,15 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                 </div>
                 {property.response_time && (
                   <p className="text-xs text-gray-500 mt-1">
-                    Responds within {property.response_time}
+                    {lng === "ar" ? "يستجيب خلال" : "Responds within"} {property.response_time}
                   </p>
                 )}
               </div>
               <Button size="lg" className="w-full">
-                <Phone className="w-4 h-4 mr-2" /> Call Now
+                <Phone className="w-4 h-4 mr-2" /> {lng === "ar" ? "اتصل الآن" : "Call Now"}
               </Button>
               <Button size="lg" variant="outline" className="w-full">
-                <MessageCircle className="w-4 h-4 mr-2" /> Send Message
+                <MessageCircle className="w-4 h-4 mr-2" /> {lng === "ar" ? "أرسل رسالة" : "Send Message"}
               </Button>
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex items-center gap-2">
@@ -314,21 +461,23 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                     onClick={() => setIsShareModalOpen(true)}
                   >
                     <Share2 className="w-4 h-4 mr-2" />
-                    Share
+                    {lng === "ar" ? "مشاركة" : "Share"}
                   </Button>
                 </div>
                 <PropertyComparisonButton 
                   property={{
                     id: property.id,
-                    title: property.title,
+                    title: displayTitle,
                     price: property.price,
-                    location: property.location,
+                    location: displayLocation,
                     area: property.area,
                     bedrooms: property.bedrooms,
                     bathrooms: property.bathrooms,
                     size: property.size,
                     property_type: property.property_type,
-                    thumbnail_url: property.thumbnail_url
+                    thumbnail_url: property.thumbnail_url ?? undefined,
+                    property_images: (property as any).property_images,
+                    location_iframe_url: property.location_iframe_url ?? undefined
                   }}
                   size="lg"
                   lng={lng}
@@ -339,12 +488,13 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
 
           {/* Related Properties */}
           <div>
-            <h3 className="text-xl font-semibold mb-4">Related Properties</h3>
+            <h3 className="text-xl font-semibold mb-4">{lng === "ar" ? "عقارات ذات صلة" : "Related Properties"}</h3>
             <div className="space-y-4">
               {relatedProperties.map((relatedProperty) => (
                 <PropertyCard
                   key={relatedProperty.id}
                   property={relatedProperty}
+                  lng={lng}
                 />
               ))}
             </div>

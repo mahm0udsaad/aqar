@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth/auth-context"
 import { ComparisonProvider } from "@/contexts/comparison-context"
 import { Toaster } from "@/components/ui/toaster"
+import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { Footer } from "@/components/footer"
 import "../globals.css"
 
@@ -49,6 +50,7 @@ export async function generateMetadata({
         ar: "/ar",
       },
     },
+    metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"),
   }
 }
 
@@ -72,6 +74,7 @@ export default async function RootLayout({
               {children}
             </ComparisonProvider>
           </AuthProvider>
+          <SonnerToaster />
           <Toaster />
           <Footer lng={lng} dict={dict} />
         </ThemeProvider>

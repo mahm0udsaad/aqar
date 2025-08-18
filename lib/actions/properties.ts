@@ -7,6 +7,8 @@ import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 import sharp from "sharp"
 
+
+
 // Updated uploadImageToStorage function with thumbnail generation
 async function uploadImageToStorage(
   imageFile: File, 
@@ -93,10 +95,16 @@ async function uploadImageToStorage(
 // Property form validation schema
 const PropertyFormSchema = z.object({
   title: z.string().min(1, "Title is required").max(500, "Title is too long"),
+  title_en: z.string().optional(),
+  title_ar: z.string().optional(),
   description: z.string().min(1, "Description is required"),
+  description_en: z.string().optional(),
+  description_ar: z.string().optional(),
   price: z.coerce.number().min(0, "Price must be a positive number"),
   pricePerMeter: z.coerce.number().optional(),
   location: z.string().min(1, "Location is required"),
+  location_en: z.string().optional(),
+  location_ar: z.string().optional(),
   area: z.string().min(1, "Area is required"),
   areaId: z.string().min(1, "Area selection is required"),
   bedrooms: z.coerce.number().min(0, "Bedrooms must be 0 or greater"),
@@ -119,7 +127,7 @@ const PropertyFormSchema = z.object({
   contactWhatsapp: z.string().optional(),
   contactEmail: z.string().email("Invalid email").optional(),
   responseTime: z.string().default("1 hour"),
-  locationIframeUrl: z.string().optional(),
+  locationIframeUrl: z.string().optional().nullable(),
 })
 
 type PropertyFormData = z.infer<typeof PropertyFormSchema>
@@ -159,10 +167,16 @@ export async function createProperty(
     // Extract and validate form data
     const rawFormData = {
       title: formData.get("title") as string,
+      titleEn: (formData.get("title_en") as string) || "",
+      titleAr: (formData.get("title_ar") as string) || "",
       description: formData.get("description") as string,
+      descriptionEn: (formData.get("description_en") as string) || "",
+      descriptionAr: (formData.get("description_ar") as string) || "",
       price: formData.get("price") as string,
       pricePerMeter: formData.get("pricePerMeter") as string,
       location: formData.get("location") as string,
+      locationEn: (formData.get("location_en") as string) || "",
+      locationAr: (formData.get("location_ar") as string) || "",
       area: formData.get("area") as string,
       areaId: formData.get("areaId") as string,
       bedrooms: formData.get("bedrooms") as string,
@@ -188,7 +202,16 @@ export async function createProperty(
       locationIframeUrl: formData.get("locationIframeUrl") as string,
     }
 
-    const validatedFields = PropertyFormSchema.safeParse(rawFormData)
+    // Normalize legacy-required fields from localized inputs if left empty
+    const normalizedRawFormData = {
+      ...rawFormData,
+      title: (rawFormData.title && rawFormData.title.trim()) || rawFormData.titleEn || rawFormData.titleAr || "",
+      description: (rawFormData.description && rawFormData.description.trim()) || rawFormData.descriptionEn || rawFormData.descriptionAr || "",
+      location: (rawFormData.location && rawFormData.location.trim()) || rawFormData.locationEn || rawFormData.locationAr || "",
+      // area must be provided via client when selecting areaId; keep as-is
+    }
+
+    const validatedFields = PropertyFormSchema.safeParse(normalizedRawFormData)
 
     if (!validatedFields.success) {
       return {
@@ -198,7 +221,7 @@ export async function createProperty(
       }
     }
 
-    const data = validatedFields.data
+    const data = validatedFields.data as any
     const pricePerMeter = data.pricePerMeter || data.price / data.size
 
     // Extract the URL from the iframe
@@ -238,10 +261,16 @@ export async function createProperty(
       .from("properties")
       .insert({
         title: data.title,
+        title_en: data.title_en ?? (rawFormData.titleEn || data.title),
+        title_ar: data.title_ar ?? (rawFormData.titleAr || data.title),
         description: data.description,
+        description_en: data.description_en ?? (rawFormData.descriptionEn || data.description),
+        description_ar: data.description_ar ?? (rawFormData.descriptionAr || data.description),
         price: data.price,
         price_per_meter: pricePerMeter,
         location: data.location,
+        location_en: data.location_en ?? (rawFormData.locationEn || data.location),
+        location_ar: data.location_ar ?? (rawFormData.locationAr || data.location),
         area: data.area,
         area_id: data.areaId,
         bedrooms: data.bedrooms,
@@ -349,6 +378,30 @@ export async function createProperty(
       }
     }
 
+    // Handle videos (URLs and/or uploaded files)
+    const totalVideos = parseInt(formData.get("total_videos") as string) || 0
+    if (totalVideos > 0) {
+      const videoOps = []
+      for (let i = 0; i < totalVideos; i++) {
+        const providedUrl = formData.get(`video_${i}_url`) as string
+        const caption = formData.get(`video_${i}_caption`) as string
+        const orderIndex = parseInt(formData.get(`video_${i}_order`) as string) || i
+
+        if (providedUrl) {
+          const insertOp = supabase.from('property_videos').insert({
+            property_id: property.id,
+            url: providedUrl,
+            caption: caption || null,
+            order_index: orderIndex,
+          })
+          videoOps.push(insertOp)
+        }
+      }
+      if (videoOps.length > 0) {
+        await Promise.all(videoOps)
+      }
+    }
+
     // Revalidate all pages that might show this property
     revalidatePath("/admin/properties")
     revalidatePath("/") // Home page
@@ -453,10 +506,16 @@ export async function updateProperty(
     // Extract and validate form data (same as create)
     const rawFormData = {
       title: formData.get("title") as string,
+      titleEn: (formData.get("title_en") as string) || "",
+      titleAr: (formData.get("title_ar") as string) || "",
       description: formData.get("description") as string,
+      descriptionEn: (formData.get("description_en") as string) || "",
+      descriptionAr: (formData.get("description_ar") as string) || "",
       price: formData.get("price") as string,
       pricePerMeter: formData.get("pricePerMeter") as string,
       location: formData.get("location") as string,
+      locationEn: (formData.get("location_en") as string) || "",
+      locationAr: (formData.get("location_ar") as string) || "",
       area: formData.get("area") as string,
       areaId: formData.get("areaId") as string,
       bedrooms: formData.get("bedrooms") as string,
@@ -492,7 +551,7 @@ export async function updateProperty(
       }
     }
 
-    const data = validatedFields.data
+    const data = validatedFields.data as any
     const pricePerMeter = data.pricePerMeter || data.price / data.size
 
     // Extract the URL from the iframe
@@ -507,10 +566,16 @@ export async function updateProperty(
 
     let updateData: any = {
       title: data.title,
+      title_en: (data.title_en && data.title_en.trim()) || rawFormData.titleEn || data.title,
+      title_ar: (data.title_ar && data.title_ar.trim()) || rawFormData.titleAr || data.title,
       description: data.description,
+      description_en: (data.description_en && data.description_en.trim()) || rawFormData.descriptionEn || data.description,
+      description_ar: (data.description_ar && data.description_ar.trim()) || rawFormData.descriptionAr || data.description,
       price: data.price,
       price_per_meter: pricePerMeter,
       location: data.location,
+      location_en: (data.location_en && data.location_en.trim()) || rawFormData.locationEn || data.location,
+      location_ar: (data.location_ar && data.location_ar.trim()) || rawFormData.locationAr || data.location,
       area: data.area,
       area_id: data.areaId,
       bedrooms: data.bedrooms,
@@ -709,6 +774,54 @@ export async function updateProperty(
       }
     }
 
+    // Handle video updates (support file uploads and URLs)
+    const totalVideos = parseInt(formData.get("total_videos") as string) || 0
+    const { data: currentVideos } = await supabase
+      .from("property_videos")
+      .select("*")
+      .eq("property_id", id)
+
+    const existingVideoIds = new Set<string>()
+    const videoOperations = []
+
+    for (let i = 0; i < totalVideos; i++) {
+      const videoId = formData.get(`video_${i}_id`) as string
+      const urlFromForm = formData.get(`video_${i}_url`) as string
+      const caption = formData.get(`video_${i}_caption`) as string
+      const orderIndex = parseInt(formData.get(`video_${i}_order`) as string) || i
+
+      if (videoId) {
+        existingVideoIds.add(videoId)
+        const videoUpdate = supabase.from("property_videos").update({
+          url: urlFromForm || null,
+          caption: caption || null,
+          order_index: orderIndex,
+        }).eq("id", videoId)
+        videoOperations.push(videoUpdate)
+      } else if (urlFromForm) {
+        const videoInsert = supabase.from("property_videos").insert({
+          property_id: id,
+          url: urlFromForm,
+          caption: caption || null,
+          order_index: orderIndex,
+        })
+        videoOperations.push(videoInsert)
+      }
+    }
+
+    if (currentVideos) {
+      for (const video of currentVideos) {
+        if (!existingVideoIds.has(video.id)) {
+          const videoDelete = supabase.from("property_videos").delete().eq("id", video.id)
+          videoOperations.push(videoDelete)
+        }
+      }
+    }
+
+    if (videoOperations.length > 0) {
+      await Promise.all(videoOperations)
+    }
+
     revalidatePath("/admin/properties")
     revalidatePath(`/admin/properties/${id}/edit`)
     return {
@@ -850,6 +963,11 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
       updateData.order_index = newOrderIndex;
     }
 
+    // If unfeaturing, ensure main featured flag is removed as well
+    if (!featured) {
+      updateData.is_main_featured = false
+    }
+
     const { error } = await supabase
       .from("properties")
       .update(updateData)
@@ -862,6 +980,7 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
 
     revalidatePath("/admin/properties")
     revalidatePath("/admin/featured")
+    revalidatePath("/")
     return { success: true, message: `Property ${featured ? "featured" : "unfeatured"} successfully` }
   } catch (error) {
     console.error("Error in togglePropertyFeatured:", error)
@@ -916,3 +1035,81 @@ export async function updatePropertyOrder(updates: { id: string; order_index: nu
     return { success: false, message: "An unexpected error occurred." };
   }
 } 
+
+// Set or unset a single property as main featured. Ensures uniqueness.
+export async function setMainFeatured(
+  id: string,
+  isMain: boolean
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const supabase = createServerComponentClient<Database>({ cookies })
+
+    // Check if user is authenticated and is admin
+    const {
+      data: { session },
+    } = await supabase.auth.getSession()
+
+    if (!session) {
+      return { success: false, message: "Authentication required" }
+    }
+
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .single()
+
+    if (!profile || profile.role !== "admin") {
+      return { success: false, message: "Admin access required" }
+    }
+
+    if (isMain) {
+      // Clear current main featured (if any)
+      await supabase
+        .from("properties")
+        .update({ is_main_featured: false })
+        .eq("is_main_featured", true)
+
+      // Place as top of featured/new stack if needed
+      const { data: topProperties } = await supabase
+        .from("properties")
+        .select("order_index")
+        .or("is_featured.eq.true,is_new.eq.true")
+        .order("order_index", { ascending: true })
+        .limit(1)
+
+      let newOrderIndex = 0
+      if (topProperties && topProperties.length > 0) {
+        newOrderIndex = Math.max(0, (topProperties[0].order_index || 0) - 1)
+      }
+
+      // Ensure the target is featured and mark as main
+      const { error: setErr } = await supabase
+        .from("properties")
+        .update({ is_featured: true, is_main_featured: true, order_index: newOrderIndex, updated_at: new Date().toISOString() })
+        .eq("id", id)
+
+      if (setErr) {
+        console.error("Error setting main featured:", setErr)
+        return { success: false, message: "Failed to set main featured" }
+      }
+    } else {
+      const { error: unsetErr } = await supabase
+        .from("properties")
+        .update({ is_main_featured: false, updated_at: new Date().toISOString() })
+        .eq("id", id)
+
+      if (unsetErr) {
+        console.error("Error unsetting main featured:", unsetErr)
+        return { success: false, message: "Failed to unset main featured" }
+      }
+    }
+
+    revalidatePath("/admin/featured")
+    revalidatePath("/")
+    return { success: true, message: isMain ? "Set as main featured" : "Removed from main featured" }
+  } catch (error) {
+    console.error("Error in setMainFeatured:", error)
+    return { success: false, message: "An unexpected error occurred" }
+  }
+}
