@@ -39,12 +39,11 @@ export function PropertyCard({
   property,
   showContactButtons = false,
 }: PropertyCardProps) {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [imageLoaded, setImageLoaded] = useState(false);
   if (!property) {
     return null // Don't render anything if no property is passed
   }
-
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-  const [imageLoaded, setImageLoaded] = useState(false);
   const mainImage =
     property.property_images && property.property_images.length > 0
       ? property.property_images.find((img) => img.is_main) ||
@@ -188,7 +187,6 @@ export function PropertyCard({
               property_type: property.property_type,
               thumbnail_url: property.thumbnail_url || undefined,
               property_images: property.property_images || undefined, // Pass the property images
-              location_iframe_url: property.location_iframe_url || undefined, // Pass the location iframe URL
             }}
             lng="en"
             size="sm"
@@ -199,7 +197,9 @@ export function PropertyCard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center text-sm text-slate-600">
             <User className="w-4 h-4 mr-1" />
-            <span className="capitalize">{property.owner_type}</span>
+            <span className="capitalize">
+              {property.owner_type === 'broker' ? 'Contact Owner' : property.owner_type}
+            </span>
             {property.contact_is_verified && (
               <Shield className="w-3 h-3 ml-1 text-green-600" />
             )}

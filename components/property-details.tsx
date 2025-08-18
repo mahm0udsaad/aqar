@@ -206,7 +206,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">Owner Type</span>
                     <span className="font-medium capitalize">
-                      {property.owner_type}
+                      {property.owner_type === 'broker' ? 'Contact Owner' : property.owner_type}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
@@ -245,14 +245,14 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
           </Card>
 
           {/* Location Map */}
-          {property.location_iframe_url && (
+          {property.map_enabled && property.location_lat && property.location_lng && (
             <Card>
               <CardHeader>
                 <CardTitle>Location</CardTitle>
               </CardHeader>
               <CardContent>
                 <iframe
-                  src={property.location_iframe_url}
+                  src={`https://www.google.com/maps?q=${property.location_lat},${property.location_lng}&output=embed`}
                   width="100%"
                   height="450"
                   style={{ border: 0 }}
@@ -288,7 +288,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                 </div>
                 <h3 className="font-semibold">{property.contact_name}</h3>
                 <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
-                  <span className="capitalize">{property.owner_type}</span>
+                  <span className="capitalize">{property.owner_type === 'broker' ? 'Contact Owner' : property.owner_type}</span>
                   {property.contact_is_verified && (
                     <Shield className="w-3 h-3 text-green-500" />
                   )}

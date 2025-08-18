@@ -20,7 +20,8 @@ export default async function EditPropertyPage({ params }: PageProps) {
     .select(`
       *,
       categories (id, name),
-      property_images (id, url, alt_text, is_main, order_index)
+      property_images (id, url, alt_text, is_main, order_index),
+      property_translations (*)
     `)
     .eq("id", id)
     .single()

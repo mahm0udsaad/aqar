@@ -24,6 +24,10 @@ export function formatArea(area: number): string {
   return new Intl.NumberFormat("en-US").format(area)
 }
 
+export function formatPropertyCount(count: number): string {
+  return count === 1 ? "1 Property" : `${count} Properties`
+}
+
 export function formatPricePerMeter(price: number, size: number): number {
   return Math.round(price / size)
 }

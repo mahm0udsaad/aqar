@@ -157,6 +157,7 @@ export interface Database {
           name_ar: string | null
           description_en: string | null
           description_ar: string | null
+          is_visible: boolean | null
           created_at: string | null
           updated_at: string | null
         }
@@ -172,6 +173,7 @@ export interface Database {
           name_ar?: string | null
           description_en?: string | null
           description_ar?: string | null
+          is_visible?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -187,6 +189,7 @@ export interface Database {
           name_ar?: string | null
           description_en?: string | null
           description_ar?: string | null
+          is_visible?: boolean | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -227,7 +230,11 @@ export interface Database {
           contact_is_verified: boolean | null
           response_time: string | null
           thumbnail_url: string | null
-          location_iframe_url: string | null
+          seo_keywords: string[] | null
+          meta_description: string | null
+          featured_order: number | null
+          hero_featured: boolean | null
+          map_enabled: boolean | null
           order_index: number | null
           created_at: string | null
           updated_at: string | null
@@ -267,7 +274,11 @@ export interface Database {
           contact_is_verified?: boolean | null
           response_time?: string | null
           thumbnail_url?: string | null
-          location_iframe_url?: string | null
+          seo_keywords?: string[] | null
+          meta_description?: string | null
+          featured_order?: number | null
+          hero_featured?: boolean | null
+          map_enabled?: boolean | null
           order_index?: number | null
           created_at?: string | null
           updated_at?: string | null
@@ -307,7 +318,11 @@ export interface Database {
           contact_is_verified?: boolean | null
           response_time?: string | null
           thumbnail_url?: string | null
-          location_iframe_url?: string | null
+          seo_keywords?: string[] | null
+          meta_description?: string | null
+          featured_order?: number | null
+          hero_featured?: boolean | null
+          map_enabled?: boolean | null
           order_index?: number | null
           created_at?: string | null
           updated_at?: string | null
@@ -320,6 +335,7 @@ export interface Database {
           url: string
           thumbnail_url: string | null
           alt_text: string | null
+          caption: string | null
           order_index: number | null
           is_main: boolean | null
           created_at: string | null
@@ -330,6 +346,7 @@ export interface Database {
           url: string
           thumbnail_url?: string | null
           alt_text?: string | null
+          caption?: string | null
           order_index?: number | null
           is_main?: boolean | null
           created_at?: string | null
@@ -340,8 +357,32 @@ export interface Database {
           url?: string
           thumbnail_url?: string | null
           alt_text?: string | null
+          caption?: string | null
           order_index?: number | null
           is_main?: boolean | null
+          created_at?: string | null
+        }
+      }
+      property_videos: {
+        Row: {
+          id: string
+          property_id: string | null
+          url: string
+          order_index: number | null
+          created_at: string | null
+        }
+        Insert: {
+          id?: string
+          property_id?: string | null
+          url: string
+          order_index?: number | null
+          created_at?: string | null
+        }
+        Update: {
+          id?: string
+          property_id?: string | null
+          url?: string
+          order_index?: number | null
           created_at?: string | null
         }
       }
@@ -381,6 +422,67 @@ export interface Database {
           quietness?: number | null
           created_at?: string | null
           updated_at?: string | null
+        }
+      }
+      property_translations: {
+        Row: {
+          id: string
+          property_id: string
+          locale: 'en' | 'ar'
+          title: string
+          description: string | null
+          location: string | null
+          area: string | null
+          meta_title: string | null
+          meta_description: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          property_id: string
+          locale: 'en' | 'ar'
+          title: string
+          description?: string | null
+          location?: string | null
+          area?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          property_id?: string
+          locale?: 'en' | 'ar'
+          title?: string
+          description?: string | null
+          location?: string | null
+          area?: string | null
+          meta_title?: string | null
+          meta_description?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      site_settings: {
+        Row: {
+          id: string
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: string
+          updated_at?: string
         }
       }
       user_profiles: {

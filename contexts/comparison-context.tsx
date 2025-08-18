@@ -15,7 +15,6 @@ export interface PropertyForComparison {
   property_type: "sale" | "rent"
   thumbnail_url?: string
   property_images?: { url: string; alt_text?: string }[]
-  location_iframe_url?: string
 }
 
 interface ComparisonContextType {

@@ -8,8 +8,9 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Separator } from "@/components/ui/separator"
-import { X, ExternalLink, Trash2, MapPin, Bed, Bath, Maximize2, Home, Eye } from "lucide-react"
+import { X, ExternalLink, Trash2, Bed, Bath, Maximize2, Home, MapPin } from "lucide-react"
 import { useComparison, PropertyForComparison } from "@/contexts/comparison-context"
+import { formatPropertyCount } from "@/lib/utils"
 
 interface PropertyComparisonViewProps {
   lng: string
@@ -19,15 +20,6 @@ interface PropertyComparisonViewProps {
 export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProps) {
   const { comparisonList, removeFromComparison, clearComparison } = useComparison()
   const [mounted, setMounted] = useState(false)
-  const [selectedProperty, setSelectedProperty] = useState<PropertyForComparison | null>(null)
-  console.log(comparisonList)
-  const handleViewMap = (property: PropertyForComparison) => {
-    setSelectedProperty(property)
-  }
-
-  const handleCloseMap = () => {
-    setSelectedProperty(null)
-  }
 
   useEffect(() => {
     setMounted(true)
@@ -67,26 +59,11 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
 
   return (
     <div className="space-y-6">
-      {selectedProperty && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={handleCloseMap}>
-          <div className="bg-white p-4 rounded-lg shadow-lg" onClick={(e) => e.stopPropagation()}>
-            <iframe
-              src={selectedProperty.location_iframe_url}
-              width="800"
-              height="600"
-              style={{ border: 0 }}
-              allowFullScreen={true}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            ></iframe>
-          </div>
-        </div>
-      )}
       {/* Header with actions */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">
-            Comparing {comparisonList.length} Properties
+            Comparing {formatPropertyCount(comparisonList.length)}
           </h2>
           <p className="text-sm text-muted-foreground">
             Compare key features and specifications
@@ -137,9 +114,6 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
                       <ExternalLink className="w-3 h-3" />
                     </Button>
                   </Link>
-                  <Button variant="ghost" size="sm" className="h-6 px-2" onClick={() => handleViewMap(property)}>
-                    <Eye className="w-3 h-3" />
-                  </Button>
                 </div>
               </div>
             </CardContent>

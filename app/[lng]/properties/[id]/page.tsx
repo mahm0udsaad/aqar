@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation"
-import { getPropertyById } from "@/lib/supabase/queries"
+import { getPropertyWithLocale } from "@/lib/supabase/queries"
 import { PropertyDetails } from "@/components/property-details"
 import { Navbar } from "@/components/navbar"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
@@ -8,7 +8,7 @@ import { Locale } from "@/lib/i18n/config"
 export async function generateMetadata({ params }: { params: { id: string; lng: Locale } }) {
   const { id, lng } = params;
   const dict = await getDictionary(lng);
-  const property = await getPropertyById(id);
+  const property = await getPropertyWithLocale(id, lng);
 
   if (!property) {
     return {
@@ -17,8 +17,8 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
     };
   }
 
-  const title = `${property.title} - ${property.location}, ${property.area}`;
-  const description = property.description.substring(0, 160);
+  const title = property.meta_title || `${property.title} - ${property.location}, ${property.area}`;
+  const description = property.meta_description || property.description.substring(0, 160);
   const imageUrl = property.thumbnail_url || property.property_images?.[0]?.url || '/placeholder.svg';
 
   return {
@@ -53,7 +53,7 @@ interface PropertyPageProps {
 export default async function PropertyPage({ params }: PropertyPageProps) {
   const { id, lng } = await params
   const dict = await getDictionary(lng)
-  const property = await getPropertyById(id)
+  const property = await getPropertyWithLocale(id, lng)
 
   if (!property) {
     notFound()

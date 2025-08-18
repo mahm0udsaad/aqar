@@ -6,6 +6,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 import sharp from "sharp"
+import { upsertPropertyTranslation } from "@/lib/supabase/queries"
 
 // Updated uploadImageToStorage function with thumbnail generation
 async function uploadImageToStorage(
@@ -119,7 +120,9 @@ const PropertyFormSchema = z.object({
   contactWhatsapp: z.string().optional(),
   contactEmail: z.string().email("Invalid email").optional(),
   responseTime: z.string().default("1 hour"),
-  locationIframeUrl: z.string().optional(),
+  locationLat: z.coerce.number().optional(),
+  locationLng: z.coerce.number().optional(),
+  mapEnabled: z.boolean().default(false),
 })
 
 type PropertyFormData = z.infer<typeof PropertyFormSchema>
@@ -185,8 +188,12 @@ export async function createProperty(
       contactWhatsapp: formData.get("contactWhatsapp") as string,
       contactEmail: formData.get("contactEmail") as string,
       responseTime: formData.get("responseTime") as string,
-      locationIframeUrl: formData.get("locationIframeUrl") as string,
+      locationLat: formData.get("locationLat") as string,
+      locationLng: formData.get("locationLng") as string,
+      mapEnabled: formData.get("mapEnabled") === "true",
     }
+
+    const translations = JSON.parse((formData.get('translations') as string) || '{}')
 
     const validatedFields = PropertyFormSchema.safeParse(rawFormData)
 
@@ -202,7 +209,6 @@ export async function createProperty(
     const pricePerMeter = data.pricePerMeter || data.price / data.size
 
     // Extract the URL from the iframe
-    const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
     // Calculate order_index for proper positioning
     // Featured and new properties should appear at the top
@@ -264,7 +270,9 @@ export async function createProperty(
         contact_whatsapp: data.contactWhatsapp,
         contact_email: data.contactEmail,
         response_time: data.responseTime,
-        location_iframe_url: locationIframeUrl,
+        location_lat: data.locationLat ? Number(data.locationLat) : null,
+        location_lng: data.locationLng ? Number(data.locationLng) : null,
+        map_enabled: data.mapEnabled,
         order_index: orderIndex,
       })
       .select()
@@ -275,6 +283,23 @@ export async function createProperty(
       return {
         message: "Failed to create property. Please try again.",
         success: false,
+      }
+    }
+
+    // Upsert translations
+    for (const locale of ['en', 'ar'] as const) {
+      const t = translations[locale]
+      if (t && t.title) {
+        await upsertPropertyTranslation({
+          property_id: property.id,
+          locale,
+          title: t.title,
+          description: t.description || null,
+          location: t.location || null,
+          area: t.area || null,
+          meta_title: t.meta_title || null,
+          meta_description: t.meta_description || null,
+        })
       }
     }
 
@@ -401,27 +426,6 @@ async function deleteImageFromStorage(url: string): Promise<void> {
   }
 }
 
-// Helper function to extract URL from iframe
-function extractSrcFromIframe(iframe: string): string | null {
-  if (!iframe || iframe.trim() === '') return null;
-  
-  // Try to match src attribute
-  const srcMatch = iframe.match(/src="([^"]+)"/);
-  if (srcMatch) return srcMatch[1];
-  
-  // Try to match src attribute with single quotes
-  const srcMatchSingle = iframe.match(/src='([^']+)'/);
-  if (srcMatchSingle) return srcMatchSingle[1];
-  
-  // If it's already a URL (not wrapped in iframe), return as is
-  if (iframe.includes('maps.google.com') || iframe.includes('google.com/maps')) {
-    return iframe.trim();
-  }
-  
-  return null;
-}
-
-
 
 export async function updateProperty(
   id: string,
@@ -479,8 +483,12 @@ export async function updateProperty(
       contactWhatsapp: formData.get("contactWhatsapp") as string,
       contactEmail: formData.get("contactEmail") as string,
       responseTime: formData.get("responseTime") as string,
-      locationIframeUrl: formData.get("locationIframeUrl") as string,
+      locationLat: formData.get("locationLat") as string,
+      locationLng: formData.get("locationLng") as string,
+      mapEnabled: formData.get("mapEnabled") === "true",
     }
+
+    const translations = JSON.parse((formData.get('translations') as string) || '{}')
 
     const validatedFields = PropertyFormSchema.safeParse(rawFormData)
 
@@ -494,9 +502,6 @@ export async function updateProperty(
 
     const data = validatedFields.data
     const pricePerMeter = data.pricePerMeter || data.price / data.size
-
-    // Extract the URL from the iframe
-    const locationIframeUrl = data.locationIframeUrl ? extractSrcFromIframe(data.locationIframeUrl) : null;
 
     // Get current property to check if featured/new status changed
     const { data: currentProperty } = await supabase
@@ -534,7 +539,9 @@ export async function updateProperty(
       contact_email: data.contactEmail,
       response_time: data.responseTime,
       updated_at: new Date().toISOString(),
-      location_iframe_url: locationIframeUrl,
+      location_lat: data.locationLat ? Number(data.locationLat) : null,
+      location_lng: data.locationLng ? Number(data.locationLng) : null,
+      map_enabled: data.mapEnabled,
     };
 
     // If featured/new status changed, recalculate order_index
@@ -587,6 +594,23 @@ export async function updateProperty(
       return {
         message: "Failed to update property. Please try again.",
         success: false,
+      }
+    }
+
+    // Upsert translations
+    for (const locale of ['en', 'ar'] as const) {
+      const t = translations[locale]
+      if (t && t.title) {
+        await upsertPropertyTranslation({
+          property_id: id,
+          locale,
+          title: t.title,
+          description: t.description || null,
+          location: t.location || null,
+          area: t.area || null,
+          meta_title: t.meta_title || null,
+          meta_description: t.meta_description || null,
+        })
       }
     }
 

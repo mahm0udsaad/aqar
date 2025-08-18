@@ -1,3 +1,19 @@
+export type Locale = 'en' | 'ar'
+
+export interface PropertyTranslation {
+  id: string
+  property_id: string
+  locale: Locale
+  title: string
+  description?: string | null
+  location?: string | null
+  area?: string | null
+  meta_title?: string | null
+  meta_description?: string | null
+  created_at: string
+  updated_at: string
+}
+
 export interface Property {
   id: string
   title: string
@@ -15,11 +31,14 @@ export interface Property {
   categoryId: string
   propertyType: "sale" | "rent"
   images: PropertyImage[]
+  videos?: PropertyVideo[]
   features: string[]
   amenities: string[]
   ownerType: "owner" | "broker"
   isNew: boolean
   isFeatured: boolean
+  featuredOrder?: number
+  heroFeatured?: boolean
   isVerified: boolean
   views: number
   contactInfo: ContactInfo
@@ -27,6 +46,9 @@ export interface Property {
     lat: number
     lng: number
   }
+  seoKeywords?: string[]
+  metaDescription?: string
+  mapEnabled?: boolean
   ratings?: PropertyRatings
   createdAt: string
   updatedAt: string
@@ -36,8 +58,16 @@ export interface PropertyImage {
   id: string
   url: string
   alt: string
+  caption?: string
   order: number
   isMain: boolean
+}
+
+export interface PropertyVideo {
+  id: string
+  url: string
+  order: number
+  createdAt: string
 }
 
 export interface ContactInfo {
@@ -66,6 +96,7 @@ export interface Category {
   description: string
   icon: string
   order: number
+  isVisible?: boolean
   createdAt: string
   updatedAt: string
 }

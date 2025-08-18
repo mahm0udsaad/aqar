@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import { Save, FileText, X, Upload, MapPin, Star, Phone, Plus, Info, Loader2, ArrowLeft, Camera } from "lucide-react"
 import Link from "next/link"
 import { createProperty, updateProperty } from "@/lib/actions/properties"
@@ -20,13 +22,9 @@ import { toast } from "sonner"
 import type { Database } from "@/lib/supabase/types"
 import { ImageUploadCrop, PropertyImage } from "@/components/admin/image-upload-crop"
 
-function extractSrcFromIframe(iframe: string): string | null {
-  const match = iframe.match(/src="([^"]+)"/);
-  return match ? match[1] : null;
-}
-
 type Property = Database["public"]["Tables"]["properties"]["Row"]
 type PropertyImageDB = Database["public"]["Tables"]["property_images"]["Row"]
+type PropertyTranslationDB = Database["public"]["Tables"]["property_translations"]["Row"]
 
 interface Category {
   id: string
@@ -47,7 +45,7 @@ interface PropertyFormProps {
   areas: Area[]
   lng: string
   mode: "create" | "edit"
-  property?: Property & { property_images?: PropertyImageDB[] }
+  property?: Property & { property_images?: PropertyImageDB[]; property_translations?: PropertyTranslationDB[] }
 }
 
 const COMMON_FEATURES = [
@@ -97,15 +95,18 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
     }))
   }
 
+  const enTranslation = property?.property_translations?.find(t => t.locale === 'en')
+  const arTranslation = property?.property_translations?.find(t => t.locale === 'ar')
+
   // Form state
   const [images, setImages] = useState<PropertyImage[]>(initializeImages())
   const [formData, setFormData] = useState({
-    title: property?.title || "",
-    description: property?.description || "",
+    title: enTranslation?.title || property?.title || "",
+    description: enTranslation?.description || property?.description || "",
     price: property?.price?.toString() || "",
     pricePerMeter: property?.price_per_meter?.toString() || "",
-    location: property?.location || "",
-    area: property?.area || "",
+    location: enTranslation?.location || property?.location || "",
+    area: enTranslation?.area || property?.area || "",
     areaId: property?.area_id || "",
     bedrooms: property?.bedrooms?.toString() || "0",
     bathrooms: property?.bathrooms?.toString() || "0",
@@ -125,7 +126,20 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
     isNew: property?.is_new || false,
     isFeatured: property?.is_featured || false,
     isVerified: property?.is_verified || false,
-    locationIframeUrl: property?.location_iframe_url || "",
+    locationLat: property?.location_lat?.toString() || "",
+    locationLng: property?.location_lng?.toString() || "",
+    mapEnabled: property?.map_enabled || false,
+    metaTitle: enTranslation?.meta_title || "",
+    metaDescription: enTranslation?.meta_description || "",
+  })
+
+  const [arForm, setArForm] = useState({
+    title: arTranslation?.title || "",
+    description: arTranslation?.description || "",
+    location: arTranslation?.location || "",
+    area: arTranslation?.area || "",
+    metaTitle: arTranslation?.meta_title || "",
+    metaDescription: arTranslation?.meta_description || "",
   })
 
   const [selectedFeatures, setSelectedFeatures] = useState<string[]>(property?.features || [])
@@ -143,8 +157,8 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
   // Calculate form completion progress
   const calculateProgress = () => {
     const requiredFields = [
-      formData.title,
-      formData.description,
+      formData.title || arForm.title,
+      formData.description || arForm.description,
       formData.price,
       formData.location,
       formData.areaId,
@@ -281,56 +295,79 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    
+
+    if (!formData.title && !arForm.title) {
+      setErrors(prev => ({ ...prev, title: ['Title is required'] }))
+      return
+    }
+
     startTransition(async () => {
       const formDataObj = new FormData()
-      
-      // Add all form fields
-      Object.entries(formData).forEach(([key, value]) => {
-        if (key !== 'locationIframeUrl') {
-          formDataObj.append(key, value.toString());
-        }
-      });
 
-      const iframeSrc = extractSrcFromIframe(formData.locationIframeUrl);
-      if (iframeSrc) {
-        formDataObj.append("locationIframeUrl", iframeSrc);
-      }
-      
-      // Add area_id if selected
+      const base = formData.title
+        ? formData
+        : { ...formData, title: arForm.title, description: arForm.description, location: arForm.location, area: arForm.area }
+
+      Object.entries(base).forEach(([key, value]) => {
+        if (!['metaTitle', 'metaDescription'].includes(key)) {
+          formDataObj.append(key, value.toString())
+        }
+      })
+
       if (formData.areaId) {
-        formDataObj.append("areaId", formData.areaId)
+        formDataObj.append('areaId', formData.areaId)
       }
-      
-      // Add features and amenities
-      selectedFeatures.forEach(feature => formDataObj.append("features", feature))
-      selectedAmenities.forEach(amenity => formDataObj.append("amenities", amenity))
-      
-      // Add images
+
+      selectedFeatures.forEach(feature => formDataObj.append('features', feature))
+      selectedAmenities.forEach(amenity => formDataObj.append('amenities', amenity))
+
       images.forEach((image, index) => {
         if (image.file) {
-          // New image file to upload
           formDataObj.append(`image_${index}`, image.file)
-          formDataObj.append(`image_${index}_alt`, image.alt_text || "")
+          formDataObj.append(`image_${index}_alt`, image.alt_text || '')
           formDataObj.append(`image_${index}_order`, image.order_index.toString())
           formDataObj.append(`image_${index}_is_main`, image.is_main.toString())
         } else {
-          // Existing image (for updates)
           formDataObj.append(`existing_image_${index}_id`, image.id)
-          formDataObj.append(`existing_image_${index}_alt`, image.alt_text || "")
+          formDataObj.append(`existing_image_${index}_alt`, image.alt_text || '')
           formDataObj.append(`existing_image_${index}_order`, image.order_index.toString())
           formDataObj.append(`existing_image_${index}_is_main`, image.is_main.toString())
         }
       })
-      
-      formDataObj.append("total_images", images.length.toString())
-      
+
+      formDataObj.append('total_images', images.length.toString())
+
+      const translations = {
+        en: formData.title
+          ? {
+              title: formData.title,
+              description: formData.description,
+              location: formData.location,
+              area: formData.area,
+              meta_title: formData.metaTitle,
+              meta_description: formData.metaDescription,
+            }
+          : undefined,
+        ar: arForm.title
+          ? {
+              title: arForm.title,
+              description: arForm.description,
+              location: arForm.location,
+              area: arForm.area,
+              meta_title: arForm.metaTitle,
+              meta_description: arForm.metaDescription,
+            }
+          : undefined,
+      }
+
+      formDataObj.append('translations', JSON.stringify(translations))
+
       try {
         let result
-        if (mode === "create") {
-          result = await createProperty({ errors: {}, message: "", success: false }, formDataObj)
+        if (mode === 'create') {
+          result = await createProperty({ errors: {}, message: '', success: false }, formDataObj)
         } else if (property) {
-          result = await updateProperty(property.id, { errors: {}, message: "", success: false }, formDataObj)
+          result = await updateProperty(property.id, { errors: {}, message: '', success: false }, formDataObj)
         }
 
         if (result?.success) {
@@ -340,20 +377,24 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
           if (result?.errors) {
             setErrors(result.errors)
           }
-          toast.error(result?.message || "An error occurred")
+          toast.error(result?.message || 'An error occurred')
         }
       } catch (error) {
-        toast.error("An unexpected error occurred")
+        toast.error('An unexpected error occurred')
       }
     })
   }
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }))
     // Clear error when user starts typing
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: [] }))
     }
+  }
+
+  const handleArInputChange = (field: string, value: string) => {
+    setArForm(prev => ({ ...prev, [field]: value }))
   }
 
   const progress = calculateProgress()
@@ -371,28 +412,116 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="md:col-span-2">
-                  <Label htmlFor="title">Property Title *</Label>
-                  <Input
-                    id="title"
-                    value={formData.title}
-                    onChange={(e) => handleInputChange("title", e.target.value)}
-                    placeholder="e.g., Modern 3BR Apartment in Downtown"
-                    className={errors.title ? "border-red-500" : ""}
-                  />
-                  {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title[0]}</p>}
-                </div>
-
-                <div className="md:col-span-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange("description", e.target.value)}
-                    rows={4}
-                    placeholder="Describe the property, its features, and what makes it special..."
-                    className={errors.description ? "border-red-500" : ""}
-                  />
-                  {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description[0]}</p>}
+                  <Tabs defaultValue="en">
+                    <TabsList className="mb-4">
+                      <TabsTrigger value="en">English</TabsTrigger>
+                      <TabsTrigger value="ar">العربية</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="en">
+                      <div className="space-y-6">
+                        <div>
+                          <Label htmlFor="title_en">Property Title *</Label>
+                          <Input
+                            id="title_en"
+                            value={formData.title}
+                            onChange={(e) => handleInputChange('title', e.target.value)}
+                            placeholder="e.g., Modern 3BR Apartment in Downtown"
+                            className={errors.title ? 'border-red-500' : ''}
+                          />
+                          {errors.title && <p className="text-sm text-red-500 mt-1">{errors.title[0]}</p>}
+                        </div>
+                        <div>
+                          <Label htmlFor="description_en">Description *</Label>
+                          <Textarea
+                            id="description_en"
+                            value={formData.description}
+                            onChange={(e) => handleInputChange('description', e.target.value)}
+                            rows={4}
+                            placeholder="Describe the property, its features, and what makes it special..."
+                            className={errors.description ? 'border-red-500' : ''}
+                          />
+                          {errors.description && <p className="text-sm text-red-500 mt-1">{errors.description[0]}</p>}
+                        </div>
+                        <div>
+                          <Label htmlFor="metaTitle_en">Meta Title</Label>
+                          <Input
+                            id="metaTitle_en"
+                            value={formData.metaTitle}
+                            onChange={(e) => handleInputChange('metaTitle', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="metaDescription_en">Meta Description</Label>
+                          <Textarea
+                            id="metaDescription_en"
+                            value={formData.metaDescription}
+                            onChange={(e) => handleInputChange('metaDescription', e.target.value)}
+                            rows={2}
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                    <TabsContent value="ar">
+                      <div dir="rtl" className="space-y-6">
+                        <div>
+                          <Label htmlFor="title_ar">عنوان العقار *</Label>
+                          <Input
+                            id="title_ar"
+                            value={arForm.title}
+                            onChange={(e) => handleArInputChange('title', e.target.value)}
+                            className="text-right"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description_ar">الوصف *</Label>
+                          <Textarea
+                            id="description_ar"
+                            value={arForm.description}
+                            onChange={(e) => handleArInputChange('description', e.target.value)}
+                            rows={4}
+                            className="text-right"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="location_ar">العنوان الكامل</Label>
+                          <Input
+                            id="location_ar"
+                            value={arForm.location}
+                            onChange={(e) => handleArInputChange('location', e.target.value)}
+                            className="text-right"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="area_ar">المنطقة</Label>
+                          <Input
+                            id="area_ar"
+                            value={arForm.area}
+                            onChange={(e) => handleArInputChange('area', e.target.value)}
+                            className="text-right"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="metaTitle_ar">عنوان الميتا</Label>
+                          <Input
+                            id="metaTitle_ar"
+                            value={arForm.metaTitle}
+                            onChange={(e) => handleArInputChange('metaTitle', e.target.value)}
+                            className="text-right"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="metaDescription_ar">وصف الميتا</Label>
+                          <Textarea
+                            id="metaDescription_ar"
+                            value={arForm.metaDescription}
+                            onChange={(e) => handleArInputChange('metaDescription', e.target.value)}
+                            rows={2}
+                            className="text-right"
+                          />
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </Tabs>
                 </div>
 
                 <div>
@@ -434,7 +563,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="owner">Owner</SelectItem>
-                      <SelectItem value="broker">Broker</SelectItem>
+                      <SelectItem value="broker">Contact Owner</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -647,17 +776,29 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                   )}
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="locationIframeUrl">Google Maps Iframe</Label>
-                <Textarea
-                  id="locationIframeUrl"
-                  value={formData.locationIframeUrl}
-                  onChange={(e) => handleInputChange("locationIframeUrl", e.target.value)}
-                  placeholder="Paste Google Maps iframe code here"
-                  className={errors.locationIframeUrl ? "border-red-500" : ""}
-                  rows={5}
+              <div>
+                <Label htmlFor="locationLat">Latitude</Label>
+                <Input
+                  id="locationLat"
+                  value={formData.locationLat}
+                  onChange={(e) => handleInputChange("locationLat", e.target.value)}
                 />
-                {errors.locationIframeUrl && <p className="text-sm text-red-500 mt-1">{errors.locationIframeUrl[0]}</p>}
+              </div>
+              <div>
+                <Label htmlFor="locationLng">Longitude</Label>
+                <Input
+                  id="locationLng"
+                  value={formData.locationLng}
+                  onChange={(e) => handleInputChange("locationLng", e.target.value)}
+                />
+              </div>
+              <div className="md:col-span-2 flex items-center gap-2">
+                <Checkbox
+                  id="mapEnabled"
+                  checked={formData.mapEnabled}
+                  onCheckedChange={(checked) => handleInputChange("mapEnabled", checked === true)}
+                />
+                <Label htmlFor="mapEnabled">Enable Map</Label>
               </div>
             </CardContent>
           </Card>

@@ -16,6 +16,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { getCategoryBySlug, getProperties, getCategories } from "@/lib/supabase/queries"
+import { formatPropertyCount } from "@/lib/utils"
 import { ArrowRight } from "lucide-react"
 import Link from "next/link"
 
@@ -41,7 +42,7 @@ export async function generateMetadata({ params }: { params: { lng: Locale; slug
     : (category.description_en || category.description || "");
   
   const title = `${categoryName} Properties for Sale & Rent in Egypt`;
-  const description = `Browse ${properties.length} ${categoryName.toLowerCase()} properties in Egypt. ${categoryDescription}`;
+  const description = `Browse ${formatPropertyCount(properties.length)} ${categoryName.toLowerCase()} in Egypt. ${categoryDescription}`;
   const imageUrl = category.image_url || '/categories/default.png';
 
   return {
@@ -146,7 +147,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
                   }
                 </p>
                 <Badge variant="secondary" className="text-lg px-6 py-3 bg-white/20 text-white border-white/30">
-                  {properties.length} {dict.categories.properties}
+                  {formatPropertyCount(properties.length)}
                 </Badge>
               </div>
             </div>

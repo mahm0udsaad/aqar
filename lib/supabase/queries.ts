@@ -4,6 +4,7 @@ import type { Database } from "./types"
 type Property = Database["public"]["Tables"]["properties"]["Row"]
 type Category = Database["public"]["Tables"]["categories"]["Row"]
 type PropertyImage = Database["public"]["Tables"]["property_images"]["Row"]
+type PropertyVideo = Database["public"]["Tables"]["property_videos"]["Row"]
 type PropertyRating = Database["public"]["Tables"]["property_ratings"]["Row"]
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"]
 type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"]
@@ -12,9 +13,9 @@ type Area = Database["public"]["Tables"]["areas"]["Row"]
 export interface PropertyWithDetails extends Property {
   categories: Category | null
   property_images: PropertyImage[]
+  property_videos: PropertyVideo[]
   property_ratings: PropertyRating | null
   areas: Area | null
-  location_iframe_url: string | null
 }
 
 export interface SearchFilters {
@@ -48,6 +49,7 @@ export async function getProperties(filters?: SearchFilters) {
       *,
       categories (*),
       property_images (*),
+      property_videos (*),
       property_ratings (*),
       areas (*)
     `)
@@ -140,6 +142,16 @@ export async function getProperties(filters?: SearchFilters) {
     console.error("Error fetching properties:", error)
     return []
   }
+  if (data) {
+    data.forEach(property => {
+      if (property.property_images) {
+        property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+      }
+      if (property.property_videos) {
+        property.property_videos.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+      }
+    })
+  }
 
   return data as PropertyWithDetails[]
 }
@@ -151,6 +163,7 @@ export async function getPropertyById(id: string) {
       *,
       categories (*),
       property_images (*),
+      property_videos (*),
       property_ratings (*),
       areas (*)
     `)
@@ -168,6 +181,11 @@ export async function getPropertyById(id: string) {
     data.property_images.sort((a: PropertyImage, b: PropertyImage) => (a.order_index || 0) - (b.order_index || 0))
   }
 
+  // Sort property videos by order_index
+  if (data.property_videos) {
+    data.property_videos.sort((a: PropertyVideo, b: PropertyVideo) => (a.order_index || 0) - (b.order_index || 0))
+  }
+
   return data as PropertyWithDetails
 }
 
@@ -177,7 +195,8 @@ export async function getFeaturedProperties() {
     .select(`
       *,
       categories (*),
-      property_images (*)
+      property_images (*),
+      property_videos (*)
     `)
     .eq("is_featured", true)
     .eq("status", "active")
@@ -194,6 +213,9 @@ export async function getFeaturedProperties() {
     if (property.property_images) {
       property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
+    if (property.property_videos) {
+      property.property_videos.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+    }
   })
 
   return data as PropertyWithDetails[]
@@ -205,7 +227,8 @@ export async function getNewProperties() {
     .select(`
       *,
       categories (*),
-      property_images (*)
+      property_images (*),
+      property_videos (*)
     `)
     .eq("is_new", true)
     .eq("status", "active")
@@ -222,6 +245,9 @@ export async function getNewProperties() {
     if (property.property_images) {
       property.property_images.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
     }
+    if (property.property_videos) {
+      property.property_videos.sort((a: any, b: any) => (a.order_index || 0) - (b.order_index || 0))
+    }
   })
 
   return data as PropertyWithDetails[]
@@ -229,7 +255,11 @@ export async function getNewProperties() {
 
 // Categories
 export async function getCategories() {
-  const { data, error } = await supabase.from("categories").select("*").order("order_index", { ascending: true })
+  const { data, error } = await supabase
+    .from("categories")
+    .select("*")
+    .eq("is_visible", true)
+    .order("order_index", { ascending: true })
 
   if (error) {
     console.error("Error fetching categories:", error)
@@ -646,6 +676,77 @@ export async function getAllPropertiesForAdmin() {
 
   if (error) {
     console.error("Error fetching properties for admin:", error)
+    throw error
+  }
+
+  return data
+}
+
+// Property translations
+export async function getPropertyWithLocale(propertyId: string, locale: 'en' | 'ar') {
+  const { data, error } = await supabase
+    .from('properties')
+    .select(`
+      *,
+      categories (*),
+      property_images (*),
+      property_ratings (*),
+      areas (*),
+      property_translations (*)
+    `)
+    .eq('id', propertyId)
+    .eq('status', 'active')
+    .single()
+
+  if (error || !data) {
+    console.error('Error fetching property with locale:', error)
+    return null
+  }
+
+  const translations = data.property_translations as any[] | null
+  const primary = translations?.find(t => t.locale === locale)
+  const fallback = translations?.find(t => t.locale !== locale)
+  const applied = primary || fallback
+
+  return {
+    ...data,
+    title: applied?.title || data.title,
+    description: applied?.description || data.description,
+    location: applied?.location || data.location,
+    area: applied?.area || data.area,
+    meta_title: applied?.meta_title || null,
+    meta_description: applied?.meta_description || null,
+  }
+}
+
+export async function upsertPropertyTranslation(input: {
+  property_id: string
+  locale: 'en' | 'ar'
+  title: string
+  description?: string | null
+  location?: string | null
+  area?: string | null
+  meta_title?: string | null
+  meta_description?: string | null
+}) {
+  const { data, error } = await supabase
+    .from('property_translations')
+    .upsert({
+      property_id: input.property_id,
+      locale: input.locale,
+      title: input.title,
+      description: input.description ?? null,
+      location: input.location ?? null,
+      area: input.area ?? null,
+      meta_title: input.meta_title ?? null,
+      meta_description: input.meta_description ?? null,
+      updated_at: new Date().toISOString(),
+    })
+    .select()
+    .single()
+
+  if (error) {
+    console.error('Error upserting property translation:', error)
     throw error
   }
 

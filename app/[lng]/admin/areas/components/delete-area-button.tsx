@@ -68,7 +68,7 @@ export function DeleteAreaButton({ area }: DeleteAreaButtonProps) {
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Area</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete "{area.name}"? This action cannot be undone.
+            Are you sure you want to delete {area.name}? This action cannot be undone.
             <br /><br />
             <strong>Note:</strong> You can only delete areas that have no properties associated with them.
           </AlertDialogDescription>
