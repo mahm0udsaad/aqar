@@ -25,6 +25,7 @@ interface Area {
   is_active: boolean | null
   created_at: string | null
   updated_at: string | null
+  image_url?: string | null
 }
 
 interface AreasGridProps {
@@ -128,6 +129,9 @@ export function AreasGrid({ areas, lng, dict }: AreasGridProps) {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
+                {area.image_url && (
+                  <img src={area.image_url} alt={`${area.name} image`} className="w-full h-32 object-cover rounded-md" />
+                )}
                 <p className="text-sm text-muted-foreground">
                   Slug: <code className="text-xs">{area.slug}</code>
                 </p>

@@ -982,13 +982,12 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
       return { success: false, message: "Failed to update property" }
     }
 
-    revalidatePath("/admin/properties")
-    revalidatePath("/admin/featured")
-    revalidatePath("/")
     return { success: true, message: `Property ${featured ? "featured" : "unfeatured"} successfully` }
   } catch (error) {
     console.error("Error in togglePropertyFeatured:", error)
     return { success: false, message: "An unexpected error occurred" }
+  } finally {
+    revalidatePath("/admin/featured")
   }
 }
 

@@ -12,6 +12,7 @@ const AreaFormSchema = z.object({
   description: z.string().optional(),
   orderIndex: z.coerce.number().min(0, "Order must be 0 or greater").default(0),
   isActive: z.boolean().default(true),
+  imageUrl: z.string().optional(),
 })
 
 type AreaFormData = z.infer<typeof AreaFormSchema>
@@ -24,11 +25,15 @@ export interface AreaActionState {
 
 // Helper function to generate slug from name
 function generateSlug(name: string): string {
-  return name
+  // Unicode-aware slug: keep letters/numbers in any language, spaces and hyphens
+  // Then collapse to single hyphens and trim
+  const normalized = name
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "") // Remove special characters except spaces and hyphens
-    .replace(/[\s_-]+/g, "-") // Replace spaces, underscores, and multiple hyphens with single hyphen
-    .replace(/^-+|-+$/g, "") // Remove leading and trailing hyphens
+    .normalize("NFKD")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
+    .replace(/[\s_-]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+  return normalized
 }
 
 export async function createArea(
@@ -61,6 +66,7 @@ export async function createArea(
       description: formData.get("description") as string,
       orderIndex: formData.get("orderIndex") as string,
       isActive: formData.get("isActive") === "true",
+      imageUrl: (formData.get("imageUrl") as string) || "",
     }
 
     console.log("Raw form data:", rawFormData)
@@ -126,6 +132,7 @@ export async function createArea(
       description: data.description || null,
       order_index: finalOrderIndex,
       is_active: data.isActive,
+      image_url: data.imageUrl || null,
     }
 
     console.log("Inserting data:", insertData)
@@ -198,6 +205,7 @@ export async function updateArea(
       description: formData.get("description") as string,
       orderIndex: formData.get("orderIndex") as string,
       isActive: formData.get("isActive") === "true",
+      imageUrl: (formData.get("imageUrl") as string) || "",
     }
 
     const validatedFields = AreaFormSchema.safeParse(rawFormData)
@@ -213,19 +221,41 @@ export async function updateArea(
     const data = validatedFields.data
     const slug = generateSlug(data.name)
 
-    // Check if slug already exists for other areas
-    const { data: existingArea } = await supabase
+    // Fetch current area to determine if slug is changing
+    const { data: currentArea, error: currentError } = await supabase
       .from("areas")
-      .select("id")
-      .eq("slug", slug)
-      .neq("id", id)
-      .single()
+      .select("slug")
+      .eq("id", id)
+      .maybeSingle()
 
-    if (existingArea) {
-      return {
-        errors: { name: ["An area with this name already exists"] },
-        message: "Area name must be unique",
-        success: false,
+    if (currentError) {
+      return { message: "Database error while fetching area", success: false }
+    }
+    if (!currentArea) {
+      return { message: "Area not found", success: false }
+    }
+
+    const isSlugChanging = currentArea.slug !== slug
+
+    if (isSlugChanging) {
+      // Check if slug already exists for other areas only if changing
+      const { data: duplicate, error: dupError } = await supabase
+        .from("areas")
+        .select("id")
+        .eq("slug", slug)
+        .neq("id", id)
+        .maybeSingle()
+
+      if (dupError) {
+        return { message: "Database error while checking for duplicates", success: false }
+      }
+
+      if (duplicate) {
+        return {
+          errors: { name: ["An area with this name already exists"] },
+          message: "Area name must be unique",
+          success: false,
+        }
       }
     }
 
@@ -238,6 +268,7 @@ export async function updateArea(
         description: data.description || null,
         order_index: data.orderIndex,
         is_active: data.isActive,
+        image_url: data.imageUrl || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)

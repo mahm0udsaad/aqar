@@ -254,6 +254,9 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                                 propertyId={property.id} 
                                 isFeatured={property.is_featured || false}
                                 dict={dict}
+                                onToggled={(newIsFeatured) => {
+                                  setProperties(prev => prev.map(p => p.id === property.id ? { ...p, is_featured: newIsFeatured } : p))
+                                }}
                               />
                               <DeletePropertyButton propertyId={property.id} dict={dict} />
                             </div>

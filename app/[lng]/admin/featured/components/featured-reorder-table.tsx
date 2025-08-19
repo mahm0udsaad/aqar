@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import Link from "next/link"
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from "@dnd-kit/core"
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable"
 import { CSS } from "@dnd-kit/utilities"
@@ -40,6 +40,30 @@ export function FeaturedReorderTable({ initialItems, lng, dict }: { initialItems
       </TableRow>
     )
   }
+
+  useEffect(() => {
+    function handleExternalToggle(e: any) {
+      const detail = e?.detail
+      if (!detail) return
+      const { property, isFeatured } = detail
+      if (!property) return
+      setItems(prev => {
+        const exists = prev.some(p => p.id === property.id)
+        if (isFeatured) {
+          if (exists) return prev
+          // Place at top; server will reconcile order_index
+          return [{ ...property, is_featured: true }, ...prev]
+        } else {
+          if (!exists) return prev
+          return prev.filter(p => p.id !== property.id)
+        }
+      })
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("admin-featured:toggle", handleExternalToggle)
+      return () => window.removeEventListener("admin-featured:toggle", handleExternalToggle)
+    }
+  }, [])
 
   const handleDragEnd = (event: any) => {
     const { active, over } = event
@@ -133,7 +157,21 @@ export function FeaturedReorderTable({ initialItems, lng, dict }: { initialItems
                               <Button variant={property.is_main_featured ? "default" : "outline"} size="sm" onClick={() => toggleMain(property.id, !property.is_main_featured)}>
                                 <Crown className="w-4 h-4 mr-1" /> {property.is_main_featured ? "Unset Main" : "Set Main"}
                               </Button>
-                              <ToggleFeaturedButton propertyId={property.id} isFeatured={true} dict={dict} />
+                              <ToggleFeaturedButton 
+                                propertyId={property.id} 
+                                isFeatured={true} 
+                                dict={dict}
+                                onToggled={(newIsFeatured) => {
+                                  // Keep local list responsive
+                                  if (!newIsFeatured) {
+                                    setItems(prev => prev.filter(p => p.id !== property.id))
+                                  }
+                                  // Notify other list
+                                  if (typeof window !== "undefined") {
+                                    window.dispatchEvent(new CustomEvent("admin-featured:toggle", { detail: { property, isFeatured: newIsFeatured } }))
+                                  }
+                                }}
+                              />
                             </div>
                           </TableCell>
                         </Row>

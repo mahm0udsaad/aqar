@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +15,7 @@ import {
 import { createArea, updateArea } from "@/lib/actions/areas"
 import { toast } from "sonner"
 import { Loader2 } from "lucide-react"
+import { uploadImages } from "@/lib/actions/uploads"
 
 interface Area {
   id: string
@@ -23,6 +24,7 @@ interface Area {
   description: string | null
   order_index: number | null
   is_active: boolean | null
+  image_url?: string | null
 }
 
 interface AreaDialogProps {
@@ -40,6 +42,7 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
     description: area?.description || "",
     orderIndex: area?.order_index?.toString() || "",
     isActive: area?.is_active ?? true,
+    imageUrl: area?.image_url || "",
   })
   const [errors, setErrors] = useState<Record<string, string[]>>({})
 
@@ -49,9 +52,24 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
       description: area?.description || "",
       orderIndex: area?.order_index?.toString() || "",
       isActive: area?.is_active ?? true,
+      imageUrl: area?.image_url || "",
     })
     setErrors({})
   }
+
+  // Ensure dialog fields are populated when opening to edit an area
+  useEffect(() => {
+    if (open) {
+      setFormData({
+        name: area?.name || "",
+        description: area?.description || "",
+        orderIndex: area?.order_index?.toString() || "",
+        isActive: area?.is_active ?? true,
+        imageUrl: area?.image_url || "",
+      })
+      setErrors({})
+    }
+  }, [area, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -62,6 +80,7 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
       formDataObj.append("description", formData.description)
       formDataObj.append("orderIndex", formData.orderIndex)
       formDataObj.append("isActive", formData.isActive.toString())
+      formDataObj.append("imageUrl", formData.imageUrl)
 
       try {
         let result
@@ -105,6 +124,48 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <Label htmlFor="imageUrl">Image</Label>
+            <div className="flex items-center gap-2">
+              <Input
+                id="imageUrl"
+                value={formData.imageUrl}
+                onChange={(e) => handleInputChange("imageUrl", e.target.value)}
+                placeholder="Paste image URL or upload below"
+              />
+            </div>
+            <div className="mt-2">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={async (e) => {
+                  const file = e.target.files?.[0]
+                  if (!file) return
+                  const form = new FormData()
+                  form.append("files", file)
+                  form.append("bucket", "property-images")
+                  form.append("prefix", "areas")
+                  try {
+                    const result = await uploadImages({ success: false }, form)
+                    if (!result.success || !result.urls || result.urls.length === 0) {
+                      throw new Error(result.message || "Upload failed")
+                    }
+                    const url = result.urls[0]
+                    setFormData((prev) => ({ ...prev, imageUrl: url }))
+                    toast.success("Image uploaded")
+                  } catch (err) {
+                    console.error(err)
+                    toast.error("Image upload failed")
+                  }
+                }}
+              />
+              {formData.imageUrl && (
+                <div className="mt-2">
+                  <img src={formData.imageUrl} alt="Area preview" className="h-28 w-full rounded-md object-cover" />
+                </div>
+              )}
+            </div>
+          </div>
           <div>
             <Label htmlFor="name">Area Name *</Label>
             <Input

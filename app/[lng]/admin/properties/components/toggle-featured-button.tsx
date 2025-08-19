@@ -7,27 +7,39 @@ import { Star, StarOff, Loader2 } from "lucide-react"
 import { togglePropertyFeatured } from "@/lib/actions/properties"
 import { toast } from "sonner"
 import { Dictionary } from "@/lib/i18n/types"
+import { useRouter } from "next/navigation"
 
 interface ToggleFeaturedButtonProps {
   propertyId: string
   isFeatured: boolean
   dict: Dictionary
+  onToggled?: (newIsFeatured: boolean) => void
 }
 
-export function ToggleFeaturedButton({ propertyId, isFeatured, dict }: ToggleFeaturedButtonProps) {
+export function ToggleFeaturedButton({ propertyId, isFeatured, dict, onToggled }: ToggleFeaturedButtonProps) {
   const [isPending, startTransition] = useTransition()
+  const router = useRouter()
 
   const handleToggle = () => {
     startTransition(async () => {
       try {
+        // Optimistic update
+        onToggled?.(!isFeatured)
+
         const result = await togglePropertyFeatured(propertyId, !isFeatured)
         
         if (result.success) {
           toast.success(result.message)
+          // Sync any server components without a full reload
+          router.refresh()
         } else {
+          // Revert optimistic update on failure
+          onToggled?.(isFeatured)
           toast.error(result.message)
         }
       } catch (error) {
+        // Revert optimistic update on error
+        onToggled?.(isFeatured)
         toast.error(dict.admin.featured.toggleError)
       }
     })

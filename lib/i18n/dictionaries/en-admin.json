@@ -8,7 +8,8 @@
       "categories": "Categories",
       "featured": "Featured",
       "settings": "Settings",
-      "logout": "Logout"
+      "logout": "Logout",
+      "areas": "Areas"
     },
     "header": {
       "viewSite": "View Site",

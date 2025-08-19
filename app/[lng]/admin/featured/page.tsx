@@ -12,7 +12,9 @@ import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 import { ToggleFeaturedButton } from "../properties/components/toggle-featured-button"
 import { FeaturedReorderTable } from "./components/featured-reorder-table"
+import { AvailableToFeatureTable } from "./components/available-to-feature-table"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
+import type { Dictionary } from "@/lib/i18n/types"
 import { Locale } from "@/lib/i18n/config"
 
 interface PageProps {
@@ -22,7 +24,7 @@ interface PageProps {
 export default async function AdminFeaturedPage({ params }: PageProps) {
   const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
-  const dict = await getDictionary(lng)
+  const dict = (await getDictionary(lng)) as unknown as Dictionary
 
   // Fetch featured properties
   const { data: featuredProperties, error } = await supabase
@@ -75,7 +77,7 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
           </div>
 
           {/* Client-side DnD table for reordering */}
-          <FeaturedReorderTable initialItems={featuredProperties} lng={lng} dict={dict} />
+          <FeaturedReorderTable initialItems={featuredProperties || []} lng={lng} dict={dict} />
         </div>
 
         {/* Available Properties to Feature */}
@@ -94,95 +96,7 @@ export default async function AdminFeaturedPage({ params }: PageProps) {
             </Link>
           </div>
 
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>{dict.admin.featured.table.property}</TableHead>
-                      <TableHead>{dict.admin.featured.table.category}</TableHead>
-                      <TableHead>{dict.admin.featured.table.price}</TableHead>
-                      <TableHead>{dict.admin.featured.table.status}</TableHead>
-                      <TableHead>{dict.admin.featured.table.actions}</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {allProperties && allProperties.length > 0 ? (
-                      allProperties.map((property) => {
-                        const mainImage = property.property_images?.find((img: any) => img.is_main) || property.property_images?.[0]
-
-                        return (
-                          <TableRow key={property.id}>
-                            <TableCell>
-                              <div className="flex items-center space-x-3">
-                                <div className="relative w-12 h-12 rounded-md overflow-hidden">
-                                  <Image
-                                    src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
-                                    alt={property.title}
-                                    fill
-                                    className="object-cover"
-                                  />
-                                </div>
-                                <div>
-                                  <p className="font-medium">{property.title}</p>
-                                  <p className="text-sm text-muted-foreground">{property.location}</p>
-                                </div>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="secondary">{property.categories?.name || dict.admin.featured.noCategory}</Badge>
-                            </TableCell>
-                            <TableCell className="font-medium">{formatPrice(property.price)}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Badge
-                                  variant="outline"
-                                  className="text-green-600 border-green-600"
-                                >
-                                  {property.status?.charAt(0).toUpperCase() + (property.status?.slice(1) || "")}
-                                </Badge>
-                                {property.is_new && (
-                                  <Badge variant="outline" className="text-blue-600 border-blue-600">
-                                    {dict.admin.featured.new}
-                                  </Badge>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex items-center space-x-2">
-                                <Link href={`/${lng}/properties/${property.id}`} target="_blank">
-                                  <Button variant="ghost" size="sm">
-                                    <Eye className="w-4 h-4" />
-                                  </Button>
-                                </Link>
-                                <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
-                                  <Button variant="ghost" size="sm">
-                                    <Edit className="w-4 h-4" />
-                                  </Button>
-                                </Link>
-                                <ToggleFeaturedButton 
-                                  propertyId={property.id} 
-                                  isFeatured={false}
-                                  dict={dict}
-                                />
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        )
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8">
-                          <p className="text-muted-foreground">{dict.admin.featured.noAvailableToFeature}</p>
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+          <AvailableToFeatureTable initialItems={allProperties || []} lng={lng} dict={dict} />
         </div>
 
         {/* Tips */}

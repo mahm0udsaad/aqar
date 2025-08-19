@@ -166,6 +166,18 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
   const [customAmenity, setCustomAmenity] = useState("")
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   
+  // Currency handling (store values in EGP; allow admin to input other currencies)
+  const CURRENCY_RATES: Record<string, number> = {
+    EGP: 1,
+    USD: 50,
+    EUR: 55,
+    GBP: 64,
+    SAR: 13.3,
+    AED: 13.6,
+  }
+  const [currency, setCurrency] = useState<keyof typeof CURRENCY_RATES>("EGP")
+  const [exchangeRate, setExchangeRate] = useState<number>(CURRENCY_RATES["EGP"]) // to EGP
+  
   // Area management state
   const [availableAreas, setAvailableAreas] = useState<Area[]>(areas)
   const [showNewAreaInput, setShowNewAreaInput] = useState(false)
@@ -318,12 +330,29 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
     startTransition(async () => {
       const formDataObj = new FormData()
       
-      // Add all form fields
+      // Add all form fields except special-cased ones
       Object.entries(formData).forEach(([key, value]) => {
-        if (key !== 'locationIframeUrl') {
-          formDataObj.append(key, value.toString());
+        if (key === 'locationIframeUrl') return
+        if (key === 'price' || key === 'pricePerMeter') return
+        formDataObj.append(key, value.toString())
+      })
+
+      // Convert price and pricePerMeter to EGP before submit
+      const numericPrice = parseFloat(formData.price || "0")
+      const priceInEgp = Number.isFinite(numericPrice)
+        ? (currency === "EGP" ? numericPrice : numericPrice * (exchangeRate || 1))
+        : 0
+      formDataObj.append("price", priceInEgp.toString())
+
+      if (formData.pricePerMeter && formData.pricePerMeter.trim() !== "") {
+        const numericPpm = parseFloat(formData.pricePerMeter)
+        const ppmInEgp = Number.isFinite(numericPpm)
+          ? (currency === "EGP" ? numericPpm : numericPpm * (exchangeRate || 1))
+          : undefined
+        if (ppmInEgp !== undefined) {
+          formDataObj.append("pricePerMeter", ppmInEgp.toString())
         }
-      });
+      }
 
       const iframeSrc = extractSrcFromIframe(formData.locationIframeUrl);
       if (iframeSrc) {
@@ -471,7 +500,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 
                 <TabsContent value="ar" className="space-y-6">
                   <div className="grid grid-cols-1 gap-6">
-                    <div>
+                    <div className="text-right">
                       <Label htmlFor="title_ar">العنوان (العربية) *</Label>
                       <Input
                         id="title_ar"
@@ -484,7 +513,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                       {errors.title_ar && <p className="text-sm text-red-500 mt-1">{errors.title_ar[0]}</p>}
                     </div>
                     
-                    <div>
+                    <div className="text-right">
                       <Label htmlFor="description_ar">الوصف (العربية) *</Label>
                       <Textarea
                         id="description_ar"
@@ -498,7 +527,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                       {errors.description_ar && <p className="text-sm text-red-500 mt-1">{errors.description_ar[0]}</p>}
                     </div>
                     
-                    <div>
+                    <div className="text-right">
                       <Label htmlFor="location_ar">العنوان (العربية) *</Label>
                       <Input
                         id="location_ar"
@@ -605,6 +634,9 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     className={errors.price ? "border-red-500" : ""}
                   />
                   {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price[0]}</p>}
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Stored in EGP. Current currency: {currency}{currency !== "EGP" ? ` → ${(parseFloat(formData.price || "0") * (exchangeRate || 1) || 0).toLocaleString()} EGP` : ""}
+                  </p>
                 </div>
 
                 <div>
@@ -616,6 +648,11 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     onChange={(e) => handleInputChange("pricePerMeter", e.target.value)}
                     placeholder="Auto-calculated if empty"
                   />
+                  {formData.pricePerMeter && currency !== "EGP" && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ≈ {(parseFloat(formData.pricePerMeter || "0") * (exchangeRate || 1) || 0).toLocaleString()} EGP
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -629,6 +666,24 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     className={errors.size ? "border-red-500" : ""}
                   />
                   {errors.size && <p className="text-sm text-red-500 mt-1">{errors.size[0]}</p>}
+                </div>
+
+                <div>
+                  <Label htmlFor="currency">Currency</Label>
+                  <Select value={currency} onValueChange={(val) => {
+                    const next = (val as keyof typeof CURRENCY_RATES)
+                    setCurrency(next)
+                    setExchangeRate(CURRENCY_RATES[next] ?? 1)
+                  }}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.keys(CURRENCY_RATES).map((code) => (
+                        <SelectItem key={code} value={code}>{code}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -791,7 +846,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                         <DialogTitle>{dict.admin.howToGetIframeTitle}</DialogTitle>
                       </DialogHeader>
                       <div className="aspect-video w-full">
-                        <video src="/videos/how-to-get-iframe.mp4" controls className="w-full h-full rounded-md" />
+                        <video src="https://hvlbyykohjeavnaqgiix.supabase.co/storage/v1/object/public/property-videos/videos/properties/how-to-get-iframe.mp4" controls className="w-full h-full rounded-md" />
                       </div>
                     </DialogContent>
                   </Dialog>

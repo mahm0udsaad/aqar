@@ -30,7 +30,7 @@ export default async function AreasPage({ params }: AreasPageProps) {
   // Fetch active areas
   const { data: areas } = await supabase
     .from("areas")
-    .select("id, name, slug, is_active, order_index")
+    .select("id, name, slug, is_active, order_index, image_url")
     .eq("is_active", true)
     .order("order_index", { ascending: true })
 
@@ -65,7 +65,10 @@ export default async function AreasPage({ params }: AreasPageProps) {
             const count = areaCounts[area.name] || 0
             return (
               <Link key={area.id} href={`/${lng}/search?area=${encodeURIComponent(area.name)}`}>
-                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">
+                <Card className="hover:shadow-md transition-shadow cursor-pointer h-full overflow-hidden">
+                  {area.image_url && (
+                    <img src={area.image_url} alt={`${area.name} image`} className="w-full h-32 object-cover" />
+                  )}
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">
                       <span className="flex items-center gap-2">

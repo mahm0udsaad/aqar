@@ -463,7 +463,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                     <Share2 className="w-4 h-4 mr-2" />
                     {lng === "ar" ? "مشاركة" : "Share"}
                   </Button>
-                </div>
+                </div > 
                 <PropertyComparisonButton 
                   property={{
                     id: property.id,

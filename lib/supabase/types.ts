@@ -11,6 +11,7 @@ export interface Database {
           description: string | null
           order_index: number | null
           is_active: boolean | null
+          image_url: string | null
           created_at: string | null
           updated_at: string | null
         }
@@ -21,6 +22,7 @@ export interface Database {
           description?: string | null
           order_index?: number | null
           is_active?: boolean | null
+          image_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
@@ -31,6 +33,7 @@ export interface Database {
           description?: string | null
           order_index?: number | null
           is_active?: boolean | null
+          image_url?: string | null
           created_at?: string | null
           updated_at?: string | null
         }
