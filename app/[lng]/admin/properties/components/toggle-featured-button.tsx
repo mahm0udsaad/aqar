@@ -30,7 +30,7 @@ export function ToggleFeaturedButton({ propertyId, isFeatured, dict, onToggled }
         
         if (result.success) {
           toast.success(result.message)
-          // Sync any server components without a full reload
+
           router.refresh()
         } else {
           // Revert optimistic update on failure
