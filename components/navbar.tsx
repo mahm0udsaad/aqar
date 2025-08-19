@@ -46,44 +46,6 @@ export function Navbar({ lng, dict }: NavbarProps) {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
-  useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession()
-      setUser(session?.user || null)
-
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle()
-        setUserProfile(profile || null)
-      }
-    }
-
-    getUser()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      setUser(session?.user || null)
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("id", session.user.id)
-          .maybeSingle()
-        setUserProfile(profile || null)
-      } else {
-        setUserProfile(null)
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [supabase])
-
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchQuery.trim()) {
@@ -176,56 +138,6 @@ export function Navbar({ lng, dict }: NavbarProps) {
               <Globe className="h-4 w-4 mr-2" />
               {lng === "ar" ? "EN" : "AR"}
             </Button>
-
-            {/* User Menu */}
-            {user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative">
-                    <User className="h-4 w-4 mr-2" />
-                    {userProfile?.full_name || user.email}
-                    {userProfile?.role === "admin" && (
-                      <Badge variant="secondary" className="ml-2 text-xs">
-                        {dict.admin.admin}
-                      </Badge>
-                    )}
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem asChild>
-                    <Link href={`/${lng}/loved`}>
-                      <Heart className="h-4 w-4 mr-2" />
-                      {dict.nav.savedProperties}
-                    </Link>
-                  </DropdownMenuItem>
-                  {userProfile?.role === "admin" && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem asChild>
-                        <Link href={`/${lng}/admin`}>
-                          <Settings className="h-4 w-4 mr-2" />
-                          {dict.nav.admin}
-                        </Link>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" />
-                    {dict.nav.logout}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href={`/${lng}/auth/login`}>{dict.nav.login}</Link>
-                </Button>
-                <Button size="sm" asChild>
-                  <Link href={`/${lng}/auth/signup`}>{dict.nav.signup}</Link>
-                </Button>
-              </div>
-            )}
           </div>
 
           {/* Mobile Menu */}
