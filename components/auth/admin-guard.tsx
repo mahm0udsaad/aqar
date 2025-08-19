@@ -31,9 +31,20 @@ export function AdminGuard({ children, lng }: AdminGuardProps) {
         }
 
         // Check if user is admin
-        const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", session.user.id).single()
+        const { data: profile, error } = await supabase
+          .from("user_profiles")
+          .select("role")
+          .eq("id", session.user.id)
+          .maybeSingle()
 
-        if (!profile || profile.role !== "admin") {
+        if (error) {
+          console.error("AdminGuard: error fetching profile", error)
+        }
+
+        // Fallback to auth metadata if profile missing
+        const userRole = profile?.role || (session.user.user_metadata?.role as string) || "user"
+
+        if (userRole !== "admin") {
           router.push(`/${lng}`)
           return
         }

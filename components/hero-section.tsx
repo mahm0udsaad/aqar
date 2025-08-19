@@ -18,9 +18,10 @@ interface HeroSectionProps {
   lng: string
   dict: any
   areas: Area[]
+  homeStats?: Record<string, string>
 }
 
-export function HeroSection({ lng, dict, areas }: HeroSectionProps) {
+export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
   const router = useRouter()
   const [searchData, setSearchData] = useState({
     type: "sale" as "sale" | "rent",
@@ -42,7 +43,6 @@ export function HeroSection({ lng, dict, areas }: HeroSectionProps) {
 
     router.push(`/${lng}/search?${params.toString()}`)
   }
-
   return (
     <section className="relative min-h-[700px] lg:min-h-[800px] flex items-center justify-center overflow-hidden">
       {/* Background with Apartment Image */}
@@ -53,7 +53,7 @@ export function HeroSection({ lng, dict, areas }: HeroSectionProps) {
         <div 
           className="w-full h-full bg-cover bg-center bg-no-repeat transform scale-105"
           style={{
-            backgroundImage: `url('/images/hero-apartment-balcony.jpg')`,
+            backgroundImage: `url('${(dict as any)?.hero?.background_image_url || '/images/hero-apartment-balcony.jpg'}')`,
           }}
         />
       </div>
@@ -156,16 +156,16 @@ export function HeroSection({ lng, dict, areas }: HeroSectionProps) {
             {/* Quick Stats */}
             <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-slate-200">
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">250K+</div>
-                <div className="text-sm text-muted-foreground">Properties for Sale</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["properties_for_sale"] || "250K+"}</div>
+                <div className="text-sm text-muted-foreground">{dict.home.propertiesForSaleLabel}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">109K+</div>
-                <div className="text-sm text-muted-foreground">Properties for Rent</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["properties_for_rent"] || "109K+"}</div>
+                <div className="text-sm text-muted-foreground">{dict.home.propertiesForRentLabel}</div>
               </div>
               <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">15K+</div>
-                <div className="text-sm text-muted-foreground">New Projects</div>
+                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["new_projects"] || "15K+"}</div>
+                <div className="text-sm text-muted-foreground">{dict.home.newProjectsLabel}</div>
               </div>
             </div>
           </CardContent>

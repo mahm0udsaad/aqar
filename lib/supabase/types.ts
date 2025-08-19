@@ -482,6 +482,55 @@ export interface Database {
           created_at?: string | null
         }
       }
+      home_hero: {
+        Row: {
+          id: string
+          title_en: string
+          title_ar: string
+          subtitle_en: string
+          subtitle_ar: string
+          background_image_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title_en?: string
+          title_ar?: string
+          subtitle_en?: string
+          subtitle_ar?: string
+          background_image_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          title_en?: string
+          title_ar?: string
+          subtitle_en?: string
+          subtitle_ar?: string
+          background_image_url?: string | null
+          updated_at?: string
+        }
+      }
+      home_stats: {
+        Row: {
+          id: string
+          key: string
+          value: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          key: string
+          value: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          key?: string
+          value?: string
+          updated_at?: string
+        }
+      }
     }
     Views: {
       [_ in never]: never

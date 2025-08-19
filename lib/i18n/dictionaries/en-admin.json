@@ -1,5 +1,7 @@
 {
   "admin": {
+    "howToGetIframe": "How to get iframe for the map?",
+    "howToGetIframeTitle": "How to get iframe for the map?",
     "sidebar": {
       "dashboard": "Dashboard",
       "properties": "Properties",

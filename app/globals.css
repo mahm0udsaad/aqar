@@ -66,6 +66,22 @@
   }
 }
 
+/* RTL adjustments for Arabic locales */
+[dir="rtl"] input,
+[dir="rtl"] textarea {
+  text-align: right;
+  direction: rtl;
+}
+
+/* Keep technical fields LTR even in RTL context */
+[dir="rtl"] input[type="email"],
+[dir="rtl"] input[type="url"],
+[dir="rtl"] input[type="number"],
+[dir="rtl"] input[type="tel"] {
+  text-align: left;
+  direction: ltr;
+}
+
 /* Custom Real Estate Styles */
 .hero-gradient {
   background: linear-gradient(135deg, rgba(182, 176, 159, 0.9) 0%, rgba(0, 0, 0, 0.8) 100%);

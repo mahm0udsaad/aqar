@@ -41,9 +41,15 @@ export function LoginForm({ lng, dict }: LoginFormProps) {
 
       if (data.user) {
         // Check if user is admin
-        const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", data.user.id).single()
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("role")
+          .eq("id", data.user.id)
+          .maybeSingle()
 
-        if (profile?.role === "admin") {
+        const role = profile?.role || (data.user.user_metadata?.role as string) || "user"
+
+        if (role === "admin") {
           router.push(`/${lng}/admin`)
         } else {
           router.push(`/${lng}`)

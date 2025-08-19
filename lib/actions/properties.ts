@@ -158,9 +158,10 @@ export async function createProperty(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { message: "Admin access required", success: false }
     }
 
@@ -497,9 +498,10 @@ export async function updateProperty(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { message: "Admin access required", success: false }
     }
 
@@ -854,9 +856,10 @@ export async function deleteProperty(id: string): Promise<{ success: boolean; me
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" }
     }
 
@@ -909,9 +912,10 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" }
     }
 
@@ -1005,9 +1009,10 @@ export async function updatePropertyOrder(updates: { id: string; order_index: nu
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" };
     }
 
@@ -1057,9 +1062,10 @@ export async function setMainFeatured(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" }
     }
 

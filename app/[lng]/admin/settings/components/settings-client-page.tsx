@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AdminHeader } from "@/components/admin/admin-header"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,9 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { Save, Settings, Globe, Shield, Bell, Palette } from "lucide-react"
+import { Save, Settings, Globe, Shield, Bell, Palette, Home as HomeIcon, Image as ImageIcon } from "lucide-react"
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { toast } from "sonner"
 import { Dictionary } from "@/lib/i18n/types"
 import { Locale } from "@/lib/i18n/config"
+import { useRouter } from "next/navigation"
+import { uploadImages } from "@/lib/actions/uploads"
 
 interface SettingsClientPageProps {
   lng: Locale
@@ -21,6 +25,8 @@ interface SettingsClientPageProps {
 }
 
 export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
+  const supabase = createClientComponentClient()
+  const router = useRouter()
   const [settings, setSettings] = useState({
     // General Settings
     siteName: "Elite Properties",
@@ -59,10 +65,107 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
     maintenanceMode: false,
   })
 
-  const handleSave = () => {
+  // Homepage content state
+  const [hero, setHero] = useState({
+    title_en: "",
+    title_ar: "",
+    subtitle_en: "",
+    subtitle_ar: "",
+    background_image_url: "",
+  })
+  const [stats, setStats] = useState<Record<string, string>>({
+    properties_for_sale: "",
+    properties_for_rent: "",
+    new_projects: "",
+    happy_customers: "",
+  })
+
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    // Save homepage content
+    try {
+      setIsSaving(true)
+      // Ensure a single row pattern using a fixed id and updated_at for proper ordering
+      const { error: heroError } = await supabase
+        .from("home_hero")
+        .insert({
+          title_en: hero.title_en,
+          title_ar: hero.title_ar,
+          subtitle_en: hero.subtitle_en,
+          subtitle_ar: hero.subtitle_ar,
+          background_image_url: hero.background_image_url || null,
+          updated_at: new Date().toISOString(),
+        })
+      if (heroError) throw heroError
+
+      const rows = Object.entries(stats).map(([key, value]) => ({ key, value }))
+      const { error: statsError } = await supabase.from("home_stats").upsert(rows, { onConflict: "key" })
+      if (statsError) throw statsError
+      toast.success("Homepage content saved")
+
+      // Re-fetch latest and refresh
+      const { data: heroData } = await supabase
+        .from("home_hero")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single()
+      if (heroData) {
+        setHero({
+          title_en: heroData.title_en || "",
+          title_ar: heroData.title_ar || "",
+          subtitle_en: heroData.subtitle_en || "",
+          subtitle_ar: heroData.subtitle_ar || "",
+          background_image_url: heroData.background_image_url || "",
+        })
+      }
+      const { data: statsRows } = await supabase.from("home_stats").select("key,value")
+      if (statsRows) {
+        const map: Record<string, string> = {}
+        statsRows.forEach((r: any) => (map[r.key] = r.value))
+        setStats((prev) => ({ ...prev, ...map }))
+      }
+      router.refresh()
+    } catch (e) {
+      console.error("Error saving homepage content:", e)
+      toast.error("Failed to save homepage content")
+    }
+    finally {
+      setIsSaving(false)
+    }
+
     console.log("Saving settings:", settings)
-    // Here you would typically save to your backend
   }
+
+  // Load current hero and stats
+  useEffect(() => {
+    const load = async () => {
+      const { data: heroData } = await supabase
+        .from("home_hero")
+        .select("*")
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .single()
+      if (heroData) {
+        setHero({
+          title_en: heroData.title_en || "",
+          title_ar: heroData.title_ar || "",
+          subtitle_en: heroData.subtitle_en || "",
+          subtitle_ar: heroData.subtitle_ar || "",
+          background_image_url: heroData.background_image_url || "",
+        })
+      }
+
+      const { data: statsRows } = await supabase.from("home_stats").select("key,value")
+      if (statsRows) {
+        const map: Record<string, string> = {}
+        statsRows.forEach((r: any) => (map[r.key] = r.value))
+        setStats((prev) => ({ ...prev, ...map }))
+      }
+    }
+    load()
+  }, [])
 
   const updateSetting = (key: string, value: any) => {
     setSettings((prev) => ({ ...prev, [key]: value }))
@@ -75,7 +178,7 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
       <div className="p-6">
         <div className="max-w-4xl mx-auto">
           <Tabs defaultValue="general" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="general" className="flex items-center gap-2">
                 <Settings className="w-4 h-4" />
                 {dict.admin.settings.tabs.general}
@@ -95,6 +198,10 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
               <TabsTrigger value="display" className="flex items-center gap-2">
                 <Palette className="w-4 h-4" />
                 {dict.admin.settings.tabs.display}
+              </TabsTrigger>
+              <TabsTrigger value="homepage" className="flex items-center gap-2">
+                <HomeIcon className="w-4 h-4" />
+                Homepage
               </TabsTrigger>
             </TabsList>
 
@@ -481,13 +588,111 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
                 </CardContent>
               </Card>
             </TabsContent>
+
+            {/* Homepage Content */}
+            <TabsContent value="homepage" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Hero Section</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="hero_title_en">Title (EN)</Label>
+                      <Input id="hero_title_en" value={hero.title_en} onChange={(e) => setHero((p) => ({ ...p, title_en: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="hero_title_ar">Title (AR)</Label>
+                      <Input id="hero_title_ar" value={hero.title_ar} onChange={(e) => setHero((p) => ({ ...p, title_ar: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="hero_subtitle_en">Subtitle (EN)</Label>
+                      <Input id="hero_subtitle_en" value={hero.subtitle_en} onChange={(e) => setHero((p) => ({ ...p, subtitle_en: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="hero_subtitle_ar">Subtitle (AR)</Label>
+                      <Input id="hero_subtitle_ar" value={hero.subtitle_ar} onChange={(e) => setHero((p) => ({ ...p, subtitle_ar: e.target.value }))} />
+                    </div>
+                  </div>
+                  <div>
+                    <Label htmlFor="hero_bg">Background Image</Label>
+                    <div className="flex gap-2 items-center">
+                      <Input id="hero_bg" placeholder="Paste image URL or upload below" value={hero.background_image_url} onChange={(e) => setHero((p) => ({ ...p, background_image_url: e.target.value }))} />
+                      <ImageIcon className="w-4 h-4" />
+                    </div>
+                    <div className="mt-3">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0]
+                          if (!file) return
+                          const form = new FormData()
+                          form.append("files", file)
+                          form.append("bucket", "property-images")
+                          form.append("prefix", "homepage")
+                          try {
+                            const result = await uploadImages({ success: false }, form)
+                            if (!result.success || !result.urls || result.urls.length === 0) {
+                              throw new Error(result.message || "Upload failed")
+                            }
+                            const url = result.urls[0]
+                            setHero((p) => ({ ...p, background_image_url: url }))
+                            await supabase
+                              .from("home_hero")
+                              .insert({ background_image_url: url, updated_at: new Date().toISOString() })
+                            toast.success("Image uploaded")
+                          } catch (err) {
+                            console.error(err)
+                            toast.error("Image upload failed")
+                          }
+                        }}
+                      />
+                      {hero.background_image_url && (
+                        <div className="mt-2">
+                          <img src={hero.background_image_url} alt="Hero background preview" className="h-28 rounded-md object-cover" />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Homepage Stats</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="stat_sale">Properties for Sale</Label>
+                      <Input id="stat_sale" value={stats.properties_for_sale} onChange={(e) => setStats((p) => ({ ...p, properties_for_sale: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="stat_rent">Properties for Rent</Label>
+                      <Input id="stat_rent" value={stats.properties_for_rent} onChange={(e) => setStats((p) => ({ ...p, properties_for_rent: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="stat_projects">New Projects</Label>
+                      <Input id="stat_projects" value={stats.new_projects} onChange={(e) => setStats((p) => ({ ...p, new_projects: e.target.value }))} />
+                    </div>
+                    <div>
+                      <Label htmlFor="stat_customers">Happy Customers</Label>
+                      <Input id="stat_customers" value={stats.happy_customers} onChange={(e) => setStats((p) => ({ ...p, happy_customers: e.target.value }))} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </Tabs>
 
           {/* Save Button */}
           <div className="flex justify-end pt-6">
-            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90 text-primary-foreground">
+            <Button onClick={handleSave} disabled={isSaving} className="bg-primary hover:bg-primary/90 text-primary-foreground">
               <Save className="w-4 h-4 mr-2" />
-              {dict.admin.settings.save}
+              {isSaving ? "Saving..." : dict.admin.settings.save}
             </Button>
           </div>
         </div>

@@ -21,6 +21,14 @@ function getLocale(request: NextRequest): string {
 
 export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname
+
+  // ✅ Allow direct access to public folders (no redirects, no checks)
+  const PUBLIC_PREFIXES = ['/videos', '/images', '/categories']
+  if (PUBLIC_PREFIXES.some(p => pathname === p || pathname.startsWith(`${p}/`))) {
+    return NextResponse.next()
+  }
+
+  // --- existing logic below ---
   const pathnameIsMissingLocale = i18n.locales.every(
     (locale) => !pathname.startsWith(`/${locale}/`) && pathname !== `/${locale}`,
   )
@@ -36,20 +44,18 @@ export async function middleware(request: NextRequest) {
   if (isAdminRoute) {
     const res = NextResponse.next()
     const supabase = createMiddlewareClient({ req: request, res })
+    const { data: { session } } = await supabase.auth.getSession()
 
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
+    if (!session) return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url))
 
-    if (!session) {
-      return NextResponse.redirect(new URL(`/${locale}/auth/login`, request.url))
-    }
+    const { data: profile } = await supabase
+      .from("user_profiles")
+      .select("role")
+      .eq("id", session.user.id)
+      .maybeSingle()
 
-    const { data: profile } = await supabase.from("user_profiles").select("role").eq("id", session.user.id).single()
-
-    if (!profile || profile.role !== "admin") {
-      return NextResponse.redirect(new URL(`/${locale}`, request.url))
-    }
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") return NextResponse.redirect(new URL(`/${locale}`, request.url))
 
     return res
   }
@@ -58,6 +64,4 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp)$).*)"],
-}
-
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico|.*\.(?:svg|png|jpg|jpeg|gif|webp|mp4|mov|avi|wmv|flv|webm|mkv)$).*)"]}

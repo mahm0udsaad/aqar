@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
-import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts } from "@/lib/supabase/queries"
+import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts, getHomeHero, getHomeStats } from "@/lib/supabase/queries"
 import { getAreas } from "@/lib/actions/areas"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
@@ -23,7 +23,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const dict = await getDictionary(lng)
 
   // Fetch data from Supabase with fallback
-  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas, areas] = await Promise.all([
+  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas, areas, heroContent, homeStats] = await Promise.all([
     getFeaturedProperties().catch(() => []),
     getProperties({ propertyType: "sale" })
       .then((data) => data.slice(0, 3))
@@ -34,30 +34,32 @@ export default async function HomePage({ params }: HomePageProps) {
     getCategories().catch(() => []),
     getPopularAreasWithCounts().catch(() => []),
     getAreas().catch(() => []),
+    getHomeHero().catch(() => null),
+    getHomeStats().catch(() => ({} as Record<string, string>)),
   ])
 
   const stats = [
     {
       label: dict.home.propertiesForSaleLabel,
-      value: "250,000+",
+      value: homeStats["properties_for_sale"] || "250,000+",
       icon: Home,
       color: "text-blue-600",
     },
     {
       label: dict.home.propertiesForRentLabel,
-      value: "109,000+",
+      value: homeStats["properties_for_rent"] || "109,000+",
       icon: Building,
       color: "text-green-600",
     },
     {
       label: dict.home.newProjectsLabel,
-      value: "15,000+",
+      value: homeStats["new_projects"] || "15,000+",
       icon: Warehouse,
       color: "text-orange-600",
     },
     {
       label: dict.home.happyCustomersLabel,
-      value: "500,000+",
+      value: homeStats["happy_customers"] || "500,000+",
       icon: Users,
       color: "text-purple-600",
     },
@@ -68,7 +70,20 @@ export default async function HomePage({ params }: HomePageProps) {
   return (
     <div className={`min-h-screen bg-background ${lng === "ar" ? "rtl" : "ltr"}`}>
       <Navbar lng={lng} dict={dict} />
-      <HeroSection lng={lng} dict={dict} areas={areas || []} />
+      <HeroSection
+        lng={lng}
+        dict={{
+          ...dict,
+          hero: {
+            ...dict.hero,
+            heroTitleFull: lng === "ar" ? (heroContent?.title_ar || dict.hero.heroTitleFull) : (heroContent?.title_en || dict.hero.heroTitleFull),
+            heroSubtitleFull: lng === "ar" ? (heroContent?.subtitle_ar || dict.hero.heroSubtitleFull) : (heroContent?.subtitle_en || dict.hero.heroSubtitleFull),
+            background_image_url: heroContent?.background_image_url || '/images/hero-apartment-balcony.jpg',
+          },
+        }}
+        areas={areas || []}
+        homeStats={homeStats}
+      />
 
       {/* Stats Section */}
       <section className="py-16 bg-card">
@@ -113,7 +128,7 @@ export default async function HomePage({ params }: HomePageProps) {
     {/* Main featured property on top */}
     {featuredProperties && featuredProperties.length > 0 && (
       <div className="mb-6">
-        <PropertyCard property={featuredProperties[0]} lng={lng} />
+        <PropertyCard property={featuredProperties[0]} lng={lng} featured={true}/>
       </div>
     )}
 

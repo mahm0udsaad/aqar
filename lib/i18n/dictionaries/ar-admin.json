@@ -257,6 +257,8 @@
         "dateFormat": "تنسيق التاريخ",
         "timezone": "المنطقة الزمنية"
       }
-    }
+    },
+    "howToGetIframe": "كيفية الحصول على iframe للخريطة؟",
+    "howToGetIframeTitle": "كيفية الحصول على iframe للخريطة؟"
   }
 } 

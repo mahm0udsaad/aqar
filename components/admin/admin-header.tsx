@@ -18,7 +18,7 @@ export function AdminHeader({ title, description, lng, dict }: AdminHeaderProps)
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 lg:px-6">
         {/* Mobile menu button */}
-        <div className="md:hidden mr-4">
+        <div className="md:hidden mr-4 rtl:ml-4 rtl:mr-0">
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
@@ -26,7 +26,7 @@ export function AdminHeader({ title, description, lng, dict }: AdminHeaderProps)
                 <span className="sr-only">Toggle menu</span>
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-64 p-0">
+            <SheetContent side={lng === 'ar' ? 'right' : 'left'} className="w-64 p-0">
               <AdminSidebar lng={lng} dict={dict} />
             </SheetContent>
           </Sheet>
@@ -43,7 +43,7 @@ export function AdminHeader({ title, description, lng, dict }: AdminHeaderProps)
         </div>
 
         {/* Right side actions could go here */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 rtl:space-x-reverse">
           {/* Add user menu, notifications, etc. here in the future */}
         </div>
       </div>

@@ -4,6 +4,7 @@ import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
 import { cookies } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 import { getAreas } from "@/lib/actions/areas"
+import { getDictionary } from "@/lib/i18n/get-dictionary"
 
 interface PageProps {
   params: Promise<{ lng: string }>
@@ -12,7 +13,7 @@ interface PageProps {
 export default async function NewPropertyPage({ params }: PageProps) {
   const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
-
+  const dict = await getDictionary(lng)
   // Fetch categories and areas for the form
   const { data: categories } = await supabase
     .from("categories")
@@ -31,6 +32,7 @@ export default async function NewPropertyPage({ params }: PageProps) {
       />
       <div className="p-6">
         <PropertyForm 
+          dict={dict}
           categories={categories || []} 
           areas={areas || []}
           lng={lng}

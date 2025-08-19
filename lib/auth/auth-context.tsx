@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .from("user_profiles")
         .select("*")
         .eq("id", userId)
-        .single()
+        .maybeSingle()
 
       if (error) {
         console.error("Error fetching profile:", {
@@ -49,17 +49,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           code: error.code
         })
         
-        // If profile doesn't exist, create a basic one from user data
-        if (error.code === 'PGRST116') { // Row not found
-          console.log("Profile not found, creating basic profile from user data")
-          // You might want to create a profile here or handle this case differently
+        setProfile(null)
+      } else {
+        if (!data) {
+          // No profile row; keep null and rely on role checks that fall back to auth metadata
           setProfile(null)
         } else {
-          setProfile(null)
+          console.log("Profile fetched successfully:", data)
+          setProfile(data)
         }
-      } else {
-        console.log("Profile fetched successfully:", data)
-        setProfile(data)
       }
     } catch (error) {
       console.error("Unexpected error fetching profile:", error)

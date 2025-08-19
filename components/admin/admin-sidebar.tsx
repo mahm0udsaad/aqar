@@ -30,7 +30,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-background/10">
-        <Link href={`/${lng}/admin`} className="flex items-center space-x-2">
+        <Link href={`/${lng}/admin`} className="flex items-center space-x-2 rtl:space-x-reverse">
           <Building className="h-8 w-8 text-background" />
           <span className="font-bold text-xl text-background">{dict.admin.sidebar.adminPanel}</span>
         </Link>
@@ -44,7 +44,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center space-x-3 px-3 py-2 rounded-md text-background/80 hover:text-background hover:bg-background/10 transition-colors",
+                  "flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 rounded-md text-background/80 hover:text-background hover:bg-background/10 transition-colors",
                   pathname === item.href && "bg-background/20 text-background",
                 )}
                 onClick={() => setIsOpen(false)}
@@ -64,7 +64,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
             variant="outline"
             className="w-full text-background border-background/20 hover:bg-background/10 bg-transparent"
           >
-            <Home className="w-4 h-4 mr-2" />
+            <Home className={cn("w-4 h-4 mr-2", "rtl:ml-2 rtl:mr-0") } />
             {dict.admin.sidebar.backToWebsite}
           </Button>
         </Link>
@@ -75,7 +75,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
   return (
     <>
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 admin-sidebar bg-foreground">
+      <div className={cn("hidden md:flex md:w-64 md:flex-col md:fixed md:inset-y-0 admin-sidebar bg-foreground", lng === 'ar' ? 'right-0' : 'left-0')}>
         <SidebarContent />
       </div>
 
@@ -87,7 +87,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
               <Menu className="h-6 w-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 admin-sidebar bg-foreground">
+          <SheetContent side={lng === 'ar' ? 'right' : 'left'} className="w-64 p-0 admin-sidebar bg-foreground">
             <SidebarContent />
           </SheetContent>
         </Sheet>

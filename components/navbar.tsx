@@ -54,8 +54,12 @@ export function Navbar({ lng, dict }: NavbarProps) {
       setUser(session?.user || null)
 
       if (session?.user) {
-        const { data: profile } = await supabase.from("user_profiles").select("*").eq("id", session.user.id).single()
-        setUserProfile(profile)
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle()
+        setUserProfile(profile || null)
       }
     }
 
@@ -66,8 +70,12 @@ export function Navbar({ lng, dict }: NavbarProps) {
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       setUser(session?.user || null)
       if (session?.user) {
-        const { data: profile } = await supabase.from("user_profiles").select("*").eq("id", session.user.id).single()
-        setUserProfile(profile)
+        const { data: profile } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("id", session.user.id)
+          .maybeSingle()
+        setUserProfile(profile || null)
       } else {
         setUserProfile(null)
       }

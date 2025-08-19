@@ -102,9 +102,10 @@ export async function createCategory(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { message: "Admin access required", success: false }
     }
 
@@ -229,9 +230,10 @@ export async function updateCategory(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { message: "Admin access required", success: false }
     }
 
@@ -355,9 +357,10 @@ export async function deleteCategory(id: string): Promise<{ success: boolean; me
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" }
     }
 
@@ -428,9 +431,10 @@ export async function updateCategoriesOrder(
       .from("user_profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single()
+      .maybeSingle()
 
-    if (!profile || profile.role !== "admin") {
+    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
+    if (role !== "admin") {
       return { success: false, message: "Admin access required" }
     }
 

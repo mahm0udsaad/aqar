@@ -41,6 +41,7 @@ export function PropertyCard({
   property,
   showContactButtons = false,
   lng,
+  featured = false,
 }: PropertyCardProps) {
   if (!property) {
     return null // Don't render anything if no property is passed
@@ -73,7 +74,7 @@ export function PropertyCard({
     <Card className="property-card overflow-hidden group">
       <div className="relative">
         <Link href={`/${lng}/properties/${property.id}`}>
-          <div className="relative h-48 overflow-hidden">
+          <div className={`relative overflow-hidden ${featured ? "h-[24rem]" : "h-52"}`}>
             {!imageLoaded && (
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div> // Simple skeleton
             )}

@@ -21,10 +21,18 @@ import { toast } from "sonner"
 import type { Database } from "@/lib/supabase/types"
 import { ImageUploadCrop, PropertyImage } from "@/components/admin/image-upload-crop"
 import { VideoUploader, VideoFile } from "@/components/admin/video-uploader"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 
 function extractSrcFromIframe(iframe: string): string | null {
-  const match = iframe.match(/src="([^"]+)"/);
-  return match ? match[1] : null;
+  if (!iframe || iframe.trim() === '') return null;
+  const srcMatch = iframe.match(/src="([^"]+)"/);
+  if (srcMatch) return srcMatch[1];
+  const srcMatchSingle = iframe.match(/src='([^']+)'/);
+  if (srcMatchSingle) return srcMatchSingle[1];
+  if (iframe.includes('maps.google.com') || iframe.includes('google.com/maps')) {
+    return iframe.trim();
+  }
+  return null;
 }
 
 type Property = Database["public"]["Tables"]["properties"]["Row"]
@@ -51,6 +59,7 @@ interface PropertyFormProps {
   lng: string
   mode: "create" | "edit"
   property?: Property & { property_images?: PropertyImageDB[], property_videos?: PropertyVideoDB[] }
+  dict: any
 }
 
 const COMMON_FEATURES = [
@@ -83,7 +92,7 @@ const COMMON_AMENITIES = [
   "Rooftop Terrace",
 ]
 
-export function PropertyForm({ categories, areas, lng, mode, property }: PropertyFormProps) {
+export function PropertyForm({ categories, areas, lng, mode, property, dict }: PropertyFormProps) {
   const router = useRouter()
   const [isPending, startTransition] = useTransition()
   
@@ -422,6 +431,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                       <Label htmlFor="title_en">Title (English) *</Label>
                       <Input
                         id="title_en"
+                        dir="ltr"
                         value={formData.title_en}
                         onChange={(e) => handleInputChange("title_en", e.target.value)}
                         placeholder="e.g., Modern 3BR Apartment in Downtown"
@@ -434,6 +444,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                       <Label htmlFor="description_en">Description (English) *</Label>
                       <Textarea
                         id="description_en"
+                        dir="ltr"
                         value={formData.description_en}
                         onChange={(e) => handleInputChange("description_en", e.target.value)}
                         rows={4}
@@ -447,6 +458,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                       <Label htmlFor="location_en">Address (English) *</Label>
                       <Input
                         id="location_en"
+                        dir="ltr"
                         value={formData.location_en}
                         onChange={(e) => handleInputChange("location_en", e.target.value)}
                         placeholder="e.g., 123 Main Street, Downtown"
@@ -764,14 +776,33 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                   )}
                 </div>
               </div>
-              <div className="md:col-span-2">
-                <Label htmlFor="locationIframeUrl">Google Maps Iframe</Label>
+              <div className="md:col-span-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="locationIframeUrl">Google Maps Iframe</Label>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button type="button" variant="outline" size="sm">
+                        <Info className="w-4 h-4 mr-2" />
+                       {dict.admin.howToGetIframe}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-3xl">
+                      <DialogHeader>
+                        <DialogTitle>{dict.admin.howToGetIframeTitle}</DialogTitle>
+                      </DialogHeader>
+                      <div className="aspect-video w-full">
+                        <video src="/videos/how-to-get-iframe.mp4" controls className="w-full h-full rounded-md" />
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
                 <Textarea
                   id="locationIframeUrl"
+                  dir="ltr"
                   value={formData.locationIframeUrl}
                   onChange={(e) => handleInputChange("locationIframeUrl", e.target.value)}
-                  placeholder="Paste Google Maps iframe code here"
-                  className={errors.locationIframeUrl ? "border-red-500" : ""}
+                  placeholder="Paste Google Maps iframe code or the embed URL here"
+                  className={errors.locationIframeUrl ? "border-red-500 text-left" : "text-left"}
                   rows={5}
                 />
                 {errors.locationIframeUrl && <p className="text-sm text-red-500 mt-1">{errors.locationIframeUrl[0]}</p>}
@@ -805,6 +836,9 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                   <Label htmlFor="contactPhone">Phone Number *</Label>
                   <Input
                     id="contactPhone"
+                    type="tel"
+                    inputMode="tel"
+                    dir="ltr"
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange("contactPhone", e.target.value)}
                     placeholder="e.g., +1234567890"
@@ -817,6 +851,9 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                   <Label htmlFor="contactWhatsapp">WhatsApp (Optional)</Label>
                   <Input
                     id="contactWhatsapp"
+                    type="tel"
+                    inputMode="tel"
+                    dir="ltr"
                     value={formData.contactWhatsapp}
                     onChange={(e) => handleInputChange("contactWhatsapp", e.target.value)}
                     placeholder="e.g., +1234567890"
@@ -828,6 +865,7 @@ export function PropertyForm({ categories, areas, lng, mode, property }: Propert
                   <Input
                     id="contactEmail"
                     type="email"
+                    dir="ltr"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange("contactEmail", e.target.value)}
                     placeholder="e.g., contact@example.com"

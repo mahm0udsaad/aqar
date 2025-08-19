@@ -1,10 +1,9 @@
 import { AdminHeader } from "@/components/admin/admin-header"
 import { PropertyForm } from "../../components/property-form"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
-import { notFound } from "next/navigation"
 import type { Database } from "@/lib/supabase/types"
 import { getAreas } from "@/lib/actions/areas"
+import { getDictionary } from "@/lib/i18n/get-dictionary"
+import { createClient } from "@/lib/supabase/server"
 
 interface PageProps {
   params: Promise<{ lng: string; id: string }>
@@ -12,21 +11,47 @@ interface PageProps {
 
 export default async function EditPropertyPage({ params }: PageProps) {
   const { lng, id } = await params
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = await createClient()
+  const dict = await getDictionary(lng as any)
 
   // Fetch the property with all related data
-  const { data: property, error } = await supabase
-    .from("properties")
-    .select(`
+  const primarySelect = `
       *,
-      categories (id, name, name_en, name_ar),
-      property_images (id, url, alt_text, is_main, order_index)
-    `)
-    .eq("id", id)
-    .single()
+      categories (id, name),
+      property_images (id, url, alt_text, is_main, order_index),
+      property_videos (id, url, caption, order_index)
+    `
+  let property: any = null
+  try {
+    const { data, error } = await supabase
+      .from("properties")
+      .select(primarySelect)
+      .eq("id", id)
+      .single()
+    if (error) {
+      console.error("EditPropertyPage: primary fetch error", error)
+    }
+    property = data
+  } catch (err) {
+    console.error("EditPropertyPage: unexpected error", err)
+  }
 
-  if (error || !property) {
-    notFound()
+  // Fallback without videos in case the relation is unavailable
+  if (!property) {
+    try {
+      const { data } = await supabase
+        .from("properties")
+        .select(`
+          *,
+          categories (id, name),
+          property_images (id, url, alt_text, is_main, order_index)
+        `)
+        .eq("id", id)
+        .single()
+      property = data
+    } catch (err) {
+      console.error("EditPropertyPage: fallback fetch error", err)
+    }
   }
 
   // Fetch categories and areas for the form
@@ -37,13 +62,29 @@ export default async function EditPropertyPage({ params }: PageProps) {
 
   const areas = await getAreas()
 
+  if (!property) {
+    return (
+      <div>
+        <AdminHeader 
+          title={"Property not found"} 
+          description={"We couldn't load this property. It may have been removed."}
+          lng={lng}
+          dict={dict as any}
+        />
+        <div className="p-6 text-sm text-muted-foreground">
+          Try returning to the properties list and selecting a different property.
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <AdminHeader 
         title={`Edit Property: ${property.title}`} 
         description="Update property information and settings"
         lng={lng}
-        dict={{} as any}
+        dict={dict as any}
       />
       <div className="p-6">
         <PropertyForm 
@@ -52,6 +93,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
           lng={lng}
           mode="edit"
           property={property}
+          dict={dict as any}
         />
       </div>
     </div>

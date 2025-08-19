@@ -9,6 +9,8 @@ type PropertyVideo = Database["public"]["Tables"]["property_videos"]["Row"]
 type PropertyInsert = Database["public"]["Tables"]["properties"]["Insert"]
 type PropertyUpdate = Database["public"]["Tables"]["properties"]["Update"]
 type Area = Database["public"]["Tables"]["areas"]["Row"]
+type HomeHero = Database["public"]["Tables"]["home_hero"]["Row"]
+type HomeStat = Database["public"]["Tables"]["home_stats"]["Row"]
 
 export interface PropertyWithDetails extends Property {
   categories: Category | null
@@ -659,4 +661,51 @@ export async function getAllPropertiesForAdmin() {
   }
 
   return data
+}
+
+// Home content: hero and stats
+export async function getHomeHero(): Promise<HomeHero | null> {
+  const { data, error } = await supabase
+    .from("home_hero")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(1)
+    .single()
+  if (error && error.code !== "PGRST116") {
+    console.error("Error fetching home hero:", error)
+    return null
+  }
+  return data as HomeHero | null
+}
+
+export async function upsertHomeHero(payload: Partial<HomeHero>): Promise<HomeHero | null> {
+  const { data, error } = await supabase.from("home_hero").upsert(payload, { onConflict: "id" }).select().order("updated_at", { ascending: false }).limit(1).single()
+  if (error) {
+    console.error("Error upserting home hero:", error)
+    return null
+  }
+  return data as HomeHero
+}
+
+export async function getHomeStats(): Promise<Record<string, string>> {
+  const { data, error } = await supabase.from("home_stats").select("key,value").order("key")
+  if (error) {
+    console.error("Error fetching home stats:", error)
+    return {}
+  }
+  const map: Record<string, string> = {}
+  data?.forEach((row: any) => {
+    map[row.key] = row.value
+  })
+  return map
+}
+
+export async function upsertHomeStats(stats: Record<string, string>): Promise<boolean> {
+  const rows = Object.entries(stats).map(([key, value]) => ({ key, value }))
+  const { error } = await supabase.from("home_stats").upsert(rows, { onConflict: "key" })
+  if (error) {
+    console.error("Error upserting home stats:", error)
+    return false
+  }
+  return true
 }

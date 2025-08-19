@@ -18,7 +18,7 @@ export default async function AdminLayout({
       <div className="min-h-screen bg-gray-50/50">
         <div className="flex min-h-screen">
           <AdminSidebar lng={params.lng} dict={dict} />
-          {/* Add margin-left to account for fixed sidebar on desktop */}
+          {/* Adjust margin to account for fixed sidebar on the correct side in RTL/LTR */}
           <main className={cn("flex-1 min-h-screen", params.lng === "ar" ? "md:mr-64" : "md:ml-64")}>
             <div className="container mx-auto max-w-7xl">
               {children}

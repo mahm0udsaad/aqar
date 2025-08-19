@@ -111,7 +111,7 @@ const DraggableVideoItem: React.FC<DraggableVideoItemProps> = ({
             </div>
           )}
           {!item.isUploading && !item.error && (
-             <p className="text-xs text-gray-500 break-all">URL: {item.url}</p>
+             <p className="text-xs text-gray-500 break-all" dir="ltr">URL: {item.url}</p>
           )}
         </div>
         <Button
@@ -333,6 +333,9 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
           <label className="font-medium">Add Video from URL</label>
           <div className="flex gap-2">
             <Input
+              type="url"
+              inputMode="url"
+              dir="ltr"
               placeholder="e.g., https://www.youtube.com/watch?v=... or public MP4 URL"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
