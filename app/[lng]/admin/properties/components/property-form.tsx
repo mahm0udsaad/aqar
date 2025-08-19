@@ -442,55 +442,55 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
           {/* Basic Information */}
           <Card>
             <CardHeader>
-              <CardTitle>Basic Information</CardTitle>
+              <CardTitle>{dict.admin.properties.form.basicInfoTitle}</CardTitle>
               <p className="text-sm text-muted-foreground">
-                Provide property details in both English and Arabic for better reach
+                {dict.admin.properties.form.basicInfoSubtitle}
               </p>
             </CardHeader>
             <CardContent className="space-y-6">
               <Tabs defaultValue="en">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="en">English</TabsTrigger>
-                  <TabsTrigger value="ar">العربية</TabsTrigger>
+                  <TabsTrigger value="en">{dict.admin.properties.form.englishTab}</TabsTrigger>
+                  <TabsTrigger value="ar">{dict.admin.properties.form.arabicTab}</TabsTrigger>
                 </TabsList>
                 
                 <TabsContent value="en" className="space-y-6">
                   <div className="grid grid-cols-1 gap-6">
                     <div>
-                      <Label htmlFor="title_en">Title (English) *</Label>
+                      <Label htmlFor="title_en">{dict.admin.properties.form.titleEnLabel}</Label>
                       <Input
                         id="title_en"
                         dir="ltr"
                         value={formData.title_en}
                         onChange={(e) => handleInputChange("title_en", e.target.value)}
-                        placeholder="e.g., Modern 3BR Apartment in Downtown"
+                        placeholder={dict.admin.properties.form.titleEnPlaceholder}
                         className={errors.title_en ? "border-red-500" : ""}
                       />
                       {errors.title_en && <p className="text-sm text-red-500 mt-1">{errors.title_en[0]}</p>}
                     </div>
                     
                     <div>
-                      <Label htmlFor="description_en">Description (English) *</Label>
+                      <Label htmlFor="description_en">{dict.admin.properties.form.descriptionEnLabel}</Label>
                       <Textarea
                         id="description_en"
                         dir="ltr"
                         value={formData.description_en}
                         onChange={(e) => handleInputChange("description_en", e.target.value)}
                         rows={4}
-                        placeholder="Describe the property, its features, and what makes it special..."
+                        placeholder={dict.admin.properties.form.descriptionEnPlaceholder}
                         className={errors.description_en ? "border-red-500" : ""}
                       />
                       {errors.description_en && <p className="text-sm text-red-500 mt-1">{errors.description_en[0]}</p>}
                     </div>
                     
                     <div>
-                      <Label htmlFor="location_en">Address (English) *</Label>
+                      <Label htmlFor="location_en">{dict.admin.properties.form.addressEnLabel}</Label>
                       <Input
                         id="location_en"
                         dir="ltr"
                         value={formData.location_en}
                         onChange={(e) => handleInputChange("location_en", e.target.value)}
-                        placeholder="e.g., 123 Main Street, Downtown"
+                        placeholder={dict.admin.properties.form.addressEnPlaceholder}
                         className={errors.location_en ? "border-red-500" : ""}
                       />
                       {errors.location_en && <p className="text-sm text-red-500 mt-1">{errors.location_en[0]}</p>}
@@ -546,20 +546,20 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
               {/* Legacy fields for backward compatibility */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t">
                 <div className="md:col-span-2">
-                  <Label htmlFor="title">Legacy Title (for compatibility)</Label>
+                  <Label htmlFor="title">{dict.admin.properties.form.legacyTitleLabel}</Label>
                   <Input
                     id="title"
                     value={formData.title}
                     onChange={(e) => handleInputChange("title", e.target.value)}
-                    placeholder="Will be synced with English title"
+                    placeholder={dict.admin.properties.form.legacyTitlePlaceholder}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="categoryId">Category *</Label>
+                  <Label htmlFor="categoryId">{dict.admin.properties.form.categoryLabel} *</Label>
                   <Select value={formData.categoryId} onValueChange={(value) => handleInputChange("categoryId", value)}>
                     <SelectTrigger className={errors.categoryId ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Select category" />
+                      <SelectValue placeholder={dict.admin.properties.form.selectCategory} />
                     </SelectTrigger>
                     <SelectContent>
                       {categories.map((category) => (
@@ -573,21 +573,21 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="propertyType">Property Type *</Label>
+                  <Label htmlFor="propertyType">{dict.admin.properties.form.typeLabel} *</Label>
                   <Select value={formData.propertyType} onValueChange={(value) => handleInputChange("propertyType", value)}>
                     <SelectTrigger className={errors.propertyType ? "border-red-500" : ""}>
-                      <SelectValue placeholder="Select type" />
+                      <SelectValue placeholder={dict.admin.properties.form.selectType} />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="sale">For Sale</SelectItem>
-                      <SelectItem value="rent">For Rent</SelectItem>
+                      <SelectItem value="sale">{dict.admin.properties.form.forSale}</SelectItem>
+                      <SelectItem value="rent">{dict.admin.properties.form.forRent}</SelectItem>
                     </SelectContent>
                   </Select>
                   {errors.propertyType && <p className="text-sm text-red-500 mt-1">{errors.propertyType[0]}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="ownerType">Owner Type</Label>
+                  <Label htmlFor="ownerType">{dict.admin.properties.form.ownerTypeLabel}</Label>
                   <Select value={formData.ownerType} onValueChange={(value) => handleInputChange("ownerType", value)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -600,15 +600,15 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="status">Status</Label>
+                  <Label htmlFor="status">{dict.admin.properties.form.statusLabel}</Label>
                   <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="draft">Draft</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="active">{dict.admin.properties.active}</SelectItem>
+                      <SelectItem value="draft">{dict.admin.properties.search.draft}</SelectItem>
+                      <SelectItem value="inactive">{dict.admin.properties.inactive}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -619,12 +619,12 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
           {/* Pricing & Details */}
           <Card>
             <CardHeader>
-              <CardTitle>Pricing & Property Details</CardTitle>
+              <CardTitle>{dict.admin.properties.form.pricingDetailsTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <Label htmlFor="price">Price *</Label>
+                  <Label htmlFor="price">{dict.admin.properties.form.priceLabel.replace("(EGP)", "")} *</Label>
                   <Input
                     id="price"
                     type="number"
@@ -635,12 +635,14 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                   />
                   {errors.price && <p className="text-sm text-red-500 mt-1">{errors.price[0]}</p>}
                   <p className="text-xs text-muted-foreground mt-1">
-                    Stored in EGP. Current currency: {currency}{currency !== "EGP" ? ` → ${(parseFloat(formData.price || "0") * (exchangeRate || 1) || 0).toLocaleString()} EGP` : ""}
+                    {lng === 'ar' ? 'يتم التخزين بالجنيه المصري. العملة الحالية: ' : 'Stored in EGP. Current currency: '} 
+                    {currency}
+                    {currency !== "EGP" ? (lng === 'ar' ? ` → ${(parseFloat(formData.price || "0") * (exchangeRate || 1) || 0).toLocaleString()} ج.م` : ` → ${(parseFloat(formData.price || "0") * (exchangeRate || 1) || 0).toLocaleString()} EGP`) : ""}
                   </p>
                 </div>
 
                 <div>
-                  <Label htmlFor="pricePerMeter">Price per m² (Optional)</Label>
+                  <Label htmlFor="pricePerMeter">{dict.admin.properties.form.pricePerMeterLabel}</Label>
                   <Input
                     id="pricePerMeter"
                     type="number"
@@ -650,13 +652,13 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                   />
                   {formData.pricePerMeter && currency !== "EGP" && (
                     <p className="text-xs text-muted-foreground mt-1">
-                      ≈ {(parseFloat(formData.pricePerMeter || "0") * (exchangeRate || 1) || 0).toLocaleString()} EGP
+                      {lng === 'ar' ? '≈ ' : '≈ '} {(parseFloat(formData.pricePerMeter || "0") * (exchangeRate || 1) || 0).toLocaleString()} {lng === 'ar' ? 'ج.م' : 'EGP'}
                     </p>
                   )}
                 </div>
 
                 <div>
-                  <Label htmlFor="size">Size (m²) *</Label>
+                  <Label htmlFor="size">{dict.admin.properties.form.sizeLabel} *</Label>
                   <Input
                     id="size"
                     type="number"
@@ -669,7 +671,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="currency">Currency</Label>
+                  <Label htmlFor="currency">{dict.admin.properties.form.currencyLabel}</Label>
                   <Select value={currency} onValueChange={(val) => {
                     const next = (val as keyof typeof CURRENCY_RATES)
                     setCurrency(next)
@@ -687,7 +689,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="bedrooms">Bedrooms *</Label>
+                  <Label htmlFor="bedrooms">{dict.admin.properties.form.bedroomsLabel} *</Label>
                   <Input
                     id="bedrooms"
                     type="number"
@@ -701,7 +703,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="bathrooms">Bathrooms *</Label>
+                  <Label htmlFor="bathrooms">{dict.admin.properties.form.bathroomsLabel} *</Label>
                   <Input
                     id="bathrooms"
                     type="number"
@@ -715,7 +717,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="yearBuilt">Year Built</Label>
+                  <Label htmlFor="yearBuilt">{dict.admin.properties.form.yearBuiltLabel}</Label>
                   <Input
                     id="yearBuilt"
                     type="number"
@@ -726,7 +728,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="floor">Floor</Label>
+                  <Label htmlFor="floor">{dict.admin.properties.form.floorLabel}</Label>
                   <Input
                     id="floor"
                     type="number"
@@ -737,7 +739,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                 </div>
 
                 <div>
-                  <Label htmlFor="totalFloors">Total Floors</Label>
+                  <Label htmlFor="totalFloors">{dict.admin.properties.form.totalFloorsLabel}</Label>
                   <Input
                     id="totalFloors"
                     type="number"
@@ -755,28 +757,28 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <MapPin className="w-5 h-5" />
-                Location Information
+                {dict.admin.properties.form.locationInfoTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="location">Legacy Location (for compatibility)</Label>
+                  <Label htmlFor="location">{dict.admin.properties.form.legacyLocationLabel}</Label>
                   <Input
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange("location", e.target.value)}
-                    placeholder="Will be synced with English location"
+                    placeholder={dict.admin.properties.form.legacyLocationPlaceholder}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="areaId">Area/District *</Label>
+                  <Label htmlFor="areaId">{dict.admin.properties.form.areaDistrictLabel}</Label>
                   {!showNewAreaInput ? (
                     <div className="space-y-2">
                       <Select value={formData.areaId} onValueChange={handleAreaChange}>
                         <SelectTrigger className={errors.areaId ? "border-red-500" : ""}>
-                          <SelectValue placeholder="Select an area" />
+                          <SelectValue placeholder={dict.admin.properties.form.selectArea} />
                         </SelectTrigger>
                         <SelectContent>
                           {availableAreas.map((area) => (
@@ -786,7 +788,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                           ))}
                           <SelectItem value="add_new" className="text-blue-600 font-medium">
                             <Plus className="w-4 h-4 mr-2 inline" />
-                            Add New Area
+                            {dict.admin.properties.form.addNewArea}
                           </SelectItem>
                         </SelectContent>
                       </Select>
@@ -796,7 +798,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     <div className="space-y-2">
                       <div className="flex gap-2">
                         <Input
-                          placeholder="Enter new area name"
+                          placeholder={dict.admin.properties.form.newAreaNamePlaceholder}
                           value={newAreaName}
                           onChange={(e) => setNewAreaName(e.target.value)}
                           onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), handleCreateArea())}
@@ -826,14 +828,14 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                           <X className="w-4 h-4" />
                         </Button>
                       </div>
-                      <p className="text-sm text-muted-foreground">Enter a new area name and click the plus button to add it.</p>
+                      <p className="text-sm text-muted-foreground">{dict.admin.properties.form.newAreaHelp}</p>
                     </div>
                   )}
                 </div>
               </div>
               <div className="md:col-span-2 space-y-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="locationIframeUrl">Google Maps Iframe</Label>
+                  <Label htmlFor="locationIframeUrl">{dict.admin.properties.form.googleMapsIframeLabel}</Label>
                   <Dialog>
                     <DialogTrigger asChild>
                       <Button type="button" variant="outline" size="sm">
@@ -856,7 +858,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                   dir="ltr"
                   value={formData.locationIframeUrl}
                   onChange={(e) => handleInputChange("locationIframeUrl", e.target.value)}
-                  placeholder="Paste Google Maps iframe code or the embed URL here"
+                  placeholder={dict.admin.properties.form.googleMapsIframePlaceholder}
                   className={errors.locationIframeUrl ? "border-red-500 text-left" : "text-left"}
                   rows={5}
                 />
@@ -870,25 +872,25 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Phone className="w-5 h-5" />
-                Contact Information
+                {dict.admin.properties.form.contactInfoTitle}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <Label htmlFor="contactName">Contact Name *</Label>
+                  <Label htmlFor="contactName">{dict.admin.properties.form.contactNameLabel}</Label>
                   <Input
                     id="contactName"
                     value={formData.contactName}
                     onChange={(e) => handleInputChange("contactName", e.target.value)}
-                    placeholder="e.g., John Smith"
+                    placeholder={dict.admin.properties.form.contactNamePlaceholder}
                     className={errors.contactName ? "border-red-500" : ""}
                   />
                   {errors.contactName && <p className="text-sm text-red-500 mt-1">{errors.contactName[0]}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="contactPhone">Phone Number *</Label>
+                  <Label htmlFor="contactPhone">{dict.admin.properties.form.phoneNumberLabel}</Label>
                   <Input
                     id="contactPhone"
                     type="tel"
@@ -896,14 +898,14 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     dir="ltr"
                     value={formData.contactPhone}
                     onChange={(e) => handleInputChange("contactPhone", e.target.value)}
-                    placeholder="e.g., +1234567890"
+                    placeholder={dict.admin.properties.form.phoneNumberPlaceholder}
                     className={errors.contactPhone ? "border-red-500" : ""}
                   />
                   {errors.contactPhone && <p className="text-sm text-red-500 mt-1">{errors.contactPhone[0]}</p>}
                 </div>
 
                 <div>
-                  <Label htmlFor="contactWhatsapp">WhatsApp (Optional)</Label>
+                  <Label htmlFor="contactWhatsapp">{dict.admin.properties.form.whatsappLabel}</Label>
                   <Input
                     id="contactWhatsapp"
                     type="tel"
@@ -911,24 +913,24 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
                     dir="ltr"
                     value={formData.contactWhatsapp}
                     onChange={(e) => handleInputChange("contactWhatsapp", e.target.value)}
-                    placeholder="e.g., +1234567890"
+                    placeholder={dict.admin.properties.form.whatsappPlaceholder}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="contactEmail">Email (Optional)</Label>
+                  <Label htmlFor="contactEmail">{dict.admin.properties.form.emailLabel}</Label>
                   <Input
                     id="contactEmail"
                     type="email"
                     dir="ltr"
                     value={formData.contactEmail}
                     onChange={(e) => handleInputChange("contactEmail", e.target.value)}
-                    placeholder="e.g., contact@example.com"
+                    placeholder={dict.admin.properties.form.emailPlaceholder}
                   />
                 </div>
 
                 <div>
-                  <Label htmlFor="responseTime">Response Time</Label>
+                  <Label htmlFor="responseTime">{dict.admin.properties.form.responseTimeLabel}</Label>
                   <Select value={formData.responseTime} onValueChange={(value) => handleInputChange("responseTime", value)}>
                     <SelectTrigger>
                       <SelectValue />
@@ -951,7 +953,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Camera className="w-5 h-5" />
-                Property Images
+                {dict.admin.properties.form.imagesTitle}
               </CardTitle>
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
@@ -984,7 +986,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <VideoIcon className="w-5 h-5" />
-                Property Videos
+                {dict.admin.properties.form.videosTitle}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -999,11 +1001,11 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
           {/* Features */}
           <Card>
             <CardHeader>
-              <CardTitle>Property Features</CardTitle>
+              <CardTitle>{dict.admin.properties.form.featuresTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label>Quick Add Features</Label>
+                <Label>{dict.admin.properties.form.quickAddFeatures}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {COMMON_FEATURES.map((feature) => (
                     <Button
@@ -1023,7 +1025,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add custom feature"
+                  placeholder={dict.admin.properties.form.addCustomFeaturePlaceholder}
                   value={customFeature}
                   onChange={(e) => setCustomFeature(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addCustomFeature())}
@@ -1035,7 +1037,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               {selectedFeatures.length > 0 && (
                 <div>
-                  <Label>Selected Features</Label>
+                  <Label>{dict.admin.properties.form.selectedFeatures}</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedFeatures.map((feature) => (
                       <Badge key={feature} variant="secondary" className="flex items-center gap-1">
@@ -1060,11 +1062,11 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
           {/* Amenities */}
           <Card>
             <CardHeader>
-              <CardTitle>Building Amenities</CardTitle>
+              <CardTitle>{dict.admin.properties.form.amenitiesTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <Label>Quick Add Amenities</Label>
+                <Label>{dict.admin.properties.form.quickAddAmenities}</Label>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {COMMON_AMENITIES.map((amenity) => (
                     <Button
@@ -1084,7 +1086,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               <div className="flex gap-2">
                 <Input
-                  placeholder="Add custom amenity"
+                  placeholder={dict.admin.properties.form.addCustomAmenityPlaceholder}
                   value={customAmenity}
                   onChange={(e) => setCustomAmenity(e.target.value)}
                   onKeyPress={(e) => e.key === "Enter" && (e.preventDefault(), addCustomAmenity())}
@@ -1096,7 +1098,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               {selectedAmenities.length > 0 && (
                 <div>
-                  <Label>Selected Amenities</Label>
+                  <Label>{dict.admin.properties.form.selectedAmenities}</Label>
                   <div className="flex flex-wrap gap-2 mt-2">
                     {selectedAmenities.map((amenity) => (
                       <Badge key={amenity} variant="secondary" className="flex items-center gap-1">
@@ -1121,13 +1123,13 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
           {/* Settings */}
           <Card>
             <CardHeader>
-              <CardTitle>Property Settings</CardTitle>
+              <CardTitle>{dict.admin.properties.form.settingsTitle}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="isFeatured">Featured Property</Label>
-                  <p className="text-sm text-muted-foreground">Display this property prominently on the homepage</p>
+                  <Label htmlFor="isFeatured">{dict.admin.properties.form.featuredPropertyLabel}</Label>
+                  <p className="text-sm text-muted-foreground">{dict.admin.properties.form.featuredPropertyDesc}</p>
                 </div>
                 <Switch
                   id="isFeatured"
@@ -1140,8 +1142,8 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="isNew">New Property</Label>
-                  <p className="text-sm text-muted-foreground">Mark this property as newly listed</p>
+                  <Label htmlFor="isNew">{dict.admin.properties.form.newPropertyLabel}</Label>
+                  <p className="text-sm text-muted-foreground">{dict.admin.properties.form.newPropertyDesc}</p>
                 </div>
                 <Switch
                   id="isNew"
@@ -1154,8 +1156,8 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label htmlFor="isVerified">Verified Property</Label>
-                  <p className="text-sm text-muted-foreground">Mark this property as verified by admin</p>
+                  <Label htmlFor="isVerified">{dict.admin.properties.form.verifiedPropertyLabel}</Label>
+                  <p className="text-sm text-muted-foreground">{dict.admin.properties.form.verifiedPropertyDesc}</p>
                 </div>
                 <Switch
                   id="isVerified"
@@ -1173,19 +1175,19 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
         {/* Actions Card */}
         <Card className="sticky top-16">
           <CardHeader>
-            <CardTitle>Actions</CardTitle>
+            <CardTitle>{dict.admin.properties.form.actionsTitle}</CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             <Button onClick={handleSubmit} className="w-full" disabled={isPending}>
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  {mode === "create" ? "Creating..." : "Updating..."}
+                  {mode === "create" ? dict.admin.properties.form.creating : dict.admin.properties.form.updating}
                 </>
               ) : (
                 <>
                   <Save className="w-4 h-4 mr-2" />
-                  {mode === "create" ? "Create Property" : "Update Property"}
+                  {mode === "create" ? dict.admin.properties.form.createButton : dict.admin.properties.form.updateButton}
                 </>
               )}
             </Button>
@@ -1193,7 +1195,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
             <Link href={`/${lng}/admin/properties`}>
               <Button type="button" variant="outline" className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Back to Properties
+                {dict.admin.properties.form.backToProperties}
               </Button>
             </Link>
           </CardContent>
@@ -1202,16 +1204,16 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
         {/* Progress Card */}
         <Card>
           <CardHeader>
-            <CardTitle>Form Progress</CardTitle>
+            <CardTitle>{dict.admin.properties.form.progressTitle}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span>Completion</span>
+                <span>{dict.admin.properties.form.completionLabel}</span>
                 <span>{progress}%</span>
               </div>
               <Progress value={progress} className="w-full" />
-              <p className="text-xs text-muted-foreground">Fill in required fields to complete the listing</p>
+              <p className="text-xs text-muted-foreground">{dict.admin.properties.form.completionHelp}</p>
             </div>
           </CardContent>
         </Card>
@@ -1239,19 +1241,19 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict }: P
         {/* Language Status */}
         <Card>
           <CardHeader>
-            <CardTitle>Content Status</CardTitle>
+            <CardTitle>{dict.admin.properties.form.contentStatusTitle}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-sm">English Content</span>
+              <span className="text-sm">{dict.admin.properties.form.englishContentLabel}</span>
               <Badge variant={formData.title_en && formData.description_en && formData.location_en ? "default" : "secondary"}>
-                {formData.title_en && formData.description_en && formData.location_en ? "Complete" : "Incomplete"}
+                {formData.title_en && formData.description_en && formData.location_en ? dict.admin.properties.form.completeLabel : dict.admin.properties.form.incompleteLabel}
               </Badge>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm">Arabic Content</span>
+              <span className="text-sm">{dict.admin.properties.form.arabicContentLabel}</span>
               <Badge variant={formData.title_ar && formData.description_ar && formData.location_ar ? "default" : "secondary"}>
-                {formData.title_ar && formData.description_ar && formData.location_ar ? "Complete" : "Incomplete"}
+                {formData.title_ar && formData.description_ar && formData.location_ar ? dict.admin.properties.form.completeLabel : dict.admin.properties.form.incompleteLabel}
               </Badge>
             </div>
           </CardContent>

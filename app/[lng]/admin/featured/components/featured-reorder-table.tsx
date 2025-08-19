@@ -117,7 +117,7 @@ export function FeaturedReorderTable({ initialItems, lng, dict }: { initialItems
                       return (
                         <Row key={property.id} id={property.id}>
                           <TableCell>
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center gap-3">
                               <div className="relative w-12 h-12 rounded-md overflow-hidden">
                                 <Image src={mainImage?.url || "/placeholder.svg?height=48&width=48"} alt={property.title} fill className="object-cover" />
                               </div>
@@ -147,7 +147,7 @@ export function FeaturedReorderTable({ initialItems, lng, dict }: { initialItems
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2">
                               <Link href={`/${lng}/properties/${property.id}`} target="_blank">
                                 <Button variant="ghost" size="sm"><Eye className="w-4 h-4" /></Button>
                               </Link>

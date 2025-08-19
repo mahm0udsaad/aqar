@@ -23,7 +23,7 @@ export function AdminHeader({ title, description, lng, dict }: AdminHeaderProps)
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="md:hidden">
                 <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle menu</span>
+                <span className="sr-only">{lng === 'ar' ? 'فتح القائمة' : 'Toggle menu'}</span>
               </Button>
             </SheetTrigger>
             <SheetContent side={lng === 'ar' ? 'right' : 'left'} className="w-64 p-0">
@@ -43,7 +43,7 @@ export function AdminHeader({ title, description, lng, dict }: AdminHeaderProps)
         </div>
 
         {/* Right side actions could go here */}
-        <div className="flex items-center space-x-2 rtl:space-x-reverse">
+        <div className="flex items-center gap-2 rtl:gap-reverse">
           {/* Add user menu, notifications, etc. here in the future */}
         </div>
       </div>

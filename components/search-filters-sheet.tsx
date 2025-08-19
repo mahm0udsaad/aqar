@@ -303,7 +303,7 @@ export function SearchFiltersSheet({
               {amenities.map((amenity) => {
                 const amenityKey = amenityToKeyMap[amenity]
                 return (
-                  <div key={amenity} className="flex items-center space-x-2">
+                  <div key={amenity} className="flex items-center gap-2">
                   <Checkbox
                       id={amenity}
                       checked={filters.amenities?.includes(amenity) || false}

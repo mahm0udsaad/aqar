@@ -142,7 +142,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
             {/* Thumbnail strip at bottom */}
             {images.length > 1 && (
               <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-full max-w-4xl px-8">
-                <div className="flex space-x-2 overflow-x-auto scrollbar-hide justify-center">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide justify-center">
                   {images.map((image, index) => (
                     <div
                       key={image.id}

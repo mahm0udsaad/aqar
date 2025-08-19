@@ -39,7 +39,7 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
     <div>
       <AdminHeader
         title={dict.admin.categories.title}
-        description="Manage property categories"
+        description={dict.admin.categories.description}
         lng={lng}
         dict={dict}
       />
@@ -48,8 +48,8 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
         {/* Header Actions */}
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h2 className="text-lg font-semibold">Property Categories</h2>
-            <p className="text-muted-foreground">Drag and drop to reorder categories</p>
+            <h2 className="text-lg font-semibold">{dict.admin.categories.manageHeaderTitle}</h2>
+            <p className="text-muted-foreground">{dict.admin.categories.dragToReorder}</p>
           </div>
           <CategoryDialog lng={lng} mode="create" dict={dict}>
             <Button>
@@ -65,23 +65,15 @@ export default async function AdminCategoriesPage({ params }: PageProps) {
         {/* Instructions */}
         <Card className="mt-8">
           <CardContent className="p-6">
-            <h3 className="font-semibold mb-3">How to Manage Categories</h3>
+            <h3 className="font-semibold mb-3">{dict.admin.categories.howToManage.title}</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-muted-foreground">
               <div className="space-y-2">
-                <p>
-                  • <strong>Drag and Drop:</strong> Reorder categories by dragging them
-                </p>
-                <p>
-                  • <strong>Edit:</strong> Click the edit button to modify category details
-                </p>
+                <p>{dict.admin.categories.howToManage.dragAndDrop}</p>
+                <p>{dict.admin.categories.howToManage.edit}</p>
               </div>
               <div className="space-y-2">
-                <p>
-                  • <strong>Delete:</strong> Remove categories that are no longer needed
-                </p>
-                <p>
-                  • <strong>Display Order:</strong> Categories are displayed in the order shown here
-                </p>
+                <p>{dict.admin.categories.howToManage.delete}</p>
+                <p>{dict.admin.categories.howToManage.displayOrder}</p>
               </div>
             </div>
           </CardContent>

@@ -204,7 +204,7 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Switch
               id="isActive"
               checked={formData.isActive}
@@ -213,7 +213,7 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
             <Label htmlFor="isActive">Active (visible to users)</Label>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>

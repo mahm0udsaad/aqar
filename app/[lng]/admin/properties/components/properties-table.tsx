@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { formatPrice } from "@/lib/utils"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Plus, Edit, Trash2, Star, Eye, Building } from "lucide-react"
+import { Plus, Edit, Star, Eye, Building } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import type { Database } from "@/lib/supabase/types"
@@ -145,7 +145,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
               <div className="bg-background border rounded-lg px-3 py-2 shadow-lg">
                 <div className="flex items-center gap-2 text-sm">
                   <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
-                  Updating order...
+                  {dict.admin.properties.table?.updatingOrder || "Updating order..."}
                 </div>
               </div>
             </div>
@@ -153,7 +153,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-24">Order</TableHead>
+                <TableHead className="w-24">{dict.admin.properties.table.order || "Order"}</TableHead>
                 <TableHead>{dict.admin.properties.table.property}</TableHead>
                 <TableHead>{dict.admin.properties.table.category}</TableHead>
                 <TableHead>{dict.admin.properties.table.price}</TableHead>
@@ -176,7 +176,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                       return (
                         <SortableRow key={property.id} property={property}>
                           <TableCell>
-                            <div className="flex items-center space-x-3">
+                            <div className="flex items-center gap-3">
                               <div className="relative w-12 h-12 rounded-md overflow-hidden">
                                 <Image
                                   src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=48&width=48"}
@@ -196,7 +196,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                           </TableCell>
                           <TableCell className="font-medium">{formatPrice(property.price)}</TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2">
                               <Badge
                                 variant="outline"
                                 className={
@@ -225,7 +225,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                             </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex items-center space-x-2">
+                            <div className="flex items-center gap-2">
                               <TooltipProvider>
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -235,7 +235,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                                       </Button>
                                     </Link>
                                   </TooltipTrigger>
-                                  <TooltipContent>View Property</TooltipContent>
+                                  <TooltipContent>{dict.admin.properties.table?.viewProperty || "View Property"}</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                               <TooltipProvider>
@@ -247,7 +247,7 @@ export function PropertiesTable({ properties: initialProperties = [], lng, dict,
                                       </Button>
                                     </Link>
                                   </TooltipTrigger>
-                                  <TooltipContent>Edit Property</TooltipContent>
+                                  <TooltipContent>{dict.admin.properties.table?.editProperty || "Edit Property"}</TooltipContent>
                                 </Tooltip>
                               </TooltipProvider>
                               <ToggleFeaturedButton 

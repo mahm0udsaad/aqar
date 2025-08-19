@@ -73,14 +73,14 @@ export function AreasGrid({ areas, lng, dict }: AreasGridProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Areas</h2>
+          <h2 className="text-2xl font-bold tracking-tight">{dict.admin.areas?.title || 'Areas'}</h2>
           <p className="text-muted-foreground">
-            Manage areas and locations for property listings
+            {dict.admin.areas?.description || 'Manage areas and locations for property listings'}
           </p>
         </div>
         <Button onClick={handleCreateNew}>
           <Plus className="w-4 h-4 mr-2" />
-          Add New Area
+          {dict.admin.areas?.addNew || 'Add New Area'}
         </Button>
       </div>
 
@@ -92,7 +92,7 @@ export function AreasGrid({ areas, lng, dict }: AreasGridProps) {
                 <CardTitle className="text-lg">{area.name}</CardTitle>
                 <div className="flex items-center gap-2">
                   <Badge variant={area.is_active ? "default" : "secondary"}>
-                    {area.is_active ? "Active" : "Inactive"}
+                    {area.is_active ? (dict.admin.areas?.active || 'Active') : (dict.admin.areas?.inactive || 'Inactive')}
                   </Badge>
                   <span className="text-sm text-muted-foreground">
                     #{area.order_index}
@@ -108,18 +108,18 @@ export function AreasGrid({ areas, lng, dict }: AreasGridProps) {
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => handleEdit(area)}>
                     <Edit className="w-4 h-4 mr-2" />
-                    Edit
+                    {lng === 'ar' ? 'تعديل' : 'Edit'}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleToggleActive(area)}>
                     {area.is_active ? (
                       <>
                         <EyeOff className="w-4 h-4 mr-2" />
-                        Deactivate
+                        {dict.admin.areas?.deactivate || 'Deactivate'}
                       </>
                     ) : (
                       <>
                         <Eye className="w-4 h-4 mr-2" />
-                        Activate
+                        {dict.admin.areas?.activate || 'Activate'}
                       </>
                     )}
                   </DropdownMenuItem>

@@ -32,7 +32,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
     <div className="flex flex-col h-full">
       {/* Logo */}
       <div className="p-6 border-b border-background/10">
-        <Link href={`/${lng}/admin`} className="flex items-center space-x-2 rtl:space-x-reverse">
+        <Link href={`/${lng}/admin`} className="flex items-center gap-2 rtl:gap-reverse">
           <Building className="h-8 w-8 text-background" />
           <span className="font-bold text-xl text-background">{dict.admin.sidebar.adminPanel}</span>
         </Link>
@@ -46,7 +46,7 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center space-x-3 rtl:space-x-reverse px-3 py-2 rounded-md text-background/80 hover:text-background hover:bg-background/10 transition-colors",
+                  "flex items-center gap-3 rtl:gap-reverse px-3 py-2 rounded-md text-background/80 hover:text-background hover:bg-background/10 transition-colors",
                   pathname === item.href && "bg-background/20 text-background",
                 )}
                 onClick={() => setIsOpen(false)}

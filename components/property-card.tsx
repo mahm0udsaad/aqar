@@ -168,7 +168,7 @@ export function PropertyCard({
 
         {/* Property Details */}
         <div className="flex items-center justify-between text-sm text-slate-600 mb-4">
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center gap-4">
             {property.bedrooms > 0 && (
               <div className="flex items-center">
                 <Bed className="w-4 h-4 mr-1" />

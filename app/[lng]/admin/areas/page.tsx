@@ -24,8 +24,8 @@ export default async function AreasPage({ params }: PageProps) {
   return (
     <div>
       <AdminHeader 
-        title="Areas Management" 
-        description="Manage areas and locations for properties"
+        title={dict.admin.areas?.title || dict.admin.categories.title}
+        description={dict.admin.areas?.description || ""}
         lng={lng}
         dict={dict}
       />

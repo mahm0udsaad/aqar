@@ -260,7 +260,7 @@ export function AdvancedSearchFilters({
       <div>
         <Label className="text-sm font-medium mb-3 block">Property Features</Label>
         <div className="space-y-3">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Checkbox
               id="furnished"
               checked={filters.furnished || false}
@@ -270,7 +270,7 @@ export function AdvancedSearchFilters({
               Furnished
             </Label>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <Checkbox
               id="petFriendly"
               checked={filters.petFriendly || false}
@@ -293,7 +293,7 @@ export function AdvancedSearchFilters({
             return (
               <div
                 key={amenity.id}
-                className={`flex items-center space-x-2 p-3 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex items-center gap-2 p-3 rounded-lg border cursor-pointer transition-colors ${
                   (filters.amenities || []).includes(amenity.id)
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-primary/50"

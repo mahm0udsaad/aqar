@@ -103,7 +103,7 @@ function SortableCategory({ category, lng, dict, isDragOverlay = false }: Sortab
     >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center gap-2">
             <div
               {...attributes}
               {...listeners}
@@ -115,7 +115,7 @@ function SortableCategory({ category, lng, dict, isDragOverlay = false }: Sortab
             <CardTitle className="text-lg">{category.name}</CardTitle>
           </div>
           {!isDragOverlay && (
-            <div className="flex items-center space-x-1">
+            <div className="flex items-center gap-1">
               <CategoryDialog lng={lng} mode="edit" category={category} dict={dict}>
                 <Button variant="ghost" size="sm">
                   <Edit className="w-4 h-4" />

@@ -312,7 +312,7 @@ export function SearchFilterForm({
       </div>
 
       {/* New Properties */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Checkbox
           id="isNew"
           checked={searchParams.isNew === "true"}
@@ -330,7 +330,7 @@ export function SearchFilterForm({
           {amenities.map((amenity) => {
             const amenityKey = amenityToKeyMap[amenity]
             return (
-              <div key={amenity} className="flex items-center space-x-2">
+              <div key={amenity} className="flex items-center gap-2">
                 <Checkbox
                   id={amenity}
                   checked={currentAmenities.includes(amenity)}

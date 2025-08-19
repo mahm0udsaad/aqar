@@ -36,7 +36,7 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
       bgColor: "bg-accent",
     },
     {
-      title: dict.admin.dashboard.categories,
+      title: dict.admin.categories.title,
       value: totalCategories,
       icon: FolderOpen,
       color: "text-success",

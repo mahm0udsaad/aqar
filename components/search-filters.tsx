@@ -276,7 +276,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, catego
       </div>
 
       {/* New Properties */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center gap-2">
         <Checkbox
           id="isNew"
           checked={filters.isNew || false}
@@ -294,7 +294,7 @@ export function SearchFilters({ filters, onFiltersChange, onClearFilters, catego
           {amenities.map((amenity) => {
             const amenityKey = amenityToKeyMap[amenity]
             return (
-              <div key={amenity} className="flex items-center space-x-2">
+              <div key={amenity} className="flex items-center gap-2">
                 <Checkbox
                   id={amenity}
                   checked={filters.amenities?.includes(amenity) || false}

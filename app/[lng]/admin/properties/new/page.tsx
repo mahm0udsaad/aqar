@@ -25,10 +25,10 @@ export default async function NewPropertyPage({ params }: PageProps) {
   return (
     <div>
       <AdminHeader 
-        title="Add New Property" 
-        description="Create a new property listing"
+        title={dict.admin.properties.form.createTitle}
+        description={dict.admin.properties.description}
         lng={lng}
-        dict={{} as any}
+        dict={dict as any}
       />
       <div className="p-6">
         <PropertyForm 

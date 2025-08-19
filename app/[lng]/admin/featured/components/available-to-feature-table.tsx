@@ -61,7 +61,7 @@ export function AvailableToFeatureTable({ initialItems, lng, dict }: AvailableTo
                   return (
                     <TableRow key={property.id}>
                       <TableCell>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
                             <Image
                               src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
@@ -81,7 +81,7 @@ export function AvailableToFeatureTable({ initialItems, lng, dict }: AvailableTo
                       </TableCell>
                       <TableCell className="font-medium">{new Intl.NumberFormat().format(property.price)}</TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center gap-2">
                           <Badge variant="outline" className="text-green-600 border-green-600">
                             {property.status?.charAt(0).toUpperCase() + (property.status?.slice(1) || "")}
                           </Badge>
@@ -93,13 +93,13 @@ export function AvailableToFeatureTable({ initialItems, lng, dict }: AvailableTo
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="flex items-center space-x-2">
-                          <Link href={`/${lng}/properties/${property.id}`} target="_blank">
+                        <div className="flex items-center gap-2">
+                          <Link href={`/${lng}/properties/${property.id}`} target="_blank" aria-label={dict.admin.featured.table?.viewProperty || 'View Property'}>
                             <Button variant="ghost" size="sm">
                               <Eye className="w-4 h-4" />
                             </Button>
                           </Link>
-                          <Link href={`/${lng}/admin/properties/${property.id}/edit`}>
+                          <Link href={`/${lng}/admin/properties/${property.id}/edit`} aria-label={dict.admin.featured.table?.editProperty || 'Edit Property'}>
                             <Button variant="ghost" size="sm">
                               <Edit className="w-4 h-4" />
                             </Button>

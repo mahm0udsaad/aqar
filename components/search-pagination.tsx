@@ -62,7 +62,7 @@ export function SearchPagination({ lng, searchParams, pagination }: SearchPagina
   const pageNumbers = getPageNumbers()
 
   return (
-    <div className="flex items-center justify-center space-x-2">
+    <div className="flex items-center justify-center gap-2">
       {/* Previous button */}
       {hasPreviousPage ? (
         <Button variant="outline" size="sm" asChild>
@@ -79,7 +79,7 @@ export function SearchPagination({ lng, searchParams, pagination }: SearchPagina
       )}
 
       {/* Page numbers */}
-      <div className="flex items-center space-x-1">
+      <div className="flex items-center gap-1">
         {pageNumbers.map((pageNum, index) => {
           if (pageNum === '...') {
             return (

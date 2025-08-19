@@ -198,7 +198,7 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
             />
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          <div className="flex justify-end gap-2 pt-4">
             <Button
               type="button"
               variant="outline"
