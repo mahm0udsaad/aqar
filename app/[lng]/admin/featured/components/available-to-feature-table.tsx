@@ -65,14 +65,14 @@ export function AvailableToFeatureTable({ initialItems, lng, dict }: AvailableTo
                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
                             <Image
                               src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
-                              alt={property.title}
+                              alt={(property as any).title_en || (property as any).title_ar || "Property"}
                               fill
                               className="object-cover"
                             />
                           </div>
                           <div>
-                            <p className="font-medium">{property.title}</p>
-                            <p className="text-sm text-muted-foreground">{property.location}</p>
+                            <p className="font-medium">{(property as any).title_en || (property as any).title_ar}</p>
+                            <p className="text-sm text-muted-foreground">{(property as any).location_en || (property as any).location_ar || property.location}</p>
                           </div>
                         </div>
                       </TableCell>

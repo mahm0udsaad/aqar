@@ -18,8 +18,8 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
   }
 
   const localizedTitle = lng === "ar"
-    ? ((property as any).title_ar || (property as any).title_en || property.title)
-    : ((property as any).title_en || (property as any).title_ar || property.title)
+    ? ((property as any).title_ar || (property as any).title_en)
+    : ((property as any).title_en || (property as any).title_ar)
   const localizedLocation = lng === "ar"
     ? ((property as any).location_ar || (property as any).location_en || property.location)
     : ((property as any).location_en || (property as any).location_ar || property.location)
@@ -95,7 +95,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           <span className="mx-2">/</span>
           <span>{property.area}</span>
           <span className="mx-2">/</span>
-          <span className="text-foreground">{(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}</span>
+          <span className="text-foreground">{(lng === "ar" ? (property as any).title_ar : (property as any).title_en)}</span>
         </div>
         <PropertyDetails property={property} lng={lng} />
       </div>

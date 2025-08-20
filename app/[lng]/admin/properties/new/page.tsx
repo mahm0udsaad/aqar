@@ -14,6 +14,8 @@ export default async function NewPropertyPage({ params }: PageProps) {
   const { lng } = await params
   const supabase = createServerComponentClient<Database>({ cookies })
   const dict = await getDictionary(lng)
+  const dictEn = await getDictionary("en" as any)
+  const dictAr = await getDictionary("ar" as any)
   // Fetch categories and areas for the form
   const { data: categories } = await supabase
     .from("categories")
@@ -33,6 +35,8 @@ export default async function NewPropertyPage({ params }: PageProps) {
       <div className="p-6">
         <PropertyForm 
           dict={dict}
+          dictEn={dictEn as any}
+          dictAr={dictAr as any}
           categories={categories || []} 
           areas={areas || []}
           lng={lng}

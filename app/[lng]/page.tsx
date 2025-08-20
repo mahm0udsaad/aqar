@@ -125,21 +125,31 @@ export default async function HomePage({ params }: HomePageProps) {
       </Link>
     </div>
 
-    {/* Main featured property on top */}
-    {featuredProperties && featuredProperties.length > 0 && (
-      <div className="mb-6">
-        <PropertyCard property={featuredProperties[0]} lng={lng} featured={true}/>
-      </div>
-    )}
+    {/* Main featured property on top only if explicitly set in admin */}
+    {(() => {
+      const mainFeatured = (featuredProperties || []).find((p: any) => p.is_main_featured)
+      const otherFeatured = mainFeatured
+        ? (featuredProperties || []).filter((p: any) => !p.is_main_featured)
+        : featuredProperties || []
 
-    {/* The rest of the featured properties underneath */}
-    {featuredProperties.length > 1 && (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {featuredProperties.slice(1, 6).map((p) => (
-          <PropertyCard key={p.id} property={p} lng={lng} />
-        ))}
-      </div>
-    )}
+      return (
+        <>
+          {mainFeatured && (
+            <div className="mb-6">
+              <PropertyCard property={mainFeatured} lng={lng} featured={true} />
+            </div>
+          )}
+
+          {otherFeatured && otherFeatured.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {(mainFeatured ? otherFeatured.slice(0, 5) : otherFeatured.slice(0, 6)).map((p: any) => (
+                <PropertyCard key={p.id} property={p} lng={lng} />
+              ))}
+            </div>
+          )}
+        </>
+      )
+    })()}
   </div>
 </section>
 
@@ -167,7 +177,7 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                       <Image
                         src={property.property_images?.[0]?.url || "/placeholder.svg"}
-                        alt={property.title}
+                        alt={(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || "Property"}
                         width={80}
                         height={80}
                         className="w-full h-full object-cover"
@@ -176,7 +186,7 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="flex-1 min-w-0">
                       <Link href={`/${lng}/properties/${property.id}`}>
                         <h4 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}
+                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en)}
                         </h4>
                       </Link>
                       <p className="text-sm text-muted-foreground mb-1">
@@ -215,7 +225,7 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                       <Image
                         src={property.property_images?.[0]?.url || "/placeholder.svg"}
-                        alt={property.title}
+                        alt={(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || "Property"}
                         width={80}
                         height={80}
                         className="w-full h-full object-cover"
@@ -224,7 +234,7 @@ export default async function HomePage({ params }: HomePageProps) {
                     <div className="flex-1 min-w-0">
                       <Link href={`/${lng}/properties/${property.id}`}>
                         <h4 className="font-semibold text-foreground hover:text-primary transition-colors line-clamp-1">
-                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || property.title}
+                          {(lng === "ar" ? (property as any).title_ar : (property as any).title_en)}
                         </h4>
                       </Link>
                       <p className="text-sm text-muted-foreground mb-1">

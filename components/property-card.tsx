@@ -35,6 +35,7 @@ interface PropertyCardProps {
   showContactButtons?: boolean
   view?: "grid" | "list"
   lng: Locale
+  featured?: boolean
 }
 
 export function PropertyCard({
@@ -50,8 +51,8 @@ export function PropertyCard({
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false);
   const displayTitle = lng === "ar"
-    ? (property as any).title_ar || (property as any).title_en || property.title
-    : (property as any).title_en || (property as any).title_ar || property.title
+    ? (property as any).title_ar || (property as any).title_en
+    : (property as any).title_en || (property as any).title_ar
   const displayLocation = lng === "ar"
     ? (property as any).location_ar || (property as any).location_en || property.location
     : (property as any).location_en || (property as any).location_ar || property.location
@@ -80,7 +81,7 @@ export function PropertyCard({
             )}
             <Image
               src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400"}
-              alt={mainImage?.alt_text || displayTitle}
+              alt={mainImage?.alt_text || displayTitle || "Property"}
               fill
               className={`object-cover transition-transform duration-300 group-hover:scale-105 ${
                 imageLoaded ? "opacity-100" : "opacity-0"
@@ -202,7 +203,7 @@ export function PropertyCard({
               size: property.size,
               property_type: property.property_type,
               thumbnail_url: property.thumbnail_url || undefined,
-              property_images: property.property_images || undefined, // Pass the property images
+              property_images: (property.property_images || []).map((img: any) => ({ url: img.url, alt_text: img.alt_text || undefined })) || undefined,
               location_iframe_url: property.location_iframe_url || undefined, // Pass the location iframe URL
             }}
             lng={lng}

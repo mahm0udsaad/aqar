@@ -119,16 +119,16 @@ export function FeaturedReorderTable({ initialItems, lng, dict }: { initialItems
                           <TableCell>
                             <div className="flex items-center gap-3">
                               <div className="relative w-12 h-12 rounded-md overflow-hidden">
-                                <Image src={mainImage?.url || "/placeholder.svg?height=48&width=48"} alt={property.title} fill className="object-cover" />
+                                <Image src={mainImage?.url || "/placeholder.svg?height=48&width=48"} alt={(property as any).title_en || (property as any).title_ar || "Property"} fill className="object-cover" />
                               </div>
                               <div>
                                 <p className="font-medium flex items-center gap-2">
-                                  {property.title}
+                                  {(property as any).title_en || (property as any).title_ar}
                                   {property.is_main_featured && (
                                     <Badge className="bg-amber-500 text-white flex items-center gap-1"><Crown className="w-3 h-3" /> Main</Badge>
                                   )}
                                 </p>
-                                <p className="text-sm text-muted-foreground">{property.location}</p>
+                                <p className="text-sm text-muted-foreground">{(property as any).location_en || (property as any).location_ar || property.location}</p>
                               </div>
                             </div>
                           </TableCell>

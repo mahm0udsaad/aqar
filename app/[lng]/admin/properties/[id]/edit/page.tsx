@@ -13,6 +13,8 @@ export default async function EditPropertyPage({ params }: PageProps) {
   const { lng, id } = await params
   const supabase = await createClient()
   const dict = await getDictionary(lng as any)
+  const dictEn = await getDictionary("en" as any)
+  const dictAr = await getDictionary("ar" as any)
 
   // Fetch the property with all related data
   const primarySelect = `
@@ -81,7 +83,7 @@ export default async function EditPropertyPage({ params }: PageProps) {
   return (
     <div>
       <AdminHeader 
-        title={`Edit Property: ${property.title}`} 
+        title={`Edit Property: ${(property as any).title_en || (property as any).title_ar || ""}`} 
         description="Update property information and settings"
         lng={lng}
         dict={dict as any}
@@ -94,6 +96,8 @@ export default async function EditPropertyPage({ params }: PageProps) {
           mode="edit"
           property={property}
           dict={dict as any}
+          dictEn={dictEn as any}
+          dictAr={dictAr as any}
         />
       </div>
     </div>

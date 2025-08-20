@@ -101,8 +101,8 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
   }
 
   const displayTitle = lng === "ar"
-    ? (property as any).title_ar || (property as any).title_en || property.title
-    : (property as any).title_en || (property as any).title_ar || property.title
+    ? (property as any).title_ar || (property as any).title_en
+    : (property as any).title_en || (property as any).title_ar
   const displayLocation = lng === "ar"
     ? (property as any).location_ar || (property as any).location_en || property.location
     : (property as any).location_en || (property as any).location_ar || property.location

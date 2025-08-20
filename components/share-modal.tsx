@@ -25,9 +25,9 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
   const propertyUrl = `${
     typeof window !== "undefined" ? window.location.origin : ""
   }/properties/${property.id}`
-  const shareText = `Check out this amazing property: ${
-    property.title
-  } - ${property.price?.toLocaleString()} EGP`
+  const localizedTitle = (property as any).title_en || (property as any).title_ar || "Property"
+  const localizedLocation = (property as any).location_en || (property as any).location_ar || property.location
+  const shareText = `Check out this amazing property: ${localizedTitle} - ${property.price?.toLocaleString()} EGP`
 
   const shareOptions = [
     {
@@ -98,10 +98,10 @@ export function ShareModal({ property, isOpen, onClose }: ShareModalProps) {
           {/* Property Preview */}
           <div className="p-4 bg-muted rounded-lg">
             <h3 className="font-semibold text-sm line-clamp-2 mb-1">
-              {property.title}
+              {localizedTitle}
             </h3>
             <p className="text-sm text-muted-foreground">
-              {property.location}, {property.area}
+              {localizedLocation}, {property.area}
             </p>
             <p className="text-sm font-medium text-primary">
               {property.price?.toLocaleString()} EGP

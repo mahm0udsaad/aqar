@@ -121,93 +121,111 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? dict.admin.categories.dialog.addTitle : dict.admin.categories.dialog.editTitle}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* English Fields */}
-          <div className="space-y-2">
-            <Label htmlFor="name_en">English Name *</Label>
-            <Input
-              id="name_en"
-              value={formData.name_en}
-              onChange={(e) => handleInputChange("name_en", e.target.value)}
-              placeholder="Enter category name in English"
-              className={errors.name_en ? "border-red-500" : ""}
-              disabled={isPending}
-              required
-            />
-            {errors.name_en && <p className="text-sm text-red-500">{errors.name_en[0]}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description_en">English Description</Label>
-            <Textarea
-              id="description_en"
-              value={formData.description_en}
-              onChange={(e) => handleInputChange("description_en", e.target.value)}
-              placeholder="Enter category description in English"
-              className={errors.description_en ? "border-red-500" : ""}
-              disabled={isPending}
-              rows={3}
-            />
-            {errors.description_en && <p className="text-sm text-red-500">{errors.description_en[0]}</p>}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Image Upload Section - Compact */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">{dict.admin.categories.dialog.imageLabel}</Label>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <CategoryImageUpload
+                image={categoryImage}
+                onImageChange={handleImageChange}
+                cropAspectRatio={16/9}
+              />
+            </div>
           </div>
 
-          {/* Arabic Fields */}
-          <div className="space-y-2">
-            <Label htmlFor="name_ar">Arabic Name *</Label>
-            <Input
-              id="name_ar"
-              value={formData.name_ar}
-              onChange={(e) => handleInputChange("name_ar", e.target.value)}
-              placeholder="أدخل اسم الفئة بالعربية"
-              className={errors.name_ar ? "border-red-500" : ""}
-              disabled={isPending}
-              required
-              dir="rtl"
-            />
-            {errors.name_ar && <p className="text-sm text-red-500">{errors.name_ar[0]}</p>}
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="description_ar">Arabic Description</Label>
-            <Textarea
-              id="description_ar"
-              value={formData.description_ar}
-              onChange={(e) => handleInputChange("description_ar", e.target.value)}
-              placeholder="أدخل وصف الفئة بالعربية"
-              className={errors.description_ar ? "border-red-500" : ""}
-              disabled={isPending}
-              rows={3}
-              dir="rtl"
-            />
-            {errors.description_ar && <p className="text-sm text-red-500">{errors.description_ar[0]}</p>}
-          </div>
-
-          {/* Category Image Upload */}
-          <div className="space-y-2">
-            <Label>{dict.admin.categories.dialog.imageLabel}</Label>
-            <CategoryImageUpload
-              image={categoryImage}
-              onImageChange={handleImageChange}
-              cropAspectRatio={16/9}
-            />
+          {/* Names Section - Side by Side */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">Category Names</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name_en" className="text-sm font-medium">English Name *</Label>
+                <Input
+                  id="name_en"
+                  value={formData.name_en}
+                  onChange={(e) => handleInputChange("name_en", e.target.value)}
+                  placeholder="Enter category name in English"
+                  className={`${errors.name_en ? "border-red-500" : ""}`}
+                  disabled={isPending}
+                  required
+                />
+                {errors.name_en && <p className="text-xs text-red-500">{errors.name_en[0]}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="name_ar" className="text-sm font-medium">Arabic Name *</Label>
+                <Input
+                  id="name_ar"
+                  value={formData.name_ar}
+                  onChange={(e) => handleInputChange("name_ar", e.target.value)}
+                  placeholder="أدخل اسم الفئة بالعربية"
+                  className={`${errors.name_ar ? "border-red-500" : ""}`}
+                  disabled={isPending}
+                  required
+                  dir="rtl"
+                />
+                {errors.name_ar && <p className="text-xs text-red-500">{errors.name_ar[0]}</p>}
+              </div>
+            </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
+          {/* Descriptions Section - Side by Side */}
+          <div className="space-y-4">
+            <h3 className="text-sm font-semibold text-gray-700 border-b pb-2">Category Descriptions</h3>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="description_en" className="text-sm font-medium">English Description</Label>
+                <Textarea
+                  id="description_en"
+                  value={formData.description_en}
+                  onChange={(e) => handleInputChange("description_en", e.target.value)}
+                  placeholder="Enter category description in English"
+                  className={`resize-none ${errors.description_en ? "border-red-500" : ""}`}
+                  disabled={isPending}
+                  rows={3}
+                />
+                {errors.description_en && <p className="text-xs text-red-500">{errors.description_en[0]}</p>}
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="description_ar" className="text-sm font-medium">Arabic Description</Label>
+                <Textarea
+                  id="description_ar"
+                  value={formData.description_ar}
+                  onChange={(e) => handleInputChange("description_ar", e.target.value)}
+                  placeholder="أدخل وصف الفئة بالعربية"
+                  className={`resize-none ${errors.description_ar ? "border-red-500" : ""}`}
+                  disabled={isPending}
+                  rows={3}
+                  dir="rtl"
+                />
+                {errors.description_ar && <p className="text-xs text-red-500">{errors.description_ar[0]}</p>}
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons - Responsive */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={isPending}
+              className="w-full sm:w-auto"
             >
               {dict.admin.categories.cancel}
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button 
+              type="submit" 
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -222,4 +240,4 @@ export function CategoryDialog({ lng, mode, category, children, dict }: Category
       </DialogContent>
     </Dialog>
   )
-} 
+}

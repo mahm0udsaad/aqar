@@ -117,107 +117,138 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
             {area ? `Edit ${area.name}` : "Create New Area"}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <Label htmlFor="imageUrl">Image</Label>
-            <div className="flex items-center gap-2">
-              <Input
-                id="imageUrl"
-                value={formData.imageUrl}
-                onChange={(e) => handleInputChange("imageUrl", e.target.value)}
-                placeholder="Paste image URL or upload below"
-              />
-            </div>
-            <div className="mt-2">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={async (e) => {
-                  const file = e.target.files?.[0]
-                  if (!file) return
-                  const form = new FormData()
-                  form.append("files", file)
-                  form.append("bucket", "property-images")
-                  form.append("prefix", "areas")
-                  try {
-                    const result = await uploadImages({ success: false }, form)
-                    if (!result.success || !result.urls || result.urls.length === 0) {
-                      throw new Error(result.message || "Upload failed")
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Image Section - Compact Layout */}
+          <div className="space-y-3">
+            <Label className="text-sm font-medium">Image</Label>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-1 space-y-2">
+                <Input
+                  value={formData.imageUrl}
+                  onChange={(e) => handleInputChange("imageUrl", e.target.value)}
+                  placeholder="Paste image URL"
+                  className="text-sm"
+                />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0]
+                    if (!file) return
+                    const form = new FormData()
+                    form.append("files", file)
+                    form.append("bucket", "property-images")
+                    form.append("prefix", "areas")
+                    try {
+                      const result = await uploadImages({ success: false }, form)
+                      if (!result.success || !result.urls || result.urls.length === 0) {
+                        throw new Error(result.message || "Upload failed")
+                      }
+                      const url = result.urls[0]
+                      setFormData((prev) => ({ ...prev, imageUrl: url }))
+                      toast.success("Image uploaded")
+                    } catch (err) {
+                      console.error(err)
+                      toast.error("Image upload failed")
                     }
-                    const url = result.urls[0]
-                    setFormData((prev) => ({ ...prev, imageUrl: url }))
-                    toast.success("Image uploaded")
-                  } catch (err) {
-                    console.error(err)
-                    toast.error("Image upload failed")
-                  }
-                }}
-              />
+                  }}
+                />
+              </div>
               {formData.imageUrl && (
-                <div className="mt-2">
-                  <img src={formData.imageUrl} alt="Area preview" className="h-28 w-full rounded-md object-cover" />
+                <div className="w-full sm:w-24 flex-shrink-0">
+                  <img 
+                    src={formData.imageUrl} 
+                    alt="Area preview" 
+                    className="w-full sm:w-24 h-16 sm:h-16 rounded-md object-cover border"
+                  />
                 </div>
               )}
             </div>
           </div>
-          <div>
-            <Label htmlFor="name">Area Name *</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => handleInputChange("name", e.target.value)}
-              placeholder="e.g., New Cairo"
-              className={errors.name ? "border-red-500" : ""}
-            />
-            {errors.name && <p className="text-sm text-red-500 mt-1">{errors.name[0]}</p>}
+
+          {/* Name and Order Index - Horizontal Layout */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="sm:col-span-2">
+              <Label htmlFor="name" className="text-sm font-medium">Area Name *</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleInputChange("name", e.target.value)}
+                placeholder="e.g., New Cairo"
+                className={`mt-1 ${errors.name ? "border-red-500" : ""}`}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name[0]}</p>}
+            </div>
+            
+            <div>
+              <Label htmlFor="orderIndex" className="text-sm font-medium">Order</Label>
+              <Input
+                id="orderIndex"
+                type="number"
+                value={formData.orderIndex}
+                onChange={(e) => handleInputChange("orderIndex", e.target.value)}
+                placeholder="1"
+                min="0"
+                className="mt-1"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Display order
+              </p>
+            </div>
           </div>
 
+          {/* Description */}
           <div>
-            <Label htmlFor="description">Description (Optional)</Label>
+            <Label htmlFor="description" className="text-sm font-medium">Description (Optional)</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               placeholder="Brief description of the area..."
-              rows={3}
+              rows={2}
+              className="mt-1 resize-none"
             />
           </div>
 
-          <div>
-            <Label htmlFor="orderIndex">Display Order</Label>
-            <Input
-              id="orderIndex"
-              type="number"
-              value={formData.orderIndex}
-              onChange={(e) => handleInputChange("orderIndex", e.target.value)}
-              placeholder="e.g., 1"
-              min="0"
-            />
-            <p className="text-xs text-muted-foreground mt-1">
-              Lower numbers appear first in lists
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
+          {/* Active Switch - Compact */}
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div>
+              <Label htmlFor="isActive" className="text-sm font-medium cursor-pointer">
+                Active Status
+              </Label>
+              <p className="text-xs text-muted-foreground">
+                {formData.isActive ? "Visible to users" : "Hidden from users"}
+              </p>
+            </div>
             <Switch
               id="isActive"
               checked={formData.isActive}
               onCheckedChange={(checked) => handleInputChange("isActive", checked)}
             />
-            <Label htmlFor="isActive">Active (visible to users)</Label>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+          {/* Action Buttons - Responsive */}
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-4 border-t">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => onOpenChange(false)}
+              className="w-full sm:w-auto"
+            >
               Cancel
             </Button>
-            <Button type="submit" disabled={isPending}>
+            <Button 
+              type="submit" 
+              disabled={isPending}
+              className="w-full sm:w-auto"
+            >
               {isPending ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -232,4 +263,4 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
       </DialogContent>
     </Dialog>
   )
-} 
+}

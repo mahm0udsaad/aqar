@@ -84,7 +84,6 @@ export function filterProperties(properties: Property[], filters: SearchFilters)
     if (filters.query) {
       const query = filters.query.toLowerCase()
       return (
-        property.title.toLowerCase().includes(query) ||
         property.description.toLowerCase().includes(query) ||
         property.location.toLowerCase().includes(query) ||
         property.area.toLowerCase().includes(query) ||

@@ -19,7 +19,7 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
   ] = await Promise.all([
     supabase.from("properties").select("id, price, is_featured, category_id").eq("status", "active"),
     supabase.from("categories").select("id, name"),
-    supabase.from("properties").select("id, title, price, location, is_featured").eq("is_featured", true).eq("status", "active").limit(5),
+    supabase.from("properties").select("id, title_en, title_ar, price, location_en, location_ar, location, is_featured").eq("is_featured", true).eq("status", "active").limit(5),
   ])
 
   const totalProperties = properties?.length || 0
@@ -99,8 +99,8 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
                   featuredProperties.map((property, index) => (
                     <div key={`featured-${property.id}-${index}`} className="flex items-center justify-between">
                       <div>
-                        <p className="font-medium">{property.title}</p>
-                        <p className="text-sm text-muted-foreground">{property.location}</p>
+                        <p className="font-medium">{(property as any).title_en || (property as any).title_ar}</p>
+                        <p className="text-sm text-muted-foreground">{(property as any).location_en || (property as any).location_ar || (property as any).location}</p>
                       </div>
                       <div className="text-right">
                         <p className="font-medium">${property.price?.toLocaleString()}</p>
