@@ -755,19 +755,17 @@ export function ImageUploadCrop({
         // Update the specific skeleton with the processed image
         const skeletonId = skeletonImages[index].id
         
-        onImagesChange(prevImages => {
-          const updatedImages = prevImages.map(img => {
-            if (img.id === skeletonId) {
-              return {
-                ...processedImage,
-                order_index: img.order_index,
-                is_main: img.is_main
-              }
+        const updatedImages = images.map((img: PropertyImage) => {
+          if (img.id === skeletonId) {
+            return {
+              ...processedImage,
+              order_index: img.order_index,
+              is_main: img.is_main
             }
-            return img
-          })
-          return updatedImages
+          }
+          return img
         })
+        onImagesChange(updatedImages)
 
         toast.success(`${file.name} uploaded successfully!`)
       } catch (error) {
@@ -776,9 +774,8 @@ export function ImageUploadCrop({
         
         // Remove the failed skeleton
         const skeletonId = skeletonImages[index].id
-        onImagesChange(prevImages => 
-          prevImages.filter(img => img.id !== skeletonId)
-        )
+        const filteredImages = images.filter((img: PropertyImage) => img.id !== skeletonId)
+        onImagesChange(filteredImages)
       }
     })
   }, [images, maxImages, onImagesChange])

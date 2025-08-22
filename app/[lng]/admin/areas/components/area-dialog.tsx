@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { createArea, updateArea } from "@/lib/actions/areas"
 import { toast } from "sonner"
-import { Loader2 } from "lucide-react"
+import { Loader2, Upload, Image as ImageIcon } from "lucide-react"
 import { uploadImages } from "@/lib/actions/uploads"
+import { AreaImageCrop } from "@/components/admin/area-image-crop"
 
 interface Area {
   id: string
@@ -45,6 +46,8 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
     imageUrl: area?.image_url || "",
   })
   const [errors, setErrors] = useState<Record<string, string[]>>({})
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [cropDialogOpen, setCropDialogOpen] = useState(false)
 
   const resetForm = () => {
     setFormData({
@@ -55,6 +58,14 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
       imageUrl: area?.image_url || "",
     })
     setErrors({})
+    setSelectedFile(null)
+    setCropDialogOpen(false)
+  }
+
+  const handleCropSave = (imageUrl: string) => {
+    setFormData(prev => ({ ...prev, imageUrl }))
+    setSelectedFile(null)
+    setCropDialogOpen(false)
   }
 
   // Ensure dialog fields are populated when opening to edit an area
@@ -68,6 +79,8 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
         imageUrl: area?.image_url || "",
       })
       setErrors({})
+      setSelectedFile(null)
+      setCropDialogOpen(false)
     }
   }, [area, open])
 
@@ -124,9 +137,9 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Section - Compact Layout */}
+          {/* Image Section - Enhanced with Crop */}
           <div className="space-y-3">
-            <Label className="text-sm font-medium">Image</Label>
+            <Label className="text-sm font-medium">Area Image</Label>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex-1 space-y-2">
                 <Input
@@ -135,39 +148,67 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
                   placeholder="Paste image URL"
                   className="text-sm"
                 />
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="text-xs file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200"
-                  onChange={async (e) => {
-                    const file = e.target.files?.[0]
-                    if (!file) return
-                    const form = new FormData()
-                    form.append("files", file)
-                    form.append("bucket", "property-images")
-                    form.append("prefix", "areas")
-                    try {
-                      const result = await uploadImages({ success: false }, form)
-                      if (!result.success || !result.urls || result.urls.length === 0) {
-                        throw new Error(result.message || "Upload failed")
+                <div className="flex gap-2">
+                  <input
+                    type="file"
+                    id="area-image-upload"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0]
+                      if (!file) return
+                      
+                      // Validate file type
+                      if (!file.type.startsWith('image/')) {
+                        toast.error('Please select a valid image file')
+                        return
                       }
-                      const url = result.urls[0]
-                      setFormData((prev) => ({ ...prev, imageUrl: url }))
-                      toast.success("Image uploaded")
-                    } catch (err) {
-                      console.error(err)
-                      toast.error("Image upload failed")
-                    }
-                  }}
-                />
+                      
+                      // Validate file size (max 10MB)
+                      if (file.size > 10 * 1024 * 1024) {
+                        toast.error('File size must be less than 10MB')
+                        return
+                      }
+                      
+                      setSelectedFile(file)
+                      setCropDialogOpen(true)
+                    }}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => document.getElementById('area-image-upload')?.click()}
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload & Crop Image
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Supports JPG, PNG, WebP. Max 10MB. Image will be cropped before upload.
+                </p>
               </div>
               {formData.imageUrl && (
                 <div className="w-full sm:w-24 flex-shrink-0">
-                  <img 
-                    src={formData.imageUrl} 
-                    alt="Area preview" 
-                    className="w-full sm:w-24 h-16 sm:h-16 rounded-md object-cover border"
-                  />
+                  <div className="relative">
+                    <img 
+                      src={formData.imageUrl} 
+                      alt="Area preview" 
+                      className="w-full sm:w-24 h-16 sm:h-16 rounded-md object-cover border"
+                    />
+                    <div className="absolute -top-2 -right-2">
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="h-6 w-6 p-0 rounded-full"
+                        onClick={() => handleInputChange("imageUrl", "")}
+                      >
+                        ×
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -260,6 +301,17 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
             </Button>
           </div>
         </form>
+        
+        {/* Crop Dialog */}
+        <AreaImageCrop
+          file={selectedFile}
+          isOpen={cropDialogOpen}
+          onClose={() => {
+            setCropDialogOpen(false)
+            setSelectedFile(null)
+          }}
+          onSave={handleCropSave}
+        />
       </DialogContent>
     </Dialog>
   )
