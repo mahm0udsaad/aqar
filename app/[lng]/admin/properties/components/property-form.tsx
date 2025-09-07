@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useEffect, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -171,6 +171,56 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
   const [customAmenity, setCustomAmenity] = useState("")
   const [errors, setErrors] = useState<Record<string, string[]>>({})
   
+  // Scroll to first error and focus it; switch language tab if needed
+  useEffect(() => {
+    const keys = Object.keys(errors)
+    const firstKey = keys.find(k => (errors[k] && errors[k].length > 0))
+    if (!firstKey) return
+
+    if (firstKey.endsWith('_ar')) setFormLang('ar')
+    if (firstKey.endsWith('_en')) setFormLang('en')
+
+    const FIELD_ID_MAP: Record<string, string> = {
+      title: 'title',
+      title_en: 'title_en',
+      title_ar: 'title_ar',
+      description: 'description',
+      description_en: 'description_en',
+      description_ar: 'description_ar',
+      location: 'location',
+      location_en: 'location_en',
+      location_ar: 'location_ar',
+      price: 'price',
+      pricePerMeter: 'pricePerMeter',
+      size: 'size',
+      bedrooms: 'bedrooms',
+      bathrooms: 'bathrooms',
+      floor: 'floor',
+      totalFloors: 'totalFloors',
+      yearBuilt: 'yearBuilt',
+      categoryId: 'categoryId-select',
+      propertyType: 'propertyType-select',
+      ownerType: 'ownerType-select',
+      status: 'status-select',
+      areaId: 'areaId-select',
+      area: 'areaId-select',
+      contactName: 'contactName',
+      contactPhone: 'contactPhone',
+      contactEmail: 'contactEmail',
+      locationIframeUrl: 'locationIframeUrl',
+    }
+
+    const targetId = FIELD_ID_MAP[firstKey] || firstKey
+    // Delay to allow tab switch/render before scrolling
+    setTimeout(() => {
+      const el = document.getElementById(targetId)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+        try { (el as HTMLElement).focus() } catch {}
+      }
+    }, 0)
+  }, [errors])
+  
   // Currency handling (store values in EGP; allow admin to input other currencies)
   const CURRENCY_RATES: Record<string, number> = {
     EGP: 1,
@@ -327,6 +377,11 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
       areaId: areaId,
       area: selectedArea ? selectedArea.name : ""
     }))
+
+    // Clear area-related errors when selection changes
+    if (errors.areaId || errors.area) {
+      setErrors(prev => ({ ...prev, areaId: [], area: [] }))
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -335,8 +390,20 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
     startTransition(async () => {
       const formDataObj = new FormData()
       
+      // Normalize required legacy fields from localized inputs
+      const normalizedTitle = (formData.title || "").trim() || (formData.title_en || "").trim() || (formData.title_ar || "").trim() || ""
+      const normalizedDescription = (formData.description || "").trim() || (formData.description_en || "").trim() || (formData.description_ar || "").trim() || ""
+      const normalizedLocation = (formData.location || "").trim() || (formData.location_en || "").trim() || (formData.location_ar || "").trim() || ""
+      
+      const toSubmit = {
+        ...formData,
+        title: normalizedTitle,
+        description: normalizedDescription,
+        location: normalizedLocation,
+      }
+      
       // Add all form fields except special-cased ones
-      Object.entries(formData).forEach(([key, value]) => {
+      Object.entries(toSubmit).forEach(([key, value]) => {
         if (key === 'locationIframeUrl') return
         if (key === 'price' || key === 'pricePerMeter') return
         formDataObj.append(key, value.toString())
@@ -563,7 +630,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                 <div>
                   <Label htmlFor="categoryId">{activeDict.admin.properties.form.categoryLabel} *</Label>
                   <Select value={formData.categoryId} onValueChange={(value) => handleInputChange("categoryId", value)}>
-                    <SelectTrigger className={errors.categoryId ? "border-red-500" : ""}>
+                    <SelectTrigger id="categoryId-select" className={errors.categoryId ? "border-red-500" : ""}>
                       <SelectValue placeholder={activeDict.admin.properties.form.selectCategory} />
                     </SelectTrigger>
                     <SelectContent>
@@ -580,7 +647,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                 <div>
                   <Label htmlFor="propertyType">{activeDict.admin.properties.form.typeLabel} *</Label>
                   <Select value={formData.propertyType} onValueChange={(value) => handleInputChange("propertyType", value)}>
-                    <SelectTrigger className={errors.propertyType ? "border-red-500" : ""}>
+                    <SelectTrigger id="propertyType-select" className={errors.propertyType ? "border-red-500" : ""}>
                       <SelectValue placeholder={activeDict.admin.properties.form.selectType} />
                     </SelectTrigger>
                     <SelectContent>
@@ -594,7 +661,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                 <div>
                   <Label htmlFor="ownerType">{activeDict.admin.properties.form.ownerTypeLabel}</Label>
                   <Select value={formData.ownerType} onValueChange={(value) => handleInputChange("ownerType", value)}>
-                    <SelectTrigger>
+                    <SelectTrigger id="ownerType-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -607,7 +674,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                 <div>
                   <Label htmlFor="status">{activeDict.admin.properties.form.statusLabel}</Label>
                   <Select value={formData.status} onValueChange={(value) => handleInputChange("status", value)}>
-                    <SelectTrigger>
+                    <SelectTrigger id="status-select">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -782,7 +849,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                   {!showNewAreaInput ? (
                     <div className="space-y-2">
                       <Select value={formData.areaId} onValueChange={handleAreaChange}>
-                        <SelectTrigger className={errors.areaId ? "border-red-500" : ""}>
+                        <SelectTrigger id="areaId-select" className={(errors.areaId || errors.area) ? "border-red-500" : ""}>
                           <SelectValue placeholder={activeDict.admin.properties.form.selectArea} />
                         </SelectTrigger>
                         <SelectContent>
@@ -798,6 +865,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                         </SelectContent>
                       </Select>
                       {errors.areaId && <p className="text-sm text-red-500 mt-1">{errors.areaId[0]}</p>}
+                      {errors.area && <p className="text-sm text-red-500 mt-1">{errors.area[0]}</p>}
                     </div>
                   ) : (
                     <div className="space-y-2">

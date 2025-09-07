@@ -685,6 +685,12 @@ export function ImageUploadCrop({
   const [cropDialogOpen, setCropDialogOpen] = useState(false)
   const [currentEditingImage, setCurrentEditingImage] = useState<PropertyImage | null>(null)
 
+  // Keep a ref to the latest images to avoid stale closures in async handlers
+  const imagesRef = useRef<PropertyImage[]>(images)
+  useEffect(() => {
+    imagesRef.current = images
+  }, [images])
+
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, {
@@ -742,7 +748,7 @@ export function ImageUploadCrop({
     }))
 
     // Add skeleton images immediately
-    const currentImages = [...images, ...skeletonImages]
+    const currentImages = [...imagesRef.current, ...skeletonImages]
     onImagesChange(currentImages)
 
     toast.success(`Uploading ${validFiles.length} image${validFiles.length > 1 ? 's' : ''}...`)
@@ -754,8 +760,8 @@ export function ImageUploadCrop({
         
         // Update the specific skeleton with the processed image
         const skeletonId = skeletonImages[index].id
-        
-        const updatedImages = images.map((img: PropertyImage) => {
+        // Compute next state using the latest images from ref to avoid stale closure
+        const updatedImages = imagesRef.current.map((img: PropertyImage) => {
           if (img.id === skeletonId) {
             return {
               ...processedImage,
@@ -774,7 +780,7 @@ export function ImageUploadCrop({
         
         // Remove the failed skeleton
         const skeletonId = skeletonImages[index].id
-        const filteredImages = images.filter((img: PropertyImage) => img.id !== skeletonId)
+        const filteredImages = imagesRef.current.filter((img: PropertyImage) => img.id !== skeletonId)
         onImagesChange(filteredImages)
       }
     })
