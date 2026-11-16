@@ -21,6 +21,7 @@ export function ChatThread({
   initialMessages,
   embedded = false,
   onBack,
+  initialDraft,
 }: {
   lng: string
   conversationId: string
@@ -30,11 +31,13 @@ export function ChatThread({
   /** Inside the chat panel: fills the panel, back button returns to the panel's list */
   embedded?: boolean
   onBack?: () => void
+  /** Text to place in the box (e.g. a quick question tapped on the listing) */
+  initialDraft?: string
 }) {
   const t = (ar: string, en: string) => tr(lng, ar, en)
   const { refresh } = useAuth()
   const [messages, setMessages] = useState<ChatMessage[]>(initialMessages)
-  const [text, setText] = useState("")
+  const [text, setText] = useState(initialDraft || "")
   const [pending, start] = useTransition()
   const bottom = useRef<HTMLDivElement>(null)
   const lastId = messages.length ? messages[messages.length - 1].id : 0
@@ -82,6 +85,15 @@ export function ChatThread({
   const fmtTime = (d: string) => new Date(d).toLocaleTimeString(lng === "ar" ? "ar-EG" : "en-GB", { hour: "2-digit", minute: "2-digit" })
   const fmtDay = (d: string) => new Date(d).toLocaleDateString(lng === "ar" ? "ar-EG" : "en-GB", { weekday: "long", day: "numeric", month: "long" })
   const closed = header.property_status !== "active" || header.moderation_status !== "approved"
+  // One-tap suggestions; the advertiser gets replies, the buyer gets follow-up questions
+  const quick =
+    header.i_am === "owner"
+      ? lng === "ar"
+        ? ["نعم، ما زال متاحاً", "ممكن نحدد موعد للمعاينة؟", "السعر نهائي", "ممكن نتفاهم في السعر بعد المعاينة", "تم البيع، شكراً لاهتمامك"]
+        : ["Yes, it's still available", "Shall we set a viewing time?", "The price is final", "We can discuss the price after viewing", "It's sold, thanks for asking"]
+      : lng === "ar"
+        ? ["هل ما زال متاحاً؟", "ممكن أعاين العقار؟ ما المواعيد المناسبة؟", "هل السعر قابل للتفاوض؟", "هل يوجد جراج وأسانسير؟", "ممكن صور إضافية؟"]
+        : ["Is it still available?", "Can I view it? When suits you?", "Is the price negotiable?", "Is there parking and an elevator?", "Could you send more photos?"]
 
   return (
     <div
@@ -134,7 +146,19 @@ export function ChatThread({
           {t("هذا الإعلان لم يعد متاحاً للعامة، لكن يمكنكما مواصلة المحادثة.", "This listing is no longer public, but you can keep chatting.")}
         </div>
       )}
-      <div className="border-t p-3 flex gap-2 items-end">
+      <div className="border-t px-3 pt-2 flex gap-2 overflow-x-auto no-scrollbar" aria-label={t("رسائل مقترحة", "Suggested messages")}>
+        {quick.map((q) => (
+          <button
+            key={q}
+            type="button"
+            onClick={() => setText(q)}
+            className="shrink-0 text-xs rounded-full border px-3 py-1.5 bg-background hover:border-primary hover:bg-primary/5"
+          >
+            {q}
+          </button>
+        ))}
+      </div>
+      <div className="p-3 flex gap-2 items-end">
         <Textarea
           value={text}
           onChange={(e) => setText(e.target.value)}

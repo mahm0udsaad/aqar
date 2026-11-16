@@ -1,12 +1,13 @@
 "use client"
 
+import { toast } from "sonner"
 import { useEffect, useState } from "react"
 import { BadgeCheck, Flag, MessageCircle, Phone, User } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { trackListingEvent } from "@/lib/actions/listings"
-import { formatEgyptPhone, normalizeEgyptPhone, tr, whatsappDigits } from "@/lib/listing-options"
+import { formatEgyptPhone, normalizeEgyptPhone, tr } from "@/lib/listing-options"
 import { ReportListingDialog } from "./report-listing-dialog"
 import { rememberViewed } from "./suggested-for-you"
 import { useChat } from "@/components/chat/chat-dock"
@@ -37,15 +38,10 @@ interface ContactCardProps {
 export function ContactCard(props: ContactCardProps) {
   const { lng, propertyId, title, contactName, contactPhone, contactWhatsapp, ownerType, owner, trackable = true, ownerId } = props
   const { profile, openSignIn } = useAuth()
-  const { openForListing } = useChat()
+  const { openForListing, openInbox } = useChat()
   const isMine = !!profile && !!ownerId && profile.id === ownerId
   const [revealed, setRevealed] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
-  const [pageUrl, setPageUrl] = useState("")
-
-  useEffect(() => {
-    setPageUrl(window.location.href.split("#")[0])
-  }, [])
 
   // One view per listing per browser session
   useEffect(() => {
@@ -62,20 +58,26 @@ export function ContactCard(props: ContactCardProps) {
   }, [propertyId, trackable])
 
   const phone = normalizeEgyptPhone(contactPhone) || contactPhone
-  const whatsapp = normalizeEgyptPhone(contactWhatsapp) || normalizeEgyptPhone(contactPhone)
   const isBroker = (owner?.account_type || ownerType) === "broker"
   const displayName = (isBroker && owner?.office_name) || owner?.full_name || contactName || tr(lng, "صاحب الإعلان", "Advertiser")
   const memberSince = owner?.created_at ? new Date(owner.created_at).getFullYear() : null
 
-  const message = tr(
-    lng,
-    `مرحباً، أنا مهتم بإعلانك "${title}" على عقار${pageUrl ? `: ${pageUrl}` : ""}`,
-    `Hello, I'm interested in your listing "${title}" on Aqar${pageUrl ? `: ${pageUrl}` : ""}`,
-  )
-  const waHref = whatsapp ? `https://wa.me/${whatsappDigits(whatsapp)}?text=${encodeURIComponent(message)}` : null
+  const quickQuestions =
+    lng === "ar"
+      ? ["هل ما زال متاحاً؟", "ممكن أعاين العقار؟", "هل السعر قابل للتفاوض؟"]
+      : ["Is it still available?", "Can I view it?", "Is the price negotiable?"]
+
+  const startChat = (text?: string) => {
+    if (!trackable) {
+      toast.info(tr(lng, "هذه معاينة. المراسلة تعمل بعد نشر الإعلان.", "This is a preview. Messaging works once the listing is live."))
+      return
+    }
+    openForListing(propertyId, title, text)
+  }
+
   const telHref = phone ? `tel:${phone}` : null
 
-  const track = (kind: "whatsapp" | "call" | "phone_reveal") => {
+  const track = (kind: "call" | "phone_reveal") => {
     if (trackable) trackListingEvent(propertyId, kind)
   }
 
@@ -101,13 +103,35 @@ export function ContactCard(props: ContactCardProps) {
           </div>
         </div>
 
-        {waHref && (
-          <Button asChild size="lg" className="w-full bg-[#25D366] hover:bg-[#1ebe5b] text-white">
-            <a href={waHref} target="_blank" rel="noopener noreferrer" onClick={() => track("whatsapp")}>
-              <MessageCircle className="w-5 h-5 me-2" />
-              {tr(lng, "تواصل عبر واتساب", "Chat on WhatsApp")}
-            </a>
-          </Button>
+        {isMine ? (
+          <>
+            <Button size="lg" className="w-full" onClick={openInbox}>
+              <MessagesSquare className="w-5 h-5 me-2" />
+              {tr(lng, "رسائل المهتمين بإعلانك", "Messages about your listing")}
+            </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              {tr(lng, "هذا ما يراه المشترون: زر المراسلة داخل عقار وزر إظهار رقمك.", "This is what buyers see: a message button and a button to show your number.")}
+            </p>
+          </>
+        ) : (
+          <>
+            <Button size="lg" className="w-full" onClick={() => startChat()}>
+              <MessagesSquare className="w-5 h-5 me-2" />
+              {tr(lng, "راسل المعلن", "Message the advertiser")}
+            </Button>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {quickQuestions.map((q) => (
+                <button
+                  key={q}
+                  type="button"
+                  onClick={() => startChat(q)}
+                  className="text-xs rounded-full border px-3 py-1.5 hover:border-primary hover:bg-primary/5"
+                >
+                  {q}
+                </button>
+              ))}
+            </div>
+          </>
         )}
 
         {telHref &&
@@ -132,13 +156,6 @@ export function ContactCard(props: ContactCardProps) {
               {tr(lng, "إظهار رقم الهاتف", "Show phone number")}
             </Button>
           ))}
-
-        {trackable && !isMine && (
-          <Button size="lg" variant="outline" className="w-full" onClick={() => openForListing(propertyId, title)}>
-            <MessagesSquare className="w-5 h-5 me-2" />
-            {tr(lng, "راسل المعلن داخل عقار", "Message on Aqar")}
-          </Button>
-        )}
 
         <p className="text-xs text-muted-foreground text-center">
           {tr(lng, "قل إنك وجدت الإعلان على عقار. لا تحوّل أي أموال قبل معاينة العقار.", "Mention you found this on Aqar. Never send money before viewing the property.")}

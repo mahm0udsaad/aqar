@@ -25,14 +25,14 @@ import { assetUrl, cn } from "@/lib/utils"
 
 type View =
   | { type: "inbox" }
-  | { type: "thread"; id: string }
-  | { type: "new"; propertyId: string; title: string }
+  | { type: "thread"; id: string; text?: string }
+  | { type: "new"; propertyId: string; title: string; text?: string }
 
 interface ChatContextType {
   openInbox: () => void
   openThread: (id: string) => void
-  /** From a listing: continues the buyer's conversation about it, or starts a new one */
-  openForListing: (propertyId: string, title: string) => void
+  /** From a listing: continues the buyer's conversation about it, or starts a new one (optionally with a ready message) */
+  openForListing: (propertyId: string, title: string, text?: string) => void
 }
 
 const ChatContext = createContext<ChatContextType | undefined>(undefined)
@@ -66,12 +66,12 @@ export function ChatProvider({ children, lng }: { children: React.ReactNode; lng
   )
 
   const openForListing = useCallback(
-    async (propertyId: string, title: string) => {
+    async (propertyId: string, title: string, text?: string) => {
       if (!profile) return openSignIn()
-      setView({ type: "new", propertyId, title })
+      setView({ type: "new", propertyId, title, text })
       setOpen(true)
       const existing = await findMyConversationForListing(propertyId)
-      if (existing) setView({ type: "thread", id: existing })
+      if (existing) setView({ type: "thread", id: existing, text })
     },
     [profile, openSignIn],
   )
@@ -108,12 +108,13 @@ export function ChatProvider({ children, lng }: { children: React.ReactNode; lng
         >
           <SheetTitle className="sr-only">{t("الرسائل", "Messages")}</SheetTitle>
           {view.type === "inbox" && <PanelInbox lng={lng} onPick={(id) => setView({ type: "thread", id })} onClose={() => setOpen(false)} />}
-          {view.type === "thread" && <PanelThread key={view.id} lng={lng} id={view.id} onBack={() => setView({ type: "inbox" })} />}
+          {view.type === "thread" && <PanelThread key={view.id} lng={lng} id={view.id} draft={view.text} onBack={() => setView({ type: "inbox" })} />}
           {view.type === "new" && (
             <PanelNew
               lng={lng}
               propertyId={view.propertyId}
               title={view.title}
+              initialText={view.text}
               onSent={(id) => setView({ type: "thread", id })}
               onClose={() => setOpen(false)}
             />
@@ -186,7 +187,7 @@ function PanelInbox({ lng, onPick, onClose }: { lng: string; onPick: (id: string
   )
 }
 
-function PanelThread({ lng, id, onBack }: { lng: string; id: string; onBack: () => void }) {
+function PanelThread({ lng, id, onBack, draft }: { lng: string; id: string; onBack: () => void; draft?: string }) {
   const [data, setData] = useState<{ header: any; me: string; messages: ChatMessage[] } | null | "missing">(null)
   useEffect(() => {
     let alive = true
@@ -214,19 +215,21 @@ function PanelThread({ lng, id, onBack }: { lng: string; id: string; onBack: () 
       </div>
     )
   }
-  return <ChatThread lng={lng} conversationId={id} me={data.me} header={data.header} initialMessages={data.messages} embedded onBack={onBack} />
+  return <ChatThread lng={lng} conversationId={id} me={data.me} header={data.header} initialMessages={data.messages} embedded onBack={onBack} initialDraft={draft} />
 }
 
 function PanelNew({
   lng,
   propertyId,
   title,
+  initialText,
   onSent,
   onClose,
 }: {
   lng: string
   propertyId: string
   title: string
+  initialText?: string
   onSent: (id: string) => void
   onClose: () => void
 }) {
@@ -234,7 +237,7 @@ function PanelNew({
     lng === "ar"
       ? ["هل العقار ما زال متاحاً؟", "هل السعر قابل للتفاوض؟", "أريد معاينة العقار، ما المواعيد المناسبة؟"]
       : ["Is it still available?", "Is the price negotiable?", "I'd like to view it. When suits you?"]
-  const [body, setBody] = useState(suggestions[0])
+  const [body, setBody] = useState(initialText || suggestions[0])
   const [pending, start] = useTransition()
   const { refresh } = useAuth()
 
