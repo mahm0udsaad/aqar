@@ -91,7 +91,7 @@ export function PropertyCard({
             {/* Image Count */}
             {property.property_images && property.property_images.length > 1 && (
               <div className="absolute bottom-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs">
-                {property.property_images.length} photos
+                {property.property_images.length} {lng === "ar" ? "صور" : "photos"}
               </div>
             )}
           </div>
@@ -105,17 +105,17 @@ export function PropertyCard({
             </Badge>
           )}
           {property.is_new && (
-            <Badge className="new-badge text-white text-xs">New</Badge>
+            <Badge className="new-badge text-white text-xs">{lng === "ar" ? "جديد" : "New"}</Badge>
           )}
           {property.is_featured && (
             <Badge className="featured-badge text-white text-xs">
-              Featured
+              {lng === "ar" ? "مميز" : "Featured"}
             </Badge>
           )}
           {property.is_verified && (
             <Badge className="verified-badge text-white text-xs">
               <Shield className="w-3 h-3 mr-1" />
-              Verified
+              {lng === "ar" ? "موثّق" : "Verified"}
             </Badge>
           )}
         </div>
@@ -139,15 +139,15 @@ export function PropertyCard({
         <div className="mb-3 min-h-[4.5rem]">
           <div className="flex items-baseline gap-2">
             <span className="text-2xl font-bold text-foreground">
-              {property.price ? formatPriceDetailed(property.price) : "N/A"} EGP
+              {property.price ? formatPriceDetailed(property.price) : "—"} {lng === "ar" ? "ج.م" : "EGP"}
             </span>
             {property.property_type === "rent" && (
-              <span className="text-sm text-slate-500">/month</span>
+              <span className="text-sm text-slate-500">{lng === "ar" ? "/ شهرياً" : "/month"}</span>
             )}
           </div>
           {pricePerMeter && (
             <div className="text-sm text-slate-500">
-              {formatPrice(pricePerMeter)} EGP/m²
+              {formatPrice(pricePerMeter)} {lng === "ar" ? "ج.م/م²" : "EGP/m²"}
             </div>
           )}
         </div>
@@ -214,7 +214,7 @@ export function PropertyCard({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center text-sm text-slate-600">
             <User className="w-4 h-4 mr-1" />
-            <span className="capitalize">{property.owner_type}</span>
+            <span>{property.owner_type === "broker" ? (lng === "ar" ? "وسيط" : "Broker") : (lng === "ar" ? "مالك" : "Owner")}</span>
             {property.contact_is_verified && (
               <Shield className="w-3 h-3 ml-1 text-green-600" />
             )}
@@ -265,8 +265,7 @@ export function PropertyCard({
         <div className="flex items-center text-xs text-slate-500 mt-2">
           <Calendar className="w-3 h-3 mr-1" />
           <span>
-            Posted{" "}
-            {new Date(property.created_at || Date.now()).toLocaleDateString()}
+            {timeAgo((property as any).published_at || property.created_at, lng)}
           </span>
         </div>
       </CardContent>
@@ -279,4 +278,21 @@ export function PropertyCard({
       />
     </Card>
   )
+}
+
+function timeAgo(date: string | null | undefined, lng: string) {
+  if (!date) return ""
+  const days = Math.max(0, Math.floor((Date.now() - new Date(date).getTime()) / 86400000))
+  if (lng === "ar") {
+    if (days === 0) return "نُشر اليوم"
+    if (days === 1) return "نُشر أمس"
+    if (days < 30) return `نُشر منذ ${days} يوم`
+    const months = Math.floor(days / 30)
+    return months < 12 ? `نُشر منذ ${months} شهر` : `نُشر منذ ${Math.floor(months / 12)} سنة`
+  }
+  if (days === 0) return "Posted today"
+  if (days === 1) return "Posted yesterday"
+  if (days < 30) return `Posted ${days} days ago`
+  const months = Math.floor(days / 30)
+  return months < 12 ? `Posted ${months} months ago` : `Posted ${Math.floor(months / 12)} years ago`
 }

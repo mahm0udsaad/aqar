@@ -41,8 +41,8 @@
   "hero": {
     "title": "359,776 Properties for Sale & Rent",
     "subtitle": "Find your perfect home with Egypt's leading real estate platform",
-    "heroTitleFull": "359,776 Properties for Sale & Rent",
-    "heroSubtitleFull": "Find your perfect home with Egypt's leading real estate platform",
+    "heroTitleFull": "Properties for sale and rent in Egypt",
+    "heroSubtitleFull": "Find your next home, or list your property for free in two minutes",
     "forSale": "For Sale",
     "forRent": "For Rent",
     "locationPlaceholder": "Enter area, neighborhood, or project name",
@@ -132,8 +132,7 @@
     "area": "Area",
     "allAreas": "All Areas",
     "priceRangeEGP": "Price Range (EGP)",
-    "sizeRangeM2": "Size Range (m²)",
-    "amenities": "Amenities"
+    "sizeRangeM2": "Size Range (m²)"
   },
   "amenities": {
     "swimmingPool": "Swimming Pool",
@@ -188,7 +187,7 @@
     "squareMeter": "m²"
   },
   "footer": {
-    "companyDesc": "Your trusted partner in finding the perfect property. We specialize in premium real estate with exceptional service.",
+    "companyDesc": "A free real estate classifieds platform for Egypt. Owners and brokers post for free, and buyers contact them directly.",
     "quickLinks": "Quick Links",
     "buyProperty": "Buy Property",
     "rentProperty": "Rent Property",
@@ -196,16 +195,16 @@
     "commercial": "Commercial",
     "popularAreas": "Popular Areas",
     "contactUs": "Contact Us",
-    "allRightsReserved": "© 2024 Elite Properties. All rights reserved.",
+    "allRightsReserved": "Aqar. All rights reserved.",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
-    "eliteProperties": "Elite Properties",
+    "eliteProperties": "Aqar",
     "home": "Home",
     "searchProperties": "Search Properties",
     "apartments": "Apartments",
     "villas": "Villas",
     "contact": "Contact",
-    "services": "Services",
+    "services": "For advertisers",
     "propertySales": "Property Sales",
     "propertyManagement": "Property Management",
     "investmentConsulting": "Investment Consulting",
@@ -219,7 +218,10 @@
     "email": "info@eliteproperties.com",
     "contactPhone": "+20 2 1234 5678",
     "contactEmail": "info@aqarmap.com",
-    "contactAddress": "Cairo, Egypt"
+    "contactAddress": "Cairo, Egypt",
+    "postFree": "List your property free",
+    "myListings": "My listings",
+    "postingRules": "Posting rules"
   },
   "auth": {
     "login": "Login",

@@ -33,13 +33,17 @@ import type { Locale } from "@/lib/i18n/config"
 import { fetchProperties as getProperties } from "@/lib/actions/public-data"
 import { PropertyImage } from "@/lib/types"
 import { AreaRatingsDisplay } from "@/components/area-ratings-display"
+import { ContactCard } from "@/components/listing/contact-card"
+import { FINISHING, PAYMENT_TYPES, categoryLabel, labelOf, tr } from "@/lib/listing-options"
 
 interface PropertyDetailsProps {
   property: PropertyWithDetails
   lng: Locale
+  /** false when the owner/admin previews a listing that is not public yet */
+  isPublic?: boolean
 }
 
-export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
+export function PropertyDetails({ property, lng, isPublic = true }: PropertyDetailsProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
   const [relatedProperties, setRelatedProperties] = React.useState<
@@ -236,17 +240,17 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
               <div className="mb-6">
                 <div className="flex items-center gap-2 mb-2">
                   {property.is_new && (
-                    <Badge className="new-badge text-white">New</Badge>
+                    <Badge className="new-badge text-white">{tr(lng, "جديد", "New")}</Badge>
                   )}
                   {property.is_featured && (
                     <Badge className="featured-badge text-white">
-                      Featured
+                      {tr(lng, "مميز", "Featured")}
                     </Badge>
                   )}
                   {property.is_verified && (
                     <Badge variant="secondary">
                       <Shield className="w-3 h-3 mr-1" />
-                      Verified
+                      {tr(lng, "موثّق", "Verified")}
                     </Badge>
                   )}
                   {/* Action Buttons */}
@@ -276,16 +280,16 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
 
                 <div className="flex items-baseline gap-4">
                   <span className="text-4xl font-bold text-foreground">
-                    {formatPriceDetailed(property.price)} EGP
+                    {formatPriceDetailed(property.price)} {tr(lng, "ج.م", "EGP")}
                   </span>
                   {property.property_type === "rent" && (
                     <span className="text-lg text-muted-foreground">
-                      /month
+                      {tr(lng, "/ شهرياً", "/month")}
                     </span>
                   )}
                 </div>
                 <div className="text-muted-foreground mt-1">
-                  {formatPriceDetailed(pricePerMeter)} EGP/m²
+                  {formatPriceDetailed(pricePerMeter)} {tr(lng, "ج.م/م²", "EGP/m²")}
                 </div>
               </div>
 
@@ -337,32 +341,56 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">{lng === "ar" ? "نوع العقار" : "Property Type"}</span>
-                    <span className="font-medium">{category?.name}</span>
+                    <span className="font-medium">{categoryLabel(category as any, lng)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">{lng === "ar" ? "نوع القائمة" : "Listing Type"}</span>
-                    <span className="font-medium capitalize">
-                      {property.property_type}
+                    <span className="font-medium">
+                      {property.property_type === "rent" ? tr(lng, "للإيجار", "For rent") : tr(lng, "للبيع", "For sale")}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">{lng === "ar" ? "نوع المالك" : "Owner Type"}</span>
-                    <span className="font-medium capitalize">
-                      {property.owner_type}
+                    <span className="font-medium">
+                      {property.owner_type === "broker" ? tr(lng, "وسيط", "Broker") : tr(lng, "مالك", "Owner")}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
                     <span className="text-muted-foreground">{lng === "ar" ? "الطابق" : "Floor"}</span>
                     <span className="font-medium">
-                      {property.floor || (lng === "ar" ? "أرضي" : "Ground")}
+                      {property.floor === 0 || property.floor == null ? tr(lng, "أرضي", "Ground") : property.floor}
                     </span>
                   </div>
-                  <div className="flex justify-between py-2 border-b">
-                    <span className="text-muted-foreground">{lng === "ar" ? "سنة البناء" : "Year Built"}</span>
-                    <span className="font-medium">
-                      {property.year_built || "2020"}
-                    </span>
-                  </div>
+                  {property.year_built ? (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">{lng === "ar" ? "سنة البناء" : "Year Built"}</span>
+                      <span className="font-medium">{property.year_built}</span>
+                    </div>
+                  ) : null}
+                  {(property as any).finishing && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">{tr(lng, "التشطيب", "Finishing")}</span>
+                      <span className="font-medium">{labelOf(FINISHING, (property as any).finishing, lng)}</span>
+                    </div>
+                  )}
+                  {(property as any).payment_type && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">{tr(lng, "طريقة الدفع", "Payment")}</span>
+                      <span className="font-medium">{labelOf(PAYMENT_TYPES, (property as any).payment_type, lng)}</span>
+                    </div>
+                  )}
+                  {(property as any).down_payment != null && (property as any).payment_type !== "cash" && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">{tr(lng, "المقدم", "Down payment")}</span>
+                      <span className="font-medium">{formatPriceDetailed((property as any).down_payment)} {tr(lng, "ج.م", "EGP")}</span>
+                    </div>
+                  )}
+                  {(property as any).installment_years != null && (property as any).payment_type !== "cash" && (
+                    <div className="flex justify-between py-2 border-b">
+                      <span className="text-muted-foreground">{tr(lng, "مدة التقسيط", "Installment period")}</span>
+                      <span className="font-medium">{tr(lng, `${(property as any).installment_years} سنوات`, `${(property as any).installment_years} years`)}</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -418,39 +446,20 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
 
         {/* Sidebar */}
         <div className="space-y-6">
-          {/* Contact Agent */}
+          {/* Contact */}
+          <ContactCard
+            lng={lng}
+            propertyId={property.id}
+            title={displayTitle}
+            contactName={property.contact_name}
+            contactPhone={property.contact_phone}
+            contactWhatsapp={property.contact_whatsapp}
+            ownerType={property.owner_type}
+            owner={(property as any).user_profiles}
+            trackable={isPublic}
+          />
           <Card>
-            <CardHeader>
-              <CardTitle>
-                {property.owner_type === "broker"
-                  ? (lng === "ar" ? "اتصل بالوسيط" : "Contact Broker")
-                  : (lng === "ar" ? "اتصل بالمالك" : "Contact Owner")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-accent rounded-full flex items-center justify-center mx-auto mb-3">
-                  <User className="w-8 h-8 text-foreground" />
-                </div>
-                <h3 className="font-semibold">{property.contact_name}</h3>
-                <div className="flex items-center justify-center gap-1 text-sm text-gray-600">
-                  <span className="capitalize">{property.owner_type}</span>
-                  {property.contact_is_verified && (
-                    <Shield className="w-3 h-3 text-green-500" />
-                  )}
-                </div>
-                {property.response_time && (
-                  <p className="text-xs text-gray-500 mt-1">
-                    {lng === "ar" ? "يستجيب خلال" : "Responds within"} {property.response_time}
-                  </p>
-                )}
-              </div>
-              <Button size="lg" className="w-full">
-                <Phone className="w-4 h-4 mr-2" /> {lng === "ar" ? "اتصل الآن" : "Call Now"}
-              </Button>
-              <Button size="lg" variant="outline" className="w-full">
-                <MessageCircle className="w-4 h-4 mr-2" /> {lng === "ar" ? "أرسل رسالة" : "Send Message"}
-              </Button>
+            <CardContent className="pt-6">
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex items-center gap-2">
                   <LoveButton propertyId={property.id} className="w-full" />
@@ -486,6 +495,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
           </Card>
 
           {/* Related Properties */}
+          {relatedProperties.length > 0 && (
           <div>
             <h3 className="text-xl font-semibold mb-4">{lng === "ar" ? "عقارات ذات صلة" : "Related Properties"}</h3>
             <div className="space-y-4">
@@ -498,6 +508,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
       <ShareModal

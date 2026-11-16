@@ -5,7 +5,7 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Home, Building, FolderOpen, Settings, Menu, BarChart3, Star, Map } from "lucide-react"
+import { Home, Building, FolderOpen, Settings, Menu, BarChart3, Star, Map, ShieldCheck, Flag } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Dictionary } from "@/lib/i18n/types"
 
@@ -20,6 +20,8 @@ export function AdminSidebar({ lng, dict }: AdminSidebarProps) {
 
   const navigation = [
     { name: dict.admin.sidebar.dashboard, href: `/${lng}/admin`, icon: BarChart3 },
+    { name: lng === "ar" ? "مراجعة الإعلانات" : "Review queue", href: `/${lng}/admin/moderation`, icon: ShieldCheck },
+    { name: lng === "ar" ? "البلاغات" : "Reports", href: `/${lng}/admin/reports`, icon: Flag },
     { name: dict.admin.sidebar.properties, href: `/${lng}/admin/properties`, icon: Building },
     { name: dict.admin.sidebar.categories, href: `/${lng}/admin/categories`, icon: FolderOpen },
     { name: dict.admin.sidebar.areas, href: `/${lng}/admin/areas`, icon: Map },

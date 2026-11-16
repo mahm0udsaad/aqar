@@ -69,7 +69,7 @@ export default async function RootLayout({
     <html lang={lng} dir={lng === "ar" ? "rtl" : "ltr"} suppressHydrationWarning>
       <body className={lng === "ar" ? cairo.className : inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-          <AuthProvider>
+          <AuthProvider lng={lng} devLogin={process.env.NODE_ENV !== "production" && process.env.AUTH_DEV_LOGIN === "1"}>
             <ComparisonProvider>
               {children}
             </ComparisonProvider>

@@ -20,6 +20,8 @@ import {
 import { Menu, Search, User, Settings, LogOut, Heart, Globe, GitCompare } from "lucide-react"
 import { SearchFiltersSheet } from "./search-filters-sheet"
 import { useComparison } from "@/contexts/comparison-context"
+import { PostListingButton } from "@/components/nav/post-listing-button"
+import { UserMenu, accountLinks } from "@/components/nav/user-menu"
 
 interface NavbarProps {
   lng: string
@@ -29,10 +31,11 @@ interface NavbarProps {
 export function Navbar({ lng, dict }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const { user, profile: userProfile, isAdmin, signOut } = useAuth()
+  const { user, profile: userProfile, isAdmin, signOut, openSignIn } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const isSearchPage = pathname.includes("/search")
+  const hideFloatingPost = pathname.includes("/listings/new") || pathname.includes("/edit") || pathname.includes("/admin")
   const { count: comparisonCount } = useComparison()
 
   useEffect(() => {
@@ -62,6 +65,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
   }
 
   return (
+    <>
     <nav
       className={`sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b transition-all duration-200 h-16`}
     >
@@ -135,6 +139,9 @@ export function Navbar({ lng, dict }: NavbarProps) {
               <Globe className="h-4 w-4 mr-2" />
               {lng === "ar" ? "EN" : "AR"}
             </Button>
+
+            <PostListingButton lng={lng} />
+            <UserMenu lng={lng} />
           </div>
 
           {/* Mobile Menu */}
@@ -184,7 +191,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
                     <Link href={`/${lng}/compare`} className="text-lg font-medium py-2 px-3 rounded-md hover:bg-accent flex items-center justify-between">
                       <span className="flex items-center gap-2">
                         <GitCompare className="h-5 w-5" />
-                        Compare
+                        {lng === "ar" ? "المقارنة" : "Compare"}
                       </span>
                       {comparisonCount > 0 && (
                         <Badge variant="destructive" className="h-5 w-5 p-0 flex items-center justify-center text-xs">
@@ -201,6 +208,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
                   </Button>
 
                   {/* User Section */}
+                  <PostListingButton lng={lng} className="w-full h-11 text-base" />
                   {user ? (
                     <div className="border-t pt-4 space-y-2">
                       <div className="px-3 py-2">
@@ -211,34 +219,30 @@ export function Navbar({ lng, dict }: NavbarProps) {
                           </Badge>
                         )}
                       </div>
-                      <Link
-                        href={`/${lng}/loved`}
-                        className="flex items-center text-lg py-2 px-3 rounded-md hover:bg-accent"
-                      >
-                        <Heart className="h-5 w-5 mr-2" />
-                        {dict.nav.savedProperties}
-                      </Link>
+                      {accountLinks(lng).map((l) => (
+                        <Link key={l.href} href={l.href} className="flex items-center text-lg py-2 px-3 rounded-md hover:bg-accent">
+                          <l.icon className="h-5 w-5 me-2" />
+                          {l.label}
+                        </Link>
+                      ))}
                       {userProfile?.role === "admin" && (
                         <Link
                           href={`/${lng}/admin`}
                           className="flex items-center text-lg py-2 px-3 rounded-md hover:bg-accent"
                         >
-                          <Settings className="h-5 w-5 mr-2" />
+                          <Settings className="h-5 w-5 me-2" />
                           {dict.nav.admin}
                         </Link>
                       )}
                       <Button variant="ghost" onClick={handleLogout} className="w-full justify-start text-lg">
-                        <LogOut className="h-5 w-5 mr-2" />
+                        <LogOut className="h-5 w-5 me-2" />
                         {dict.nav.logout}
                       </Button>
                     </div>
                   ) : (
                     <div className="border-t pt-4 space-y-2">
-                      <Button variant="outline" asChild className="w-full bg-transparent text-lg">
-                        <Link href={`/${lng}/auth/login`}>{dict.nav.login}</Link>
-                      </Button>
-                      <Button asChild className="w-full text-lg">
-                        <Link href={`/${lng}/auth/signup`}>{dict.nav.signup}</Link>
+                      <Button variant="outline" className="w-full bg-transparent text-lg" onClick={() => openSignIn()}>
+                        {dict.nav.login}
                       </Button>
                     </div>
                   )}
@@ -249,5 +253,8 @@ export function Navbar({ lng, dict }: NavbarProps) {
         </div>
       </div>
     </nav>
+    {/* outside <nav>: its backdrop blur would trap position:fixed children */}
+    {!hideFloatingPost && <PostListingButton lng={lng} floating />}
+    </>
   )
 }

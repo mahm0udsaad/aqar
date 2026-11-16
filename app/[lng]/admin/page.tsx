@@ -5,6 +5,8 @@ import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
+import Link from "next/link"
+import { getPendingCounts } from "@/lib/actions/moderation"
 
 export default async function AdminDashboard({ params: { lng } }: { params: { lng: Locale } }) {
   const supabase = createDb()
@@ -57,6 +59,8 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
     },
   ]
 
+  const queue = await getPendingCounts()
+
   return (
     <div>
       <AdminHeader
@@ -65,6 +69,22 @@ export default async function AdminDashboard({ params: { lng } }: { params: { ln
         lng={lng}
         dict={dict}
       />
+      {(queue.pending > 0 || queue.reports > 0) && (
+        <div className="px-6 pt-6 grid gap-3 sm:grid-cols-2">
+          {queue.pending > 0 && (
+            <Link href={`/${lng}/admin/moderation`} className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-amber-900 hover:bg-amber-100">
+              <div className="text-2xl font-bold">{queue.pending}</div>
+              <div className="text-sm">{lng === "ar" ? "إعلانات بانتظار المراجعة" : "listings waiting for review"}</div>
+            </Link>
+          )}
+          {queue.reports > 0 && (
+            <Link href={`/${lng}/admin/reports`} className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-900 hover:bg-red-100">
+              <div className="text-2xl font-bold">{queue.reports}</div>
+              <div className="text-sm">{lng === "ar" ? "بلاغات مفتوحة من الزوار" : "open visitor reports"}</div>
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="p-6">
         {/* Stats Grid */}

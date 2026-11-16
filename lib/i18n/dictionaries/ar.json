@@ -41,8 +41,8 @@
   "hero": {
     "title": "359,776 عقار للبيع والإيجار",
     "subtitle": "اعثر على منزلك المثالي مع منصة العقارات الرائدة في مصر",
-    "heroTitleFull": "359,776 عقار للبيع والإيجار",
-    "heroSubtitleFull": "اعثر على منزلك المثالي مع منصة العقارات الرائدة في مصر",
+    "heroTitleFull": "عقارات للبيع والإيجار في مصر",
+    "heroSubtitleFull": "ابحث عن بيتك الجاي، أو اعرض عقارك مجاناً في دقيقتين",
     "forSale": "للبيع",
     "forRent": "للإيجار",
     "locationPlaceholder": "أدخل المنطقة أو الحي أو اسم المشروع",
@@ -132,8 +132,7 @@
     "area": "المنطقة",
     "allAreas": "جميع المناطق",
     "priceRangeEGP": "نطاق السعر (ج.م)",
-    "sizeRangeM2": "نطاق المساحة (م²)",
-    "amenities": "المرافق"
+    "sizeRangeM2": "نطاق المساحة (م²)"
   },
   "amenities": {
     "swimmingPool": "حمام سباحة",
@@ -166,7 +165,6 @@
     "deleteTitleDialog": "حذف الفئة",
     "deleteConfirmation": "هل أنت متأكد أنك تريد حذف هذه الفئة؟ لا يمكن التراجع عن هذا الإجراء.",
     "deleteWarning": "هذه الفئة لديها",
-    "properties": "عقارات",
     "cancel": "إلغاء",
     "delete": "حذف",
     "order": "الترتيب",
@@ -208,7 +206,7 @@
     "squareMeter": "م²"
   },
   "footer": {
-    "companyDesc": "شريكك الموثوق في العثور على العقار المثالي. نحن متخصصون في العقارات الفاخرة مع خدمة استثنائية.",
+    "companyDesc": "منصة مجانية لإعلانات العقارات في مصر. الملاك والوسطاء ينشرون مجاناً، والمشترون يتواصلون معهم مباشرة.",
     "quickLinks": "روابط سريعة",
     "buyProperty": "شراء عقار",
     "rentProperty": "استئجار عقار",
@@ -216,16 +214,16 @@
     "commercial": "تجاري",
     "popularAreas": "المناطق الشائعة",
     "contactUs": "اتصل بنا",
-    "allRightsReserved": "© 2024 إيليت العقارية. جميع الحقوق محفوظة.",
+    "allRightsReserved": "عقار. جميع الحقوق محفوظة.",
     "privacyPolicy": "سياسة الخصوصية",
     "termsOfService": "شروط الخدمة",
-    "eliteProperties": "إيليت العقارية",
+    "eliteProperties": "عقار",
     "home": "الرئيسية",
     "searchProperties": "البحث عن العقارات",
     "apartments": "شقق",
     "villas": "فلل",
     "contact": "اتصل بنا",
-    "services": "الخدمات",
+    "services": "للمعلنين",
     "propertySales": "مبيعات العقارات",
     "propertyManagement": "إدارة العقارات",
     "investmentConsulting": "استشارات استثمارية",
@@ -239,7 +237,10 @@
     "email": "info@eliteproperties.com",
     "contactPhone": "+20 2 1234 5678",
     "contactEmail": "info@aqarmap.com",
-    "contactAddress": "القاهرة، مصر"
+    "contactAddress": "القاهرة، مصر",
+    "postFree": "أضف عقارك مجاناً",
+    "myListings": "إعلاناتي",
+    "postingRules": "شروط النشر"
   },
   "auth": {
     "login": "تسجيل الدخول",

@@ -5,13 +5,25 @@ import { PropertyDetails } from "@/components/property-details"
 import { Navbar } from "@/components/navbar"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
+import { getCurrentUser } from "@/lib/auth/session"
+import { ListingStatusBanner } from "@/components/listing/listing-status-banner"
 
-export async function generateMetadata({ params }: { params: { id: string; lng: Locale } }) {
-  const { id, lng } = params;
+export async function generateMetadata({ params }: { params: Promise<{ id: string; lng: Locale }> }) {
+  const { id, lng } = await params;
   const dict = await getDictionary(lng);
   const property = await getPropertyById(id);
 
   if (!property) {
+    const viewer = await getCurrentUser()
+    if (viewer) {
+      const draft = await getPropertyById(id, { includeUnpublished: true })
+      if (draft && (viewer.role === "admin" || (draft as any).owner_id === viewer.id)) {
+        return {
+          title: `${lng === "ar" ? "معاينة" : "Preview"}: ${(draft as any).title_ar || (draft as any).title_en || draft.title}`,
+          robots: { index: false, follow: false },
+        }
+      }
+    }
     return {
       title: dict.seo.propertyNotFoundTitle,
       description: dict.seo.propertyNotFoundDescription,
@@ -76,7 +88,20 @@ interface PropertyPageProps {
 export default async function PropertyPage({ params }: PropertyPageProps) {
   const { id, lng } = await params
   const dict = await getDictionary(lng)
-  const property = await getPropertyById(id)
+  let property = await getPropertyById(id)
+  let isPublic = true
+
+  // Owners and admins can preview a listing that is under review, paused or rejected
+  if (!property) {
+    const viewer = await getCurrentUser()
+    if (viewer) {
+      const draft = await getPropertyById(id, { includeUnpublished: true })
+      if (draft && (viewer.role === "admin" || (draft as any).owner_id === viewer.id)) {
+        property = draft
+        isPublic = false
+      }
+    }
+  }
 
   if (!property) {
     notFound()
@@ -98,7 +123,16 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
           <span className="mx-2">/</span>
           <span className="text-foreground">{(lng === "ar" ? (property as any).title_ar : (property as any).title_en)}</span>
         </div>
-        <PropertyDetails property={property} lng={lng} />
+        {!isPublic && (
+          <ListingStatusBanner
+            lng={lng}
+            id={property.id}
+            status={property.status as string}
+            moderationStatus={(property as any).moderation_status}
+            rejectionReason={(property as any).rejection_reason}
+          />
+        )}
+        <PropertyDetails property={property} lng={lng} isPublic={isPublic} />
       </div>
     </div>
   )

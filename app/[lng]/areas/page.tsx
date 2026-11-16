@@ -42,6 +42,7 @@ export default async function AreasPage({ params }: AreasPageProps) {
     .from("properties")
     .select("area")
     .eq("status", "active")
+    .eq("moderation_status", "approved")
     .not("area", "is", null)
     .not("area", "eq", "")
 

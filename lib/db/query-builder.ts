@@ -29,6 +29,12 @@ const RELATIONS: Record<string, Record<string, Relation>> = {
     property_videos: { kind: "child", table: "property_videos", fk: "property_id" },
     property_ratings: { kind: "child", table: "property_ratings", fk: "property_id", single: true },
     loved_properties: { kind: "child", table: "loved_properties", fk: "property_id" },
+    // never select "*" from these two in public queries: user_profiles holds private fields
+    user_profiles: { kind: "parent", table: "user_profiles", fk: "owner_id" },
+    locations: { kind: "parent", table: "locations", fk: "location_id" },
+  },
+  locations: {
+    parent: { kind: "parent", table: "locations", fk: "parent_id" },
   },
   categories: {
     properties: { kind: "child", table: "properties", fk: "category_id" },

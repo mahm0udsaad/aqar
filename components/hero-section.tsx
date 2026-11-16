@@ -19,10 +19,12 @@ interface HeroSectionProps {
   lng: string
   dict: any
   areas: Area[]
-  homeStats?: Record<string, string>
+  counts?: { sale: number; rent: number; newThisWeek: number }
 }
 
-export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
+export function HeroSection({ lng, dict, areas, counts }: HeroSectionProps) {
+  const t = (ar: string, en: string) => (lng === "ar" ? ar : en)
+  const fmt = (n: number) => n.toLocaleString(lng === "ar" ? "ar-EG" : "en-US")
   const router = useRouter()
   const [searchData, setSearchData] = useState({
     type: "sale" as "sale" | "rent",
@@ -103,7 +105,7 @@ export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
               <div className="relative">
                 <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
-                  placeholder="Enter area, neighborhood, or project name"
+                  placeholder={t("اكتب المنطقة أو الكمبوند أو اسم المشروع", "Area, compound or project name")}
                   value={searchData.location}
                   onChange={(e) => setSearchData((prev) => ({ ...prev, location: e.target.value }))}
                   className="pl-10 h-12 border-input focus:border-primary focus:ring-primary"
@@ -116,7 +118,7 @@ export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
                 onValueChange={(value) => setSearchData((prev) => ({ ...prev, area: value }))}
               >
                 <SelectTrigger className="h-12 border-input focus:border-primary focus:ring-primary">
-                  <SelectValue placeholder="Select Area" />
+                  <SelectValue placeholder={t("اختر المنطقة", "Select area")} />
                 </SelectTrigger>
                 <SelectContent>
                   {areas.map((area) => (
@@ -133,12 +135,12 @@ export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
                 onValueChange={(value) => setSearchData((prev) => ({ ...prev, priceRange: value }))}
               >
                 <SelectTrigger className="h-12 border-input focus:border-primary focus:ring-primary">
-                  <SelectValue placeholder="Price Range" />
+                  <SelectValue placeholder={t("نطاق السعر", "Price range")} />
                 </SelectTrigger>
                 <SelectContent>
                   {priceRanges[searchData.type].map((range) => (
                     <SelectItem key={range.value} value={range.value}>
-                      {range.label}
+                      {lng === "ar" ? range.ar : range.label}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -149,26 +151,28 @@ export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
                 onClick={handleSearch} 
                 className="h-12 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold transition-all duration-200 hover:scale-105"
               >
-                <Search className="w-4 h-4 mr-2" />
-                Search
+                <Search className="w-4 h-4 me-2" />
+                {t("بحث", "Search")}
               </Button>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-slate-200">
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["properties_for_sale"] || "250K+"}</div>
-                <div className="text-sm text-muted-foreground">{dict.home.propertiesForSaleLabel}</div>
+            {/* Real counts from the database */}
+            {counts && (
+              <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-slate-200">
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-foreground">{fmt(counts.sale)}</div>
+                  <div className="text-sm text-muted-foreground">{t("عقار للبيع", "for sale")}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-foreground">{fmt(counts.rent)}</div>
+                  <div className="text-sm text-muted-foreground">{t("عقار للإيجار", "for rent")}</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl md:text-3xl font-bold text-foreground">{fmt(counts.newThisWeek)}</div>
+                  <div className="text-sm text-muted-foreground">{t("إعلان جديد هذا الأسبوع", "new this week")}</div>
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["properties_for_rent"] || "109K+"}</div>
-                <div className="text-sm text-muted-foreground">{dict.home.propertiesForRentLabel}</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-foreground">{homeStats?.["new_projects"] || "15K+"}</div>
-                <div className="text-sm text-muted-foreground">{dict.home.newProjectsLabel}</div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -190,18 +194,18 @@ const propertyTypes = [
 
 const priceRanges = {
   sale: [
-    { label: "Any Price", value: "any" },
-    { label: "1M - 3M EGP", value: "1000000-3000000" },
-    { label: "3M - 5M EGP", value: "3000000-5000000" },
-    { label: "5M - 10M EGP", value: "5000000-10000000" },
-    { label: "Over 10M EGP", value: "10000000-" },
+    { label: "Any Price", ar: "أي سعر", value: "any" },
+    { label: "1M - 3M EGP", ar: "1 - 3 مليون", value: "1000000-3000000" },
+    { label: "3M - 5M EGP", ar: "3 - 5 مليون", value: "3000000-5000000" },
+    { label: "5M - 10M EGP", ar: "5 - 10 مليون", value: "5000000-10000000" },
+    { label: "Over 10M EGP", ar: "أكثر من 10 مليون", value: "10000000-" },
   ],
   rent: [
-    { label: "Any Price", value: "any" },
-    { label: "Under 5K EGP", value: "0-5000" },
-    { label: "5K - 10K EGP", value: "5000-10000" },
-    { label: "10K - 20K EGP", value: "10000-20000" },
-    { label: "20K - 50K EGP", value: "20000-50000" },
-    { label: "Over 50K EGP", value: "50000-" },
+    { label: "Any Price", ar: "أي سعر", value: "any" },
+    { label: "Under 5K EGP", ar: "أقل من 5 آلاف", value: "0-5000" },
+    { label: "5K - 10K EGP", ar: "5 - 10 آلاف", value: "5000-10000" },
+    { label: "10K - 20K EGP", ar: "10 - 20 ألف", value: "10000-20000" },
+    { label: "20K - 50K EGP", ar: "20 - 50 ألف", value: "20000-50000" },
+    { label: "Over 50K EGP", ar: "أكثر من 50 ألف", value: "50000-" },
   ],
 }

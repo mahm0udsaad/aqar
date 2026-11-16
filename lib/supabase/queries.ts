@@ -101,7 +101,8 @@ export async function getProperties(filters?: SearchFilters) {
       property_ratings (*),
       areas (*)
     `)
-      .eq("status", "active"),
+      .eq("status", "active")
+    .eq("moderation_status", "approved"),
     filters,
   ).order("order_index", { ascending: true })
 
@@ -115,8 +116,13 @@ export async function getProperties(filters?: SearchFilters) {
   return sortImages(data) as PropertyWithDetails[]
 }
 
-export async function getPropertyById(id: string) {
-  const { data, error } = await supabase
+/**
+ * A public listing (active + approved). With includeUnpublished, any status is returned:
+ * callers must check that the viewer is the owner or an admin before showing it.
+ */
+export async function getPropertyById(id: string, opts: { includeUnpublished?: boolean } = {}) {
+  if (!/^[0-9a-f-]{36}$/i.test(id || "")) return null
+  let query = supabase
     .from("properties")
     .select(`
       *,
@@ -124,14 +130,16 @@ export async function getPropertyById(id: string) {
       property_images (*),
       property_ratings (*),
       areas (*),
-      property_videos (*)
+      property_videos (*),
+      locations (id, name_ar, name_en, slug, level),
+      user_profiles (id, full_name, avatar_url, account_type, office_name, is_verified_broker, created_at)
     `)
     .eq("id", id)
-    .eq("status", "active")
-    .single()
+  if (!opts.includeUnpublished) query = query.eq("status", "active").eq("moderation_status", "approved")
+  const { data, error } = await query.maybeSingle()
 
-  if (error) {
-    console.error("Error fetching property:", error)
+  if (error || !data) {
+    if (error) console.error("Error fetching property:", error)
     return null
   }
 
@@ -158,6 +166,7 @@ export async function getFeaturedProperties() {
     `)
     .eq("is_featured", true)
     .eq("status", "active")
+    .eq("moderation_status", "approved")
     .order("is_main_featured", { ascending: false })
     .order("order_index", { ascending: true })
     .limit(6)
@@ -187,6 +196,7 @@ export async function getNewProperties() {
     `)
     .eq("is_new", true)
     .eq("status", "active")
+    .eq("moderation_status", "approved")
     .order("order_index", { ascending: true })
     .limit(6)
 
@@ -239,6 +249,7 @@ export async function searchProperties(query: string, filters?: SearchFilters) {
       areas (*)
     `)
     .eq("status", "active")
+    .eq("moderation_status", "approved")
 
   const q = typeof query === "string" ? query.trim().slice(0, 100) : ""
   if (q) {
@@ -271,6 +282,7 @@ export async function getPopularAreasWithCounts() {
       .from("properties")
       .select("area")
       .eq("status", "active")
+    .eq("moderation_status", "approved")
       .not("area", "is", null)
       .not("area", "eq", "")
 
@@ -358,4 +370,18 @@ export async function getHomeStats(): Promise<Record<string, string>> {
     map[row.key] = row.value
   })
   return map
+}
+
+/** Real numbers for the home page (replaces the hand-typed stats). */
+export async function getSiteCounts(): Promise<{ sale: number; rent: number; advertisers: number; newThisWeek: number }> {
+  const { query } = await import("@/lib/db/pool")
+  const res = await query<{ sale: number; rent: number; advertisers: number; new_this_week: number }>(
+    `SELECT count(*) FILTER (WHERE property_type = 'sale')::int AS sale,
+            count(*) FILTER (WHERE property_type = 'rent')::int AS rent,
+            count(DISTINCT owner_id)::int AS advertisers,
+            count(*) FILTER (WHERE COALESCE(published_at, created_at) > now() - interval '7 days')::int AS new_this_week
+       FROM properties WHERE status = 'active' AND moderation_status = 'approved'`,
+  )
+  const r = res.rows[0] || { sale: 0, rent: 0, advertisers: 0, new_this_week: 0 }
+  return { sale: r.sale, rent: r.rent, advertisers: r.advertisers, newThisWeek: r.new_this_week }
 }

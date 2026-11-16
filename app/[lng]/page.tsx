@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
-import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts, getHomeHero, getHomeStats } from "@/lib/supabase/queries"
+import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWithCounts, getHomeHero, getSiteCounts } from "@/lib/supabase/queries"
 import { getAreas } from "@/lib/actions/areas"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
@@ -24,7 +24,7 @@ export default async function HomePage({ params }: HomePageProps) {
   const dict = await getDictionary(lng)
 
   // Fetch data from Supabase with fallback
-  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas, areas, heroContent, homeStats] = await Promise.all([
+  const [featuredProperties, saleProperties, rentProperties, categories, popularAreas, areas, heroContent, counts] = await Promise.all([
     getFeaturedProperties().catch(() => []),
     getProperties({ propertyType: "sale" })
       .then((data) => data.slice(0, 3))
@@ -36,37 +36,8 @@ export default async function HomePage({ params }: HomePageProps) {
     getPopularAreasWithCounts().catch(() => []),
     getAreas().catch(() => []),
     getHomeHero().catch(() => null),
-    getHomeStats().catch(() => ({} as Record<string, string>)),
+    getSiteCounts().catch(() => ({ sale: 0, rent: 0, advertisers: 0, newThisWeek: 0 })),
   ])
-
-  const stats = [
-    {
-      label: dict.home.propertiesForSaleLabel,
-      value: homeStats["properties_for_sale"] || "250,000+",
-      icon: Home,
-      color: "text-blue-600",
-    },
-    {
-      label: dict.home.propertiesForRentLabel,
-      value: homeStats["properties_for_rent"] || "109,000+",
-      icon: Building,
-      color: "text-green-600",
-    },
-    {
-      label: dict.home.newProjectsLabel,
-      value: homeStats["new_projects"] || "15,000+",
-      icon: Warehouse,
-      color: "text-orange-600",
-    },
-    {
-      label: dict.home.happyCustomersLabel,
-      value: homeStats["happy_customers"] || "500,000+",
-      icon: Users,
-      color: "text-purple-600",
-    },
-  ]
-
-  
 
   return (
     <div className={`min-h-screen bg-background ${lng === "ar" ? "rtl" : "ltr"}`}>
@@ -83,24 +54,50 @@ export default async function HomePage({ params }: HomePageProps) {
           },
         }}
         areas={areas || []}
-        homeStats={homeStats}
+        counts={counts}
       />
 
-      {/* Stats Section */}
-      <section className="py-16 bg-card">
+      {/* List your property */}
+      <section className="py-14 bg-card border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div
-                  className={`w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center ${stat.color}`}
-                >
-                  <stat.icon className="w-8 h-8" />
-                </div>
-                <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">{stat.value}</div>
-                <div className="text-sm text-muted-foreground">{stat.label}</div>
-              </div>
-            ))}
+          <div className="grid gap-8 lg:grid-cols-[1fr_2fr] items-center">
+            <div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+                {lng === "ar" ? "عندك عقار؟ اعرضه مجاناً" : "Have a property? List it for free"}
+              </h2>
+              <p className="text-muted-foreground mb-5">
+                {lng === "ar"
+                  ? "للمالك والوسيط. بدون عمولة وبدون دفع، والمشترون يتواصلون معك مباشرة على واتساب أو بالتليفون."
+                  : "For owners and brokers. No fees, no payment: buyers reach you directly on WhatsApp or by phone."}
+              </p>
+              <Link href={`/${lng}/listings/new`}>
+                <Button size="lg" className="font-semibold">
+                  {lng === "ar" ? "+ أضف عقارك مجاناً" : "+ List your property free"}
+                </Button>
+              </Link>
+            </div>
+            <ol className="grid gap-4 sm:grid-cols-3">
+              {(lng === "ar"
+                ? [
+                    ["سجّل بحساب جوجل", "واختر إنك مالك أو وسيط وأضف رقم موبايلك."],
+                    ["أضف بيانات العقار", "النوع والموقع والسعر والمساحة و3 صور على الأقل."],
+                    ["ننشره بعد المراجعة", "خلال 24 ساعة غالباً، وتتابع المشاهدات من إعلاناتي."],
+                  ]
+                : [
+                    ["Sign in with Google", "Choose owner or broker and add your mobile number."],
+                    ["Add the details", "Type, location, price, size and at least 3 photos."],
+                    ["We publish after review", "Usually within 24 hours. Track views in My listings."],
+                  ]
+              ).map(([title, body], i) => (
+                <li key={i} className="rounded-lg border bg-background p-5">
+                  <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold mb-3">
+                    {i + 1}
+                  </div>
+                  <div className="font-semibold mb-1">{title}</div>
+                  <div className="text-sm text-muted-foreground">{body}</div>
+                </li>
+              ))}
+            </ol>
           </div>
         </div>
       </section>
@@ -284,7 +281,7 @@ export default async function HomePage({ params }: HomePageProps) {
                       className={`flex items-center text-muted-foreground ${lng === "ar" ? "flex-row-reverse" : ""}`}
                     >
                       <MapPin className="w-4 h-4 mr-2" />
-                      <span className="text-sm">{area.count} Properties</span>
+                      <span className="text-sm">{lng === "ar" ? `${area.count} عقار` : `${area.count} properties`}</span>
                     </div>
                   </CardContent>
                 </Card>
