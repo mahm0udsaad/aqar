@@ -27,3 +27,6 @@ yarn-error.log*
 next-env.d.ts
 # local uploads (served by app/uploads route)
 .uploads/
+
+# generated local test data (python3 db/seed/generate_dev_seed.py)
+db/seed/dev_seed.sql

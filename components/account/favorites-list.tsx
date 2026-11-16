@@ -6,24 +6,38 @@ import { Heart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { PropertyCard } from "@/components/property-card"
 import { getListingsByIds } from "@/lib/actions/listings"
+import { useFavorites } from "@/contexts/favorites-context"
+import { useAuth } from "@/lib/auth/auth-context"
 import { tr } from "@/lib/listing-options"
 
-/** Favorites are kept in this browser (localStorage "lovedProperties"), as the heart button does. */
 export function FavoritesList({ lng }: { lng: string }) {
+  const { profile, loading, openSignIn } = useAuth()
+  const { ids, ready } = useFavorites()
   const [items, setItems] = useState<any[] | null>(null)
+  const key = [...ids].sort().join(",")
 
   useEffect(() => {
-    const load = async () => {
-      let ids: string[] = []
-      try {
-        ids = JSON.parse(localStorage.getItem("lovedProperties") || "[]")
-      } catch {}
-      setItems(ids.length ? await getListingsByIds(ids) : [])
+    if (!ready) return
+    let alive = true
+    ;(async () => {
+      const list = ids.size ? await getListingsByIds([...ids]) : []
+      if (alive) setItems(list)
+    })()
+    return () => {
+      alive = false
     }
-    load()
-    window.addEventListener("lovedPropertiesChanged", load)
-    return () => window.removeEventListener("lovedPropertiesChanged", load)
-  }, [])
+  }, [key, ready]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!loading && !profile) {
+    return (
+      <div className="text-center py-16 space-y-4">
+        <Heart className="w-10 h-10 mx-auto text-muted-foreground" />
+        <h1 className="text-2xl font-bold">{tr(lng, "المفضلة", "Favorites")}</h1>
+        <p className="text-muted-foreground">{tr(lng, "سجّل الدخول لتحفظ العقارات وترجع لها من أي جهاز.", "Sign in to save properties and find them on any device.")}</p>
+        <Button onClick={() => openSignIn()}>{tr(lng, "تسجيل الدخول", "Sign in")}</Button>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

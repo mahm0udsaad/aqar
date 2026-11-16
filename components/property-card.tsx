@@ -122,7 +122,7 @@ export function PropertyCard({
 
         {/* Action Buttons */}
         <div className="absolute top-2 right-2 flex flex-col gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <LoveButton propertyId={property.id} size="sm" />
+          <LoveButton lng={lng} propertyId={property.id} size="sm" />
           <Button
             size="icon"
             variant="secondary"

@@ -47,6 +47,7 @@ JavaScript origin `https://www.alakkareya.com`.
 1. Commit and push the code first (the August 2026 build was lost because its source was never committed).
 2. Back up the database: `pg_dump -Fc` through the tunnel.
 3. Apply new files in `db/migrations/` in order (they are idempotent): `psql -v ON_ERROR_STOP=1 -f db/migrations/NNN_*.sql`.
+   Never run anything from `db/seed/` on production: that is local test data.
 4. Build: `deploy/build-bundle.sh <out-dir> <dir with linux sharp packages>`.
    The Linux `sharp` binaries (`sharp-linux-x64`, `sharp-libvips-linux-x64`) are copied from the host's
    `aqar-app/node_modules/@img/` once and reused.

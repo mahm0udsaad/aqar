@@ -35,7 +35,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const isSearchPage = pathname.includes("/search")
-  const hideFloatingPost = pathname.includes("/listings/new") || pathname.includes("/edit") || pathname.includes("/admin")
+  const hideFloatingPost = pathname.includes("/listings/new") || pathname.includes("/account") || pathname.includes("/admin")
   const { count: comparisonCount } = useComparison()
 
   useEffect(() => {

@@ -8,6 +8,10 @@ import { Badge } from "@/components/ui/badge"
 import { trackListingEvent } from "@/lib/actions/listings"
 import { formatEgyptPhone, normalizeEgyptPhone, tr, whatsappDigits } from "@/lib/listing-options"
 import { ReportListingDialog } from "./report-listing-dialog"
+import { rememberViewed } from "./suggested-for-you"
+import { MessageOwnerDialog } from "./message-owner-dialog"
+import { useAuth } from "@/lib/auth/auth-context"
+import { MessagesSquare } from "lucide-react"
 
 interface ContactCardProps {
   lng: string
@@ -26,10 +30,15 @@ interface ContactCardProps {
   } | null
   /** Only track clicks on public, approved listings */
   trackable?: boolean
+  /** Listings posted by a user (not by the site admin) can receive in-site messages */
+  ownerId?: string | null
 }
 
 export function ContactCard(props: ContactCardProps) {
-  const { lng, propertyId, title, contactName, contactPhone, contactWhatsapp, ownerType, owner, trackable = true } = props
+  const { lng, propertyId, title, contactName, contactPhone, contactWhatsapp, ownerType, owner, trackable = true, ownerId } = props
+  const { profile, openSignIn } = useAuth()
+  const [messageOpen, setMessageOpen] = useState(false)
+  const isMine = !!profile && !!ownerId && profile.id === ownerId
   const [revealed, setRevealed] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
   const [pageUrl, setPageUrl] = useState("")
@@ -41,6 +50,7 @@ export function ContactCard(props: ContactCardProps) {
   // One view per listing per browser session
   useEffect(() => {
     if (!trackable) return
+    rememberViewed(propertyId)
     try {
       const key = `viewed:${propertyId}`
       if (sessionStorage.getItem(key)) return
@@ -122,6 +132,21 @@ export function ContactCard(props: ContactCardProps) {
               {tr(lng, "إظهار رقم الهاتف", "Show phone number")}
             </Button>
           ))}
+
+        {ownerId && trackable && !isMine && (
+          <>
+            <Button
+              size="lg"
+              variant="outline"
+              className="w-full"
+              onClick={() => (profile ? setMessageOpen(true) : openSignIn())}
+            >
+              <MessagesSquare className="w-5 h-5 me-2" />
+              {tr(lng, "راسل المعلن داخل عقار", "Message on Aqar")}
+            </Button>
+            <MessageOwnerDialog lng={lng} propertyId={propertyId} open={messageOpen} onOpenChange={setMessageOpen} />
+          </>
+        )}
 
         <p className="text-xs text-muted-foreground text-center">
           {tr(lng, "قل إنك وجدت الإعلان على عقار. لا تحوّل أي أموال قبل معاينة العقار.", "Mention you found this on Aqar. Never send money before viewing the property.")}

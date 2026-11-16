@@ -30,7 +30,6 @@ import { LoveButton } from "@/components/love-button"
 import { PropertyComparisonButton } from "@/components/property-comparison-button"
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
 import type { Locale } from "@/lib/i18n/config"
-import { fetchProperties as getProperties } from "@/lib/actions/public-data"
 import { PropertyImage } from "@/lib/types"
 import { AreaRatingsDisplay } from "@/components/area-ratings-display"
 import { ContactCard } from "@/components/listing/contact-card"
@@ -41,14 +40,14 @@ interface PropertyDetailsProps {
   lng: Locale
   /** false when the owner/admin previews a listing that is not public yet */
   isPublic?: boolean
+  /** ranked by lib/recommendations (same type, area, price range…) */
+  similar?: PropertyWithDetails[]
 }
 
-export function PropertyDetails({ property, lng, isPublic = true }: PropertyDetailsProps) {
+export function PropertyDetails({ property, lng, isPublic = true, similar = [] }: PropertyDetailsProps) {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false)
   const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
-  const [relatedProperties, setRelatedProperties] = React.useState<
-    PropertyWithDetails[]
-  >([])
+  const relatedProperties = similar
 
   const translateFeature = (feature: string) => {
     if (lng !== 'ar') return feature
@@ -69,19 +68,6 @@ export function PropertyDetails({ property, lng, isPublic = true }: PropertyDeta
     return map[feature] || feature
   }
 
-  React.useEffect(() => {
-    async function fetchRelated() {
-      if (property && property.categories) {
-        const related = await getProperties({
-          category: property.categories.id,
-        })
-        setRelatedProperties(
-          related.filter((p) => p.id !== property.id).slice(0, 3),
-        )
-      }
-    }
-    fetchRelated()
-  }, [property])
 
   if (!property) {
     notFound()
@@ -255,7 +241,7 @@ export function PropertyDetails({ property, lng, isPublic = true }: PropertyDeta
                   )}
                   {/* Action Buttons */}
                   <div className="absolute top-2 right-2 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <LoveButton propertyId={property.id} size="sm" />
+                    <LoveButton lng={lng} propertyId={property.id} size="sm" />
                     <Button
                       size="icon"
                       variant="secondary"
@@ -456,13 +442,14 @@ export function PropertyDetails({ property, lng, isPublic = true }: PropertyDeta
             contactWhatsapp={property.contact_whatsapp}
             ownerType={property.owner_type}
             owner={(property as any).user_profiles}
+            ownerId={(property as any).owner_id}
             trackable={isPublic}
           />
           <Card>
             <CardContent className="pt-6">
               <div className="flex flex-col gap-2 pt-2">
                 <div className="flex items-center gap-2">
-                  <LoveButton propertyId={property.id} className="w-full" />
+                  <LoveButton lng={lng} propertyId={property.id} className="w-full" />
                   <Button
                     variant="outline"
                     className="w-full"
@@ -497,7 +484,7 @@ export function PropertyDetails({ property, lng, isPublic = true }: PropertyDeta
           {/* Related Properties */}
           {relatedProperties.length > 0 && (
           <div>
-            <h3 className="text-xl font-semibold mb-4">{lng === "ar" ? "عقارات ذات صلة" : "Related Properties"}</h3>
+            <h3 className="text-xl font-semibold mb-4">{lng === "ar" ? "عقارات مشابهة" : "Similar properties"}</h3>
             <div className="space-y-4">
               {relatedProperties.map((relatedProperty) => (
                 <PropertyCard

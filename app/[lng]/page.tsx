@@ -13,6 +13,7 @@ import { getProperties, getFeaturedProperties, getCategories, getPopularAreasWit
 import { getAreas } from "@/lib/actions/areas"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
+import { SuggestedForYou } from "@/components/listing/suggested-for-you"
 import { TrendingUp, MapPin, Building, Home, Warehouse, Users, Shield, Award } from "lucide-react"
 
 interface HomePageProps {
@@ -101,6 +102,8 @@ export default async function HomePage({ params }: HomePageProps) {
           </div>
         </div>
       </section>
+
+      <SuggestedForYou lng={lng} />
 
       {/* Featured Properties */}
       <section className="py-16 bg-background">

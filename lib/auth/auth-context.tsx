@@ -20,6 +20,7 @@ export interface UserProfile {
   office_name: string | null
   is_suspended: boolean
   needs_onboarding: boolean
+  unread_messages: number
 }
 
 interface AuthContextType {
@@ -76,6 +77,18 @@ export function AuthProvider({
   useEffect(() => {
     refresh()
   }, [refresh])
+
+  // keep the unread-messages badge fresh while signed in
+  useEffect(() => {
+    if (!profile?.id) return
+    const t = setInterval(refresh, 45000)
+    const onFocus = () => refresh()
+    window.addEventListener("focus", onFocus)
+    return () => {
+      clearInterval(t)
+      window.removeEventListener("focus", onFocus)
+    }
+  }, [profile?.id, refresh])
 
   // New accounts: ask for owner/broker and phone once per browser session (not on admin pages)
   useEffect(() => {

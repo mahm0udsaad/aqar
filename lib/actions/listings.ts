@@ -279,6 +279,8 @@ export interface MyListing {
   thumbnail_url: string | null
   created_at: string
   submitted_at: string | null
+  favorites_count: number
+  conversations_count: number
 }
 
 export async function getMyListings(): Promise<{ listings: MyListing[]; limit: number; used: number } | null> {
@@ -287,7 +289,9 @@ export async function getMyListings(): Promise<{ listings: MyListing[]; limit: n
   const res = await query<MyListing>(
     `SELECT id, COALESCE(title_ar, title_en, title) AS title, price, property_type, status, moderation_status,
             rejection_reason, area, size, COALESCE(views, 0) AS views, whatsapp_clicks, call_clicks,
-            thumbnail_url, created_at, submitted_at
+            thumbnail_url, created_at, submitted_at,
+            (SELECT count(*)::int FROM loved_properties f WHERE f.property_id = properties.id) AS favorites_count,
+            (SELECT count(*)::int FROM conversations c WHERE c.property_id = properties.id) AS conversations_count
        FROM properties WHERE owner_id = $1 ORDER BY created_at DESC`,
     [user.id],
   )

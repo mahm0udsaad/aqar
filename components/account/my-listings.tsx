@@ -4,7 +4,7 @@ import { useMemo, useState, useTransition } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
-import { CheckCircle2, Eye, MessageCircle, MoreVertical, Pencil, Phone, Plus } from "lucide-react"
+import { BarChart3, CheckCircle2, Eye, Heart, MessageCircle, MessagesSquare, MoreVertical, Pencil, Phone, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
@@ -47,12 +47,14 @@ export function MyListings({
   limit,
   used,
   justSubmitted,
+  overview,
 }: {
   lng: string
   listings: MyListing[]
   limit: number
   used: number
   justSubmitted?: boolean
+  overview?: { views: number; contacts: number; favorites: number; conversations: number } | null
 }) {
   const router = useRouter()
   const t = (ar: string, en: string) => tr(lng, ar, en)
@@ -103,6 +105,27 @@ export function MyListings({
         </div>
         <PostListingButton lng={lng} className="h-10" />
       </div>
+
+      {overview && listings.length > 0 && (
+        <div>
+          <div className="text-sm text-muted-foreground mb-2">{t("أداء إعلاناتك خلال آخر 30 يوماً", "Your listings in the last 30 days")}</div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              [Eye, t("مشاهدة", "views"), overview.views],
+              [Phone, t("تواصل", "contacts"), overview.contacts],
+              [MessagesSquare, t("محادثة جديدة", "new conversations"), overview.conversations],
+              [Heart, t("حفظ في المفضلة", "saves"), overview.favorites],
+            ].map(([Icon, label, value]: any) => (
+              <Card key={label}>
+                <CardContent className="p-3">
+                  <div className="text-xl font-bold">{fmt(value)}</div>
+                  <div className="text-xs text-muted-foreground flex items-center gap-1"><Icon className="w-3.5 h-3.5" />{label}</div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
 
       {justSubmitted && (
         <div className="rounded-lg border border-green-200 bg-green-50 text-green-900 p-4 flex gap-3">
@@ -168,6 +191,12 @@ export function MyListings({
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem asChild>
+                            <Link href={`/${lng}/account/listings/${l.id}/stats`}>
+                              <BarChart3 className="w-4 h-4 me-2" />
+                              {t("الإحصائيات", "Stats")}
+                            </Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
                             <Link href={`/${lng}/account/listings/${l.id}/edit`}>
                               <Pencil className="w-4 h-4 me-2" />
                               {t("تعديل", "Edit")}
@@ -197,6 +226,9 @@ export function MyListings({
                       <span className="flex items-center gap-1"><Eye className="w-3.5 h-3.5" />{fmt(l.views)}</span>
                       <span className="flex items-center gap-1"><MessageCircle className="w-3.5 h-3.5" />{fmt(l.whatsapp_clicks)}</span>
                       <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{fmt(l.call_clicks)}</span>
+                      <span className="flex items-center gap-1"><MessagesSquare className="w-3.5 h-3.5" />{fmt(l.conversations_count)}</span>
+                      <span className="flex items-center gap-1"><Heart className="w-3.5 h-3.5" />{fmt(l.favorites_count)}</span>
+                      <Link href={`/${lng}/account/listings/${l.id}/stats`} className="text-primary underline underline-offset-2">{t("الإحصائيات", "Stats")}</Link>
                     </div>
                     {status === "rejected" && l.rejection_reason && (
                       <div className="text-xs text-red-700 bg-red-50 rounded p-2 mt-1">

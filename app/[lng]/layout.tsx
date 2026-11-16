@@ -5,6 +5,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth/auth-context"
 import { ComparisonProvider } from "@/contexts/comparison-context"
+import { FavoritesProvider } from "@/contexts/favorites-context"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { Footer } from "@/components/footer"
@@ -70,9 +71,11 @@ export default async function RootLayout({
       <body className={lng === "ar" ? cairo.className : inter.className}>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider lng={lng} devLogin={process.env.NODE_ENV !== "production" && process.env.AUTH_DEV_LOGIN === "1"}>
-            <ComparisonProvider>
-              {children}
-            </ComparisonProvider>
+            <FavoritesProvider>
+              <ComparisonProvider>
+                {children}
+              </ComparisonProvider>
+            </FavoritesProvider>
           </AuthProvider>
           <SonnerToaster />
           <Toaster />

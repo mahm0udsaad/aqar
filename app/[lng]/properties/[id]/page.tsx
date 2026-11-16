@@ -7,6 +7,7 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 import { getCurrentUser } from "@/lib/auth/session"
 import { ListingStatusBanner } from "@/components/listing/listing-status-banner"
+import { getSimilarListings } from "@/lib/recommendations"
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string; lng: Locale }> }) {
   const { id, lng } = await params;
@@ -108,6 +109,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
   }
 
   const category = property.categories
+  const similar = await getSimilarListings(property.id, 4)
 
   return (
     <div className="min-h-screen bg-background">
@@ -132,7 +134,7 @@ export default async function PropertyPage({ params }: PropertyPageProps) {
             rejectionReason={(property as any).rejection_reason}
           />
         )}
-        <PropertyDetails property={property} lng={lng} isPublic={isPublic} />
+        <PropertyDetails property={property} lng={lng} isPublic={isPublic} similar={similar} />
       </div>
     </div>
   )

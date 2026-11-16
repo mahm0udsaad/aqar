@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server"
 import { getCurrentUser } from "@/lib/auth/session"
 import { needsOnboarding } from "@/lib/auth/profiles"
+import { getMyUnreadCount } from "@/lib/actions/chat"
 
 export const dynamic = "force-dynamic"
 
 export async function GET() {
   const user = await getCurrentUser()
+  const unread = user ? await getMyUnreadCount() : 0
   return NextResponse.json(
     {
       user: user
@@ -21,6 +23,7 @@ export async function GET() {
             office_name: user.office_name,
             is_suspended: user.is_suspended,
             needs_onboarding: needsOnboarding(user),
+            unread_messages: unread,
           }
         : null,
     },
