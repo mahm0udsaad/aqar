@@ -31,12 +31,20 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
     <>
       <div className="space-y-4">
         {/* Main Image */}
-        <div className="relative h-96 overflow-hidden rounded-lg cursor-pointer" onClick={() => setIsModalOpen(true)}>
+        <div className="relative h-96 overflow-hidden rounded-lg cursor-pointer bg-neutral-900" onClick={() => setIsModalOpen(true)}>
+          {/* blurred copy fills the frame so portrait photos aren't cut, the photo itself is shown whole */}
+          <Image
+            src={assetUrl(images[selectedImage]?.url || "/placeholder.svg?height=400&width=600")}
+            alt=""
+            aria-hidden
+            fill
+            className="object-cover blur-2xl scale-110 opacity-60"
+          />
           <Image
             src={assetUrl(images[selectedImage]?.url || "/placeholder.svg?height=400&width=600")}
             alt={images[selectedImage]?.alt || title}
             fill
-            className="object-cover"
+            className="object-contain"
           />
           {images.length > 1 && (
             <>

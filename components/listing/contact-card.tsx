@@ -9,7 +9,7 @@ import { trackListingEvent } from "@/lib/actions/listings"
 import { formatEgyptPhone, normalizeEgyptPhone, tr, whatsappDigits } from "@/lib/listing-options"
 import { ReportListingDialog } from "./report-listing-dialog"
 import { rememberViewed } from "./suggested-for-you"
-import { MessageOwnerDialog } from "./message-owner-dialog"
+import { useChat } from "@/components/chat/chat-dock"
 import { useAuth } from "@/lib/auth/auth-context"
 import { MessagesSquare } from "lucide-react"
 
@@ -37,7 +37,7 @@ interface ContactCardProps {
 export function ContactCard(props: ContactCardProps) {
   const { lng, propertyId, title, contactName, contactPhone, contactWhatsapp, ownerType, owner, trackable = true, ownerId } = props
   const { profile, openSignIn } = useAuth()
-  const [messageOpen, setMessageOpen] = useState(false)
+  const { openForListing } = useChat()
   const isMine = !!profile && !!ownerId && profile.id === ownerId
   const [revealed, setRevealed] = useState(false)
   const [reportOpen, setReportOpen] = useState(false)
@@ -133,19 +133,11 @@ export function ContactCard(props: ContactCardProps) {
             </Button>
           ))}
 
-        {ownerId && trackable && !isMine && (
-          <>
-            <Button
-              size="lg"
-              variant="outline"
-              className="w-full"
-              onClick={() => (profile ? setMessageOpen(true) : openSignIn())}
-            >
-              <MessagesSquare className="w-5 h-5 me-2" />
-              {tr(lng, "راسل المعلن داخل عقار", "Message on Aqar")}
-            </Button>
-            <MessageOwnerDialog lng={lng} propertyId={propertyId} open={messageOpen} onOpenChange={setMessageOpen} />
-          </>
+        {trackable && !isMine && (
+          <Button size="lg" variant="outline" className="w-full" onClick={() => openForListing(propertyId, title)}>
+            <MessagesSquare className="w-5 h-5 me-2" />
+            {tr(lng, "راسل المعلن داخل عقار", "Message on Aqar")}
+          </Button>
         )}
 
         <p className="text-xs text-muted-foreground text-center">

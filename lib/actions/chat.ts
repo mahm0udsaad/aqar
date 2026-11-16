@@ -28,6 +28,18 @@ export interface ConversationSummary {
   unread: boolean
 }
 
+/** Who answers messages on listings the site team posted: SITE_INBOX_EMAIL, else the oldest admin. */
+async function siteInboxUserId(): Promise<string | null> {
+  const email = (process.env.SITE_INBOX_EMAIL || "").trim().toLowerCase()
+  const r = await query<{ id: string }>(
+    email
+      ? `SELECT id FROM user_profiles WHERE lower(email) = $1 LIMIT 1`
+      : `SELECT id FROM user_profiles WHERE role = 'admin' ORDER BY created_at ASC NULLS LAST LIMIT 1`,
+    email ? [email] : [],
+  )
+  return r.rows[0]?.id ?? null
+}
+
 function cleanBody(body: unknown) {
   return typeof body === "string" ? body.replace(/\r\n/g, "\n").trim().slice(0, 2000) : ""
 }
@@ -54,8 +66,10 @@ export async function startConversation(propertyId: string, body: string, lng = 
     `SELECT owner_id FROM properties WHERE id = $1 AND status = 'active' AND moderation_status = 'approved'`,
     [propertyId],
   )
-  const ownerId = p.rows[0]?.owner_id
-  if (!ownerId) return { success: false, message: tr(lng, "المراسلة غير متاحة لهذا الإعلان", "Messaging isn't available for this listing") }
+  if (!p.rows[0]) return { success: false, message: tr(lng, "الإعلان غير متاح", "This listing isn't available") }
+  // Listings added by the site team have no owner account: their messages go to the site inbox (an admin)
+  const ownerId = p.rows[0].owner_id || (await siteInboxUserId())
+  if (!ownerId) return { success: false, message: tr(lng, "المراسلة غير متاحة حالياً", "Messaging isn't available right now") }
   if (ownerId === user.id) return { success: false, message: tr(lng, "هذا إعلانك", "This is your own listing") }
   if (await tooManyMessages(user.id)) return { success: false, message: tr(lng, "أرسلت رسائل كثيرة، انتظر دقيقة", "Too many messages, wait a minute") }
 
@@ -125,7 +139,7 @@ export async function getConversationHeader(conversationId: string) {
     `SELECT c.id, c.property_id, c.buyer_id, c.owner_id,
             COALESCE(p.title_ar, p.title_en, p.title) AS property_title, p.thumbnail_url AS property_thumb, p.price AS property_price,
             p.property_type::text AS property_type, p.status::text AS property_status, p.moderation_status,
-            CASE WHEN c.buyer_id = $2 THEN COALESCE(NULLIF(o.office_name, ''), o.full_name, 'المعلن') ELSE COALESCE(b.full_name, 'مشتري') END AS other_name,
+            CASE WHEN c.buyer_id = $2 THEN CASE WHEN p.owner_id IS NULL THEN 'فريق عقار' ELSE COALESCE(NULLIF(o.office_name, ''), o.full_name, 'المعلن') END ELSE COALESCE(b.full_name, 'مشتري') END AS other_name,
             CASE WHEN c.buyer_id = $2 THEN 'buyer' ELSE 'owner' END AS i_am
        FROM conversations c
        JOIN properties p ON p.id = c.property_id
@@ -144,7 +158,7 @@ export async function getInbox(): Promise<ConversationSummary[] | null> {
     `SELECT c.id, c.property_id,
             COALESCE(p.title_ar, p.title_en, p.title) AS property_title, p.thumbnail_url AS property_thumb,
             p.price AS property_price, p.property_type::text AS property_type,
-            CASE WHEN c.buyer_id = $1 THEN COALESCE(NULLIF(o.office_name, ''), o.full_name, 'المعلن') ELSE COALESCE(b.full_name, 'مشتري') END AS other_name,
+            CASE WHEN c.buyer_id = $1 THEN CASE WHEN p.owner_id IS NULL THEN 'فريق عقار' ELSE COALESCE(NULLIF(o.office_name, ''), o.full_name, 'المعلن') END ELSE COALESCE(b.full_name, 'مشتري') END AS other_name,
             CASE WHEN c.buyer_id = $1 THEN 'buyer' ELSE 'owner' END AS i_am,
             (SELECT m.body FROM messages m WHERE m.conversation_id = c.id ORDER BY m.id DESC LIMIT 1) AS last_message,
             c.last_message_at,
@@ -175,4 +189,12 @@ export async function getMyUnreadCount(): Promise<number> {
     [userId],
   )
   return r.rows[0]?.n ?? 0
+}
+
+/** The signed-in buyer's existing conversation about a listing, if any (so the panel can continue it). */
+export async function findMyConversationForListing(propertyId: string): Promise<string | null> {
+  const user = await getCurrentUser()
+  if (!user || !UUID.test(propertyId)) return null
+  const r = await query<{ id: string }>(`SELECT id FROM conversations WHERE property_id = $1 AND buyer_id = $2`, [propertyId, user.id])
+  return r.rows[0]?.id ?? null
 }

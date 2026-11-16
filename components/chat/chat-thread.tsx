@@ -19,12 +19,17 @@ export function ChatThread({
   me,
   header,
   initialMessages,
+  embedded = false,
+  onBack,
 }: {
   lng: string
   conversationId: string
   me: string
   header: any
   initialMessages: ChatMessage[]
+  /** Inside the chat panel: fills the panel, back button returns to the panel's list */
+  embedded?: boolean
+  onBack?: () => void
 }) {
   const t = (ar: string, en: string) => tr(lng, ar, en)
   const { refresh } = useAuth()
@@ -79,11 +84,22 @@ export function ChatThread({
   const closed = header.property_status !== "active" || header.moderation_status !== "approved"
 
   return (
-    <div className="flex flex-col h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-7rem)] bg-background sm:rounded-lg sm:border overflow-hidden">
+    <div
+      className={cn(
+        "flex flex-col bg-background overflow-hidden",
+        embedded ? "h-full" : "h-[calc(100dvh-4rem)] sm:h-[calc(100dvh-7rem)] sm:rounded-lg sm:border",
+      )}
+    >
       <div className="flex items-center gap-3 p-3 border-b">
-        <Link href={`/${lng}/account/messages`} className="p-1" aria-label={t("رجوع للرسائل", "Back to messages")}>
-          <Back className="w-5 h-5" />
-        </Link>
+        {onBack ? (
+          <button type="button" onClick={onBack} className="p-1" aria-label={t("رجوع للرسائل", "Back to messages")}>
+            <Back className="w-5 h-5" />
+          </button>
+        ) : (
+          <Link href={`/${lng}/account/messages`} className="p-1" aria-label={t("رجوع للرسائل", "Back to messages")}>
+            <Back className="w-5 h-5" />
+          </Link>
+        )}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={assetUrl(header.property_thumb || "/placeholder.svg")} alt="" className="w-11 h-11 rounded object-cover bg-muted" />
         <div className="min-w-0 flex-1">

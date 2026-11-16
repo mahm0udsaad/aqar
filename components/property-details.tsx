@@ -426,6 +426,7 @@ export function PropertyDetails({ property, lng, isPublic = true, similar = [] }
               areaId={property.areas.id}
               areaName={property.areas.name}
               showAddButton={true}
+              lng={lng}
             />
           )}
         </div>

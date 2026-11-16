@@ -90,15 +90,8 @@ export function AuthProvider({
     }
   }, [profile?.id, refresh])
 
-  // New accounts: ask for owner/broker and phone once per browser session (not on admin pages)
-  useEffect(() => {
-    if (!profile?.needs_onboarding) return
-    if (typeof window !== "undefined" && window.location.pathname.includes("/admin")) return
-    try {
-      if (sessionStorage.getItem("onboarding-dismissed")) return
-    } catch {}
-    setOnboardingOpen(true)
-  }, [profile?.needs_onboarding])
+  // The owner/broker setup is only asked for when someone starts posting (requireAccount / the wizard),
+  // so visitors who only browse, save or message are never interrupted.
 
   const signOut = useCallback(async (lang?: string) => {
     setProfile(null)
@@ -150,14 +143,7 @@ export function AuthProvider({
           lng={lng}
           open={onboardingOpen}
           profile={profile}
-          onOpenChange={(open) => {
-            setOnboardingOpen(open)
-            if (!open) {
-              try {
-                sessionStorage.setItem("onboarding-dismissed", "1")
-              } catch {}
-            }
-          }}
+          onOpenChange={setOnboardingOpen}
           onSaved={async () => {
             const updated = await refresh()
             setOnboardingOpen(false)

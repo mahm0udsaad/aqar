@@ -10,6 +10,7 @@ import {
   Building2,
   Camera,
   Check,
+  Crop,
   ChevronLeft,
   ChevronRight,
   Home,
@@ -41,6 +42,7 @@ import {
   tr,
 } from "@/lib/listing-options"
 import { assetUrl, cn } from "@/lib/utils"
+import { PhotoEditorDialog } from "@/components/listing/photo-editor-dialog"
 
 export interface WizardCategory {
   id: string
@@ -200,40 +202,60 @@ export function ListingWizard({
     if (!titleTouched.current && suggested) setForm((f) => ({ ...f, title: suggested }))
   }, [suggested])
 
-  // ---- photos
-  const uploadFiles = useCallback(
-    async (files: File[]) => {
-      const room = MAX_PHOTOS - form.images.length - uploads.filter((u) => !u.error).length
-      const batch = files.slice(0, Math.max(0, room))
-      if (files.length > batch.length) toast.error(t(`الحد الأقصى ${MAX_PHOTOS} صورة`, `Up to ${MAX_PHOTOS} photos`))
-      for (const original of batch) {
-        const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`
-        const preview = URL.createObjectURL(original)
-        setUploads((u) => [...u, { key, name: original.name, preview, progress: 10 }])
-        try {
-          const file = await compressImage(original)
-          setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: 45 } : x)))
-          const fd = new FormData()
-          fd.append("file", file)
-          fd.append("lng", lng)
-          const res = await uploadListingPhoto(fd)
-          if (!res.success) throw new Error(res.message)
-          setForm((f) => ({ ...f, images: [...f.images, { url: res.url, thumbnailUrl: res.thumbnailUrl }] }))
-          setUploads((u) => u.filter((x) => x.key !== key))
-          URL.revokeObjectURL(preview)
-        } catch (e: any) {
-          setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: 100, error: e?.message || t("فشل الرفع", "Upload failed") } : x)))
-        }
+  // ---- photos: every new photo passes through the editor (crop / shape / rotate), then uploads
+  const [editQueue, setEditQueue] = useState<File[]>([])
+  const [editSrc, setEditSrc] = useState<string | null>(null)
+  const [editingExisting, setEditingExisting] = useState<{ url: string; src: string } | null>(null)
+
+  useEffect(() => {
+    if (!editQueue.length) return setEditSrc(null)
+    const url = URL.createObjectURL(editQueue[0])
+    setEditSrc(url)
+    return () => URL.revokeObjectURL(url)
+  }, [editQueue])
+
+  /** Uploads one photo; with replaceUrl it takes the place of that already-uploaded photo. */
+  const uploadOne = useCallback(
+    async (original: File, replaceUrl?: string) => {
+      const key = `${Date.now()}-${Math.random().toString(36).slice(2)}`
+      const preview = URL.createObjectURL(original)
+      setUploads((u) => [...u, { key, name: original.name, preview, progress: 10 }])
+      try {
+        const file = await compressImage(original)
+        setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: 45 } : x)))
+        const fd = new FormData()
+        fd.append("file", file)
+        fd.append("lng", lng)
+        const res = await uploadListingPhoto(fd)
+        if (!res.success) throw new Error(res.message)
+        const photo = { url: res.url, thumbnailUrl: res.thumbnailUrl }
+        setForm((f) => ({
+          ...f,
+          images: replaceUrl && f.images.some((i) => i.url === replaceUrl) ? f.images.map((i) => (i.url === replaceUrl ? photo : i)) : [...f.images, photo],
+        }))
+        setUploads((u) => u.filter((x) => x.key !== key))
+        URL.revokeObjectURL(preview)
+      } catch (e: any) {
+        setUploads((u) => u.map((x) => (x.key === key ? { ...x, progress: 100, error: e?.message || t("فشل الرفع", "Upload failed") } : x)))
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [form.images.length, uploads, lng],
+    [lng],
   )
+
+  const queueFiles = (files: File[]) => {
+    const room = MAX_PHOTOS - form.images.length - uploads.filter((u) => !u.error).length - editQueue.length
+    const batch = files.slice(0, Math.max(0, room))
+    if (files.length > batch.length) toast.error(t(`الحد الأقصى ${MAX_PHOTOS} صورة`, `Up to ${MAX_PHOTOS} photos`))
+    if (batch.length) setEditQueue((q) => [...q, ...batch])
+  }
+
+  const nextInQueue = () => setEditQueue((q) => q.slice(1))
 
   const { getRootProps, getInputProps, isDragActive, open: openFilePicker } = useDropzone({
     accept: { "image/*": [".jpg", ".jpeg", ".png", ".webp", ".heic", ".heif"] },
     multiple: true,
-    onDrop: (accepted) => uploadFiles(accepted),
+    onDrop: (accepted) => queueFiles(accepted),
   })
 
   const movePhoto = (from: number, to: number) =>
@@ -277,7 +299,7 @@ export function ListingWizard({
     }
     if (s === 3) {
       if (form.images.length < MIN_PHOTOS) e.images = t(`أضف ${MIN_PHOTOS} صور على الأقل`, `Add at least ${MIN_PHOTOS} photos`)
-      if (uploads.some((u) => !u.error)) e.images = t("انتظر حتى يكتمل رفع الصور", "Wait for the photos to finish uploading")
+      if (uploads.some((u) => !u.error) || editQueue.length) e.images = t("انتظر حتى يكتمل رفع الصور", "Wait for the photos to finish uploading")
     }
     if (s === 4) {
       if (form.title.trim().length < 8) e.title = t("العنوان قصير (8 أحرف على الأقل)", "Title is too short (at least 8 characters)")
@@ -640,7 +662,7 @@ export function ListingWizard({
                 <Camera className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
                 <div className="font-semibold">{t("اضغط لاختيار الصور أو اسحبها هنا", "Tap to choose photos or drag them here")}</div>
                 <div className="text-sm text-muted-foreground mt-1">
-                  {t(`من ${MIN_PHOTOS} إلى ${MAX_PHOTOS} صور. الصورة الأولى هي الغلاف. صوّر بالعرض وفي إضاءة جيدة.`, `${MIN_PHOTOS} to ${MAX_PHOTOS} photos. The first one is the cover. Landscape, in good light.`)}
+                  {t(`من ${MIN_PHOTOS} إلى ${MAX_PHOTOS} صور. الصورة الأولى هي الغلاف. يمكنك قص كل صورة واختيار أفقي أو رأسي قبل رفعها.`, `${MIN_PHOTOS} to ${MAX_PHOTOS} photos. The first one is the cover. You can crop each photo and pick landscape or portrait before it uploads.`)}
                 </div>
               </div>
               {fieldError("images")}
@@ -665,6 +687,9 @@ export function ListingWizard({
                           {t("اجعلها الغلاف", "Make cover")}
                         </Button>
                       )}
+                      <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-white" onClick={() => setEditingExisting({ url: img.url, src: assetUrl(img.url) })} aria-label={t("قص وتعديل", "Crop and edit")} title={t("قص وتعديل", "Crop and edit")}>
+                        <Crop className="w-4 h-4" />
+                      </Button>
                       <Button type="button" size="icon" variant="ghost" className="h-8 w-8 text-white" onClick={() => setForm((f) => ({ ...f, images: f.images.filter((_, j) => j !== i) }))} aria-label={t("حذف", "Remove")}>
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -702,6 +727,39 @@ export function ListingWizard({
                   </button>
                 )}
               </div>
+              <PhotoEditorDialog
+                lng={lng}
+                src={editSrc}
+                fileName={editQueue[0]?.name}
+                progressLabel={editQueue.length > 1 ? t(`${editQueue.length} صور متبقية`, `${editQueue.length} left`) : undefined}
+                onApply={(file) => {
+                  uploadOne(file)
+                  nextInQueue()
+                }}
+                onSkip={() => {
+                  if (editQueue[0]) uploadOne(editQueue[0])
+                  nextInQueue()
+                }}
+                onSkipAll={
+                  editQueue.length > 1
+                    ? () => {
+                        editQueue.forEach((f) => uploadOne(f))
+                        setEditQueue([])
+                      }
+                    : undefined
+                }
+                onCancel={() => setEditQueue([])}
+              />
+              <PhotoEditorDialog
+                lng={lng}
+                src={editingExisting?.src || null}
+                onApply={(file) => {
+                  if (editingExisting) uploadOne(file, editingExisting.url)
+                  setEditingExisting(null)
+                }}
+                onSkip={() => setEditingExisting(null)}
+                onCancel={() => setEditingExisting(null)}
+              />
               <p className="text-sm text-muted-foreground">
                 {t(`${form.images.length} من ${MIN_PHOTOS} صور مطلوبة على الأقل`, `${form.images.length} of at least ${MIN_PHOTOS} photos`)}
               </p>

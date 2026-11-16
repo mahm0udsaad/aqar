@@ -86,14 +86,15 @@ function StarRating({ value, size = "sm" }: { value: number, size?: "sm" | "md" 
 export function AreaRatingsDisplay({ 
   areaId, 
   areaName, 
-  showAddButton = true 
-}: AreaRatingsDisplayProps) {
+  showAddButton = true,
+  lng,
+}: AreaRatingsDisplayProps & { lng?: string }) {
   const [ratingsSummary, setRatingsSummary] = useState<RatingSummary | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
 
-  const lang = typeof document !== 'undefined' ? document.documentElement.lang : 'en'
-  const isAr = lang?.startsWith('ar')
+  // language comes from the page (reading <html lang> differed between server and browser)
+  const isAr = (lng ?? 'ar').startsWith('ar')
 
   const loadRatingsSummary = async () => {
     setIsLoading(true)

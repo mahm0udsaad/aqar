@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { AuthProvider } from "@/lib/auth/auth-context"
 import { ComparisonProvider } from "@/contexts/comparison-context"
 import { FavoritesProvider } from "@/contexts/favorites-context"
+import { ChatProvider } from "@/components/chat/chat-dock"
 import { Toaster } from "@/components/ui/toaster"
 import { Toaster as SonnerToaster } from "@/components/ui/sonner"
 import { Footer } from "@/components/footer"
@@ -72,9 +73,11 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AuthProvider lng={lng} devLogin={process.env.NODE_ENV !== "production" && process.env.AUTH_DEV_LOGIN === "1"}>
             <FavoritesProvider>
-              <ComparisonProvider>
-                {children}
-              </ComparisonProvider>
+              <ChatProvider lng={lng}>
+                <ComparisonProvider>
+                  {children}
+                </ComparisonProvider>
+              </ChatProvider>
             </FavoritesProvider>
           </AuthProvider>
           <SonnerToaster />
