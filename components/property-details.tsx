@@ -8,8 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   formatPriceDetailed,
-  formatPricePerMeter,
-} from "@/lib/utils"
+  formatPricePerMeter, assetUrl } from "@/lib/utils"
 import {
   Phone,
   MessageCircle,
@@ -29,9 +28,9 @@ import { PropertyGallery } from "@/components/property-gallery"
 import { ShareModal } from "@/components/share-modal"
 import { LoveButton } from "@/components/love-button"
 import { PropertyComparisonButton } from "@/components/property-comparison-button"
-import { PropertyWithDetails } from "@/lib/supabase/queries"
+import type { PropertyWithDetails } from "@/lib/supabase/queries"
 import type { Locale } from "@/lib/i18n/config"
-import { getProperties } from "@/lib/supabase/queries"
+import { fetchProperties as getProperties } from "@/lib/actions/public-data"
 import { PropertyImage } from "@/lib/types"
 import { AreaRatingsDisplay } from "@/components/area-ratings-display"
 
@@ -151,10 +150,10 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                   <div className="relative group">
                     <video 
                       key={videos[currentVideoIndex].id}
-                      src={videos[currentVideoIndex].url} 
+                      src={assetUrl(videos[currentVideoIndex].url)} 
                       controls 
                       className="w-full h-[400px] object-cover rounded-lg border shadow-lg"
-                      poster={videos[currentVideoIndex].thumbnail_url}
+                      poster={assetUrl(videos[currentVideoIndex].thumbnail_url)}
                     />
                     
                     {/* Navigation Arrows - Only show if multiple videos */}
@@ -205,7 +204,7 @@ export function PropertyDetails({ property, lng }: PropertyDetailsProps) {
                           >
                             {video.thumbnail_url ? (
                               <img
-                                src={video.thumbnail_url}
+                                src={assetUrl(video.thumbnail_url)}
                                 alt={`Video ${index + 1}`}
                                 className="w-full h-full object-cover"
                               />

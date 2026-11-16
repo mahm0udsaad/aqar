@@ -134,3 +134,16 @@ export function getTimeAgo(dateString: string): string {
   const diffInMonths = Math.floor(diffInDays / 30)
   return `${diffInMonths} months ago`
 }
+
+/**
+ * Prefix root-relative asset URLs ("/images/x.jpg") with the app's basePath ("/aqar"),
+ * which next/image (unoptimized), <img> and CSS backgrounds do not do on their own.
+ * Absolute URLs, blob:/data: URLs and already-prefixed paths are returned unchanged.
+ */
+export function assetUrl<T extends string | null | undefined>(url: T): T {
+  const base = process.env.NEXT_PUBLIC_BASE_PATH || ""
+  if (!base || !url || typeof url !== "string") return url
+  if (!url.startsWith("/") || url.startsWith("//")) return url
+  if (url === base || url.startsWith(`${base}/`)) return url
+  return `${base}${url}` as T
+}

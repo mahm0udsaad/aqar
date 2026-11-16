@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
@@ -557,7 +558,7 @@ function SortableImageItem({
             </div>
           )}
           <img
-            src={image.url}
+            src={assetUrl(image.url)}
             alt={image.alt_text || `Property image ${image.order_index + 1}`}
             className="w-full h-48 object-cover transition-transform group-hover:scale-105"
             onLoad={() => setImageLoaded(true)}

@@ -46,8 +46,8 @@ export async function generateMetadata({
     },
     alternates: {
       languages: {
-        en: "/en",
-        ar: "/ar",
+        en: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/en`,
+        ar: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/ar`,
       },
     },
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://example.com"),

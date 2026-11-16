@@ -7,8 +7,7 @@ import { formatPrice } from "@/lib/utils"
 import { Star, Eye, Edit } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { ToggleFeaturedButton } from "../properties/components/toggle-featured-button"
 import { FeaturedReorderTable } from "./components/featured-reorder-table"
@@ -23,7 +22,7 @@ interface PageProps {
 
 export default async function AdminFeaturedPage({ params }: PageProps) {
   const { lng } = await params
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
   const dict = (await getDictionary(lng)) as unknown as Dictionary
 
   // Fetch featured properties

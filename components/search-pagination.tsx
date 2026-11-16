@@ -1,8 +1,8 @@
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
-import { buildSearchUrl } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
+import { buildSearchUrl } from "@/lib/search-params"
 import Link from "next/link"
 
 interface PaginationInfo {

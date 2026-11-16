@@ -1,9 +1,9 @@
 "use server"
 
+import { getAdminUser } from "@/lib/auth/session"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import sharp from "sharp"
 
@@ -16,7 +16,7 @@ async function uploadImageToStorage(
   index: number
 ): Promise<{ originalUrl: string; thumbnailUrl: string } | null> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createDb();
     
     // Convert File to Buffer
     const arrayBuffer = await imageFile.arrayBuffer();
@@ -143,26 +143,11 @@ export async function createProperty(
   formData: FormData
 ): Promise<PropertyActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { message: "Authentication required", success: false }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
-      return { message: "Admin access required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Extract and validate form data
@@ -431,7 +416,7 @@ export async function createProperty(
 // Helper function to delete image from storage
 async function deleteImageFromStorage(url: string): Promise<void> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     // Extract file path from URL
     const urlParts = url.split('/')
@@ -483,26 +468,11 @@ export async function updateProperty(
   formData: FormData
 ): Promise<PropertyActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { message: "Authentication required", success: false }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
-      return { message: "Admin access required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Extract and validate form data (same as create)
@@ -841,25 +811,10 @@ export async function updateProperty(
 
 export async function deleteProperty(id: string): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 
@@ -897,25 +852,10 @@ export async function deleteProperty(id: string): Promise<{ success: boolean; me
 
 export async function togglePropertyFeatured(id: string, featured: boolean): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 
@@ -993,26 +933,11 @@ export async function togglePropertyFeatured(id: string, featured: boolean): Pro
 
 export async function updatePropertyOrder(updates: { id: string; order_index: number }[]): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createDb();
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session) {
-      return { success: false, message: "Authentication required" };
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle();
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
-      return { success: false, message: "Admin access required" };
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Perform batch update using individual update operations
@@ -1046,25 +971,10 @@ export async function setMainFeatured(
   isMain: boolean
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 

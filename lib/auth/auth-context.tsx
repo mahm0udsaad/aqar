@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useEffect, useState, useCallback } from "react"
-import type { User } from "@supabase/supabase-js"
-import { supabase } from "@/lib/supabase/client"
+import { createContext, useCallback, useContext, useEffect, useState } from "react"
+import { signOutAction } from "@/lib/auth/actions"
 
-interface UserProfile {
+const BASE_PATH = process.env.NEXT_PUBLIC_BASE_PATH || ""
+
+export interface UserProfile {
   id: string
   email: string
   full_name: string | null
@@ -14,53 +15,27 @@ interface UserProfile {
 }
 
 interface AuthContextType {
-  user: User | null
+  /** Same object as `profile`; kept for components written against the old Supabase user. */
+  user: UserProfile | null
   profile: UserProfile | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error: any }>
-  signUp: (email: string, password: string, fullName?: string, phone?: string) => Promise<{ error: any }>
-  signOut: () => Promise<void>
   isAdmin: boolean
+  signOut: (lng?: string) => Promise<void>
+  refresh: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loading, setLoading] = useState(true)
 
-  // Memoize fetchProfile to prevent unnecessary re-renders
-  const fetchProfile = useCallback(async (userId: string) => {
+  const refresh = useCallback(async () => {
     try {
-      console.log("Fetching profile for user:", userId)
-      
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("id", userId)
-        .maybeSingle()
-
-      if (error) {
-        console.error("Error fetching profile:", {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code
-        })
-        
-        setProfile(null)
-      } else {
-        if (!data) {
-          // No profile row; keep null and rely on role checks that fall back to auth metadata
-          setProfile(null)
-        } else {
-          console.log("Profile fetched successfully:", data)
-          setProfile(data)
-        }
-      }
-    } catch (error) {
-      console.error("Unexpected error fetching profile:", error)
+      const res = await fetch(`${BASE_PATH}/api/me`, { cache: "no-store", credentials: "same-origin" })
+      const json = res.ok ? await res.json() : { user: null }
+      setProfile(json.user ?? null)
+    } catch {
       setProfile(null)
     } finally {
       setLoading(false)
@@ -68,130 +43,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
-    let isMounted = true
+    refresh()
+  }, [refresh])
 
-    // Get initial session
-    const getInitialSession = async () => {
-      try {
-        console.log("Getting initial session...")
-        const { data: { session }, error } = await supabase.auth.getSession()
-        
-        if (error) {
-          console.error("Error getting session:", error)
-          if (isMounted) {
-            setLoading(false)
-          }
-          return
-        }
+  const signOut = useCallback(async (lng?: string) => {
+    setProfile(null)
+    await signOutAction(lng)
+  }, [])
 
-        if (!isMounted) return
-
-        console.log("Initial session:", session?.user?.id ? "User found" : "No user")
-        setUser(session?.user ?? null)
-        
-        if (session?.user) {
-          await fetchProfile(session.user.id)
-        } else {
-          setProfile(null)
-          setLoading(false)
-        }
-      } catch (error) {
-        console.error("Error in getInitialSession:", error)
-        if (isMounted) {
-          setLoading(false)
-        }
-      }
-    }
-
-    getInitialSession()
-
-    // Listen for auth changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (!isMounted) return
-
-      console.log("Auth state change:", event, session?.user?.id ? "User present" : "No user")
-      
-      setUser(session?.user ?? null)
-      
-      if (session?.user) {
-        // Only fetch profile if user ID is different or profile is null
-        if (!profile || profile.id !== session.user.id) {
-          await fetchProfile(session.user.id)
-        } else {
-          // User is the same, just make sure loading is false
-          setLoading(false)
-        }
-      } else {
-        setProfile(null)
-        setLoading(false)
-      }
-    })
-
-    return () => {
-      isMounted = false
-      subscription.unsubscribe()
-    }
-  }, [fetchProfile, profile?.id]) // Add profile?.id to dependencies
-
-  const signIn = async (email: string, password: string) => {
-    setLoading(true)
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
-      return { error }
-    } catch (error) {
-      console.error("Error signing in:", error)
-      return { error }
-    }
-  }
-
-  const signUp = async (email: string, password: string, fullName?: string, phone?: string) => {
-    setLoading(true)
-    try {
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-            phone,
-            role: "user",
-          },
-        },
-      })
-      return { error }
-    } catch (error) {
-      console.error("Error signing up:", error)
-      return { error }
-    }
-  }
-
-  const signOut = async () => {
-    setLoading(true)
-    try {
-      await supabase.auth.signOut()
-    } catch (error) {
-      console.error("Error signing out:", error)
-    }
-  }
-
-  const isAdmin = profile?.role === "admin"
-
-  const value = {
-    user,
-    profile,
-    loading,
-    signIn,
-    signUp,
-    signOut,
-    isAdmin,
-  }
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
+  return (
+    <AuthContext.Provider
+      value={{ user: profile, profile, loading, isAdmin: profile?.role === "admin", signOut, refresh }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
 }
 
 export function useAuth() {

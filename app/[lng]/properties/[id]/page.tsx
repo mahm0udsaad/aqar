@@ -1,3 +1,4 @@
+import { assetUrl } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import { getPropertyById } from "@/lib/supabase/queries"
 import { PropertyDetails } from "@/components/property-details"
@@ -40,7 +41,7 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
   ]
     .filter(Boolean)
     .join(", ");
-  const imageUrl = property.thumbnail_url || property.property_images?.[0]?.url || '/placeholder.svg';
+  const imageUrl = assetUrl(property.thumbnail_url || property.property_images?.[0]?.url || '/placeholder.svg');
 
   return {
     title: title,
@@ -57,7 +58,7 @@ export async function generateMetadata({ params }: { params: { id: string; lng: 
       }],
       type: 'website',
       locale: lng,
-      url: `/${lng}/properties/${id}`,
+      url: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/${lng}/properties/${id}`,
     },
     twitter: {
       card: 'summary_large_image',

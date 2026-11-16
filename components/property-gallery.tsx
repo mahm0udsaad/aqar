@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState } from "react"
 import Image from "next/image"
@@ -32,7 +33,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
         {/* Main Image */}
         <div className="relative h-96 overflow-hidden rounded-lg cursor-pointer" onClick={() => setIsModalOpen(true)}>
           <Image
-            src={images[selectedImage]?.url || "/placeholder.svg?height=400&width=600"}
+            src={assetUrl(images[selectedImage]?.url || "/placeholder.svg?height=400&width=600")}
             alt={images[selectedImage]?.alt || title}
             fill
             className="object-cover"
@@ -76,7 +77,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                 }`}
                 onClick={() => setSelectedImage(index)}
               >
-                <Image src={image.url || "/placeholder.svg"} alt={image.alt} fill className="object-cover" />
+                <Image src={assetUrl(image.url || "/placeholder.svg")} alt={image.alt} fill className="object-cover" />
               </div>
             ))}
           </div>
@@ -100,7 +101,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
             {/* Main image container - full screen */}
             <div className="relative w-full h-[90vh] flex items-center justify-center">
               <Image
-                src={images[selectedImage]?.url || "/placeholder.svg"}
+                src={assetUrl(images[selectedImage]?.url || "/placeholder.svg")}
                 alt={images[selectedImage]?.alt || title}
                 fill
                 className="object-contain"
@@ -154,7 +155,7 @@ export function PropertyGallery({ images, title }: PropertyGalleryProps) {
                       onClick={() => setSelectedImage(index)}
                     >
                       <Image 
-                        src={image.url || "/placeholder.svg"} 
+                        src={assetUrl(image.url || "/placeholder.svg")} 
                         alt={image.alt} 
                         fill 
                         className="object-cover" 

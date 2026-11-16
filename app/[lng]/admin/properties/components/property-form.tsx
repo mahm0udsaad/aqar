@@ -921,7 +921,7 @@ export function PropertyForm({ categories, areas, lng, mode, property, dict, dic
                         <DialogTitle>{activeDict.admin.howToGetIframeTitle}</DialogTitle>
                       </DialogHeader>
                       <div className="aspect-video w-full">
-                        <video src="https://hvlbyykohjeavnaqgiix.supabase.co/storage/v1/object/public/property-videos/videos/properties/how-to-get-iframe.mp4" controls className="w-full h-full rounded-md" />
+                        <video src={`${process.env.NEXT_PUBLIC_STORAGE_PUBLIC_PREFIX || "/uploads"}/property-videos/videos/properties/how-to-get-iframe.mp4`} controls className="w-full h-full rounded-md" />
                       </div>
                     </DialogContent>
                   </Dialog>

@@ -3,7 +3,7 @@ import { PropertyForm } from "../../components/property-form"
 import type { Database } from "@/lib/supabase/types"
 import { getAreas } from "@/lib/actions/areas"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
-import { createClient } from "@/lib/supabase/server"
+import { createDb } from "@/lib/db"
 
 interface PageProps {
   params: Promise<{ lng: string; id: string }>
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function EditPropertyPage({ params }: PageProps) {
   const { lng, id } = await params
-  const supabase = await createClient()
+  const supabase = createDb()
   const dict = await getDictionary(lng as any)
   const dictEn = await getDictionary("en" as any)
   const dictAr = await getDictionary("ar" as any)

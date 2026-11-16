@@ -1,9 +1,9 @@
 "use server"
 
+import { getAdminUser } from "@/lib/auth/session"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 
 // Area form validation schema
@@ -41,24 +41,13 @@ export async function createArea(
   formData: FormData
 ): Promise<AreaActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     console.log("createArea called with formData:", Object.fromEntries(formData.entries()))
 
-    // Check if user is authenticated
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    console.log("Session:", session ? "exists" : "no session")
-
-    if (!session) {
-      console.log("No session found")
-      return { message: "Authentication required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
-
-    // For now, let's skip the admin check to debug
-    // We can add it back later once the basic functionality works
-    console.log("User authenticated, proceeding...")
 
     // Extract and validate form data
     const rawFormData = {
@@ -178,25 +167,11 @@ export async function updateArea(
   formData: FormData
 ): Promise<AreaActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { message: "Authentication required", success: false }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    if (!profile || profile.role !== "admin") {
-      return { message: "Admin access required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Extract and validate form data
@@ -300,24 +275,10 @@ export async function updateArea(
 
 export async function deleteArea(id: string): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    if (!profile || profile.role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 
@@ -358,29 +319,15 @@ export async function updateAreasOrder(
   areas: { id: string; order_index: number }[]
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
     // Validate input
     if (!areas || areas.length === 0) {
       return { success: false, message: "No areas provided" }
     }
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single()
-
-    if (!profile || profile.role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 
@@ -441,7 +388,7 @@ export async function updateAreasOrder(
 // Helper function to get all active areas
 export async function getAreas() {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     const { data: areas, error } = await supabase
       .from("areas")
@@ -464,7 +411,7 @@ export async function getAreas() {
 // Helper function to get area by ID
 export async function getAreaById(id: string) {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     const { data: area, error } = await supabase
       .from("areas")

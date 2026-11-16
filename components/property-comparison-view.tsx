@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useEffect, useState } from "react"
 import Image from "next/image"
@@ -115,7 +116,7 @@ export function PropertyComparisonView({ lng, dict }: PropertyComparisonViewProp
               <Link href={`/${lng}/properties/${property.id}`}>
                 <div className="relative h-32 mb-3 overflow-hidden rounded cursor-pointer">
                   <Image
-                    src={property.thumbnail_url || property.property_images?.[0]?.url || "/placeholder.svg"}
+                    src={assetUrl(property.thumbnail_url || property.property_images?.[0]?.url || "/placeholder.svg")}
                     alt={property.title}
                     fill
                     className="object-cover"

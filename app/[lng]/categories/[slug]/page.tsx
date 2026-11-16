@@ -1,3 +1,4 @@
+import { assetUrl } from "@/lib/utils"
 import { notFound } from "next/navigation"
 import type { Locale } from "@/lib/i18n/config"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
@@ -42,7 +43,7 @@ export async function generateMetadata({ params }: { params: { lng: Locale; slug
   
   const title = `${categoryName} Properties for Sale & Rent in Egypt`;
   const description = `Browse ${properties.length} ${categoryName.toLowerCase()} properties in Egypt. ${categoryDescription}`;
-  const imageUrl = category.image_url || '/categories/default.png';
+  const imageUrl = assetUrl(category.image_url || '/categories/default.png');
 
   return {
     title: title,
@@ -58,7 +59,7 @@ export async function generateMetadata({ params }: { params: { lng: Locale; slug
       }],
       type: 'website',
       locale: lng,
-      url: `/${lng}/categories/${slug}`,
+      url: `${process.env.NEXT_PUBLIC_BASE_PATH || ""}/${lng}/categories/${slug}`,
     },
     twitter: {
       card: 'summary_large_image',
@@ -124,7 +125,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
             <div 
               className="w-full h-full bg-cover bg-center bg-no-repeat"
               style={{
-                backgroundImage: `url('${imagePath}')`,
+                backgroundImage: `url('${assetUrl(imagePath)}')`,
               }}
             />
             {/* Gradient overlay */}
@@ -167,7 +168,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
                 <div 
                   className="w-12 h-12 bg-cover bg-center rounded-full"
                   style={{
-                    backgroundImage: `url('${imagePath}')`,
+                    backgroundImage: `url('${assetUrl(imagePath)}')`,
                   }}
                 />
               </div>
@@ -198,7 +199,7 @@ export default async function CategoryPage({ params: { lng, slug } }: CategoryPa
                         <div 
                           className="w-full h-full bg-cover bg-center bg-no-repeat transition-transform duration-300 group-hover:scale-110"
                           style={{
-                            backgroundImage: `url('${relatedImagePath}')`,
+                            backgroundImage: `url('${assetUrl(relatedImagePath)}')`,
                           }}
                         />
                         {/* Gradient overlay */}

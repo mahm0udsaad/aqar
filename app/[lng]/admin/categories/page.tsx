@@ -3,8 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Plus, GripVertical } from "lucide-react"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { CategoryGrid } from "./components/category-grid"
 import { CategoryDialog } from "./components/category-dialog"
@@ -17,7 +16,7 @@ interface PageProps {
 
 export default async function AdminCategoriesPage({ params }: PageProps) {
   const { lng } = await params
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
   const dict = await getDictionary(lng)
 
   // Fetch categories with property counts

@@ -1,14 +1,8 @@
-import { UserSignupForm } from "@/components/auth/user-signup-form"
-import { getDictionary } from "@/lib/i18n/get-dictionary"
+import { redirect } from "next/navigation"
 import type { Locale } from "@/lib/i18n/config"
 
-interface SignupPageProps {
-  params: Promise<{ lng: Locale }>
-}
-
-export default async function SignupPage({ params }: SignupPageProps) {
+// Accounts are created on first Google sign-in, so sign-up is the same page as login.
+export default async function SignupPage({ params }: { params: Promise<{ lng: Locale }> }) {
   const { lng } = await params
-  const dict = await getDictionary(lng)
-
-  return <UserSignupForm lng={lng} dict={dict} />
+  redirect(`/${lng}/auth/login`)
 }

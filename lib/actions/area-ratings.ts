@@ -1,8 +1,9 @@
 "use server"
 
+import { getCurrentUser } from "@/lib/auth/session"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { createDb } from "@/lib/db"
 import { cookies, headers } from "next/headers"
 import type { Database } from "@/lib/supabase/types"
 
@@ -68,10 +69,10 @@ export async function createOrUpdateAreaRating(
   formData: FormData
 ): Promise<AreaRatingActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     
     // Get client IP for anonymous users
     const hdrs = await headers()
@@ -216,7 +217,7 @@ export async function createOrUpdateAreaRating(
 // Get area ratings summary
 export async function getAreaRatingsSummary(areaId: string) {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     const { data, error } = await supabase
       .from("area_ratings_summary")
@@ -239,10 +240,10 @@ export async function getAreaRatingsSummary(areaId: string) {
 // Get user's rating for an area
 export async function getUserAreaRating(areaId: string) {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       // For anonymous users, check by IP
@@ -292,7 +293,7 @@ export async function getUserAreaRating(areaId: string) {
 // Get all ratings for an area (for detailed view)
 export async function getAreaRatings(areaId: string, limit = 10, offset = 0) {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     const { data, error } = await supabase
       .from("area_ratings")
@@ -316,10 +317,10 @@ export async function getAreaRatings(areaId: string, limit = 10, offset = 0) {
 // Delete area rating (for authenticated users only)
 export async function deleteAreaRating(ratingId: string): Promise<AreaRatingActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
     
     // Get current user
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = await getCurrentUser()
     
     if (!user) {
       return {

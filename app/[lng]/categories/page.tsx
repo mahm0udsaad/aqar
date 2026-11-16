@@ -1,3 +1,4 @@
+import { assetUrl } from "@/lib/utils"
 import type { Locale } from "@/lib/i18n/config"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Navbar } from "@/components/navbar"
@@ -8,6 +9,9 @@ import { getCategories, getProperties } from "@/lib/supabase/queries"
 import Link from "next/link"
 import { ArrowRight, MapPin } from "lucide-react"
 import { Button } from "@/components/ui/button"
+
+// Listings change at any time: always render with fresh data from the database
+export const dynamic = "force-dynamic"
 
 interface CategoriesPageProps {
   params: Promise<{ lng: Locale }>
@@ -55,7 +59,7 @@ export default async function CategoriesPage({ params }: CategoriesPageProps) {
                     <div 
                       className="w-full h-full bg-cover bg-center bg-no-repeat transition-all duration-700 group-hover:scale-105 group-hover:brightness-110"
                       style={{
-                        backgroundImage: `url('${imagePath}')`,
+                        backgroundImage: `url('${assetUrl(imagePath)}')`,
                       }}
                     />
                     {/* Enhanced gradient overlay */}

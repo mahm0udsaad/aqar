@@ -1,3 +1,4 @@
+import { assetUrl } from "@/lib/utils"
 export const revalidate = 0; // Ensure dynamic rendering
 
 import Image from "next/image"
@@ -176,7 +177,7 @@ export default async function HomePage({ params }: HomePageProps) {
                   >
                     <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                       <Image
-                        src={property.property_images?.[0]?.url || "/placeholder.svg"}
+                        src={assetUrl(property.property_images?.[0]?.url || "/placeholder.svg")}
                         alt={(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || "Property"}
                         width={80}
                         height={80}
@@ -224,7 +225,7 @@ export default async function HomePage({ params }: HomePageProps) {
                   >
                     <div className="w-20 h-20 relative rounded-lg overflow-hidden flex-shrink-0">
                       <Image
-                        src={property.property_images?.[0]?.url || "/placeholder.svg"}
+                        src={assetUrl(property.property_images?.[0]?.url || "/placeholder.svg")}
                         alt={(lng === "ar" ? (property as any).title_ar : (property as any).title_en) || "Property"}
                         width={80}
                         height={80}

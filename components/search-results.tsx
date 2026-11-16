@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Search, MapPin, Home, DollarSign, X } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
-import { buildSearchUrl } from "@/lib/actions/search"
+import { buildSearchUrl } from "@/lib/search-params"
 import Link from "next/link"
 
 interface Area {

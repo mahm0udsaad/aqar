@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useEffect, useState, useTransition } from "react"
 import { Button } from "@/components/ui/button"
@@ -193,7 +194,7 @@ export function AreaDialog({ area, open, onOpenChange, lng, dict }: AreaDialogPr
                 <div className="w-full sm:w-24 flex-shrink-0">
                   <div className="relative">
                     <img 
-                      src={formData.imageUrl} 
+                      src={assetUrl(formData.imageUrl)} 
                       alt="Area preview" 
                       className="w-full sm:w-24 h-16 sm:h-16 rounded-md object-cover border"
                     />

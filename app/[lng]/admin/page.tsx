@@ -1,14 +1,13 @@
 import { AdminHeader } from "@/components/admin/admin-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Building, FolderOpen, Star, TrendingUp } from "lucide-react"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import { Locale } from "@/lib/i18n/config"
 
 export default async function AdminDashboard({ params: { lng } }: { params: { lng: Locale } }) {
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
   const dict = await getDictionary(lng)
 
   // Fetch real data from database

@@ -9,8 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { X } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
-import { buildSearchUrl } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
+import { buildSearchUrl } from "@/lib/search-params"
 
 interface Area {
   id: string

@@ -6,13 +6,12 @@ import { useState } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { PropertyWithDetails } from "@/lib/supabase/queries"
+import type { PropertyWithDetails } from "@/lib/supabase/queries"
 import type { Locale } from "@/lib/i18n/config"
 import {
   formatPrice,
   formatPriceDetailed,
-  formatPricePerMeter,
-} from "@/lib/utils"
+  formatPricePerMeter, assetUrl } from "@/lib/utils"
 import { LoveButton } from "@/components/love-button"
 import { ShareModal } from "@/components/share-modal"
 import { PropertyComparisonButton } from "@/components/property-comparison-button"
@@ -80,7 +79,7 @@ export function PropertyCard({
               <div className="absolute inset-0 bg-gray-200 animate-pulse"></div> // Simple skeleton
             )}
             <Image
-              src={property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400"}
+              src={assetUrl(property.thumbnail_url || mainImage?.url || "/placeholder.svg?height=300&width=400")}
               alt={mainImage?.alt_text || displayTitle || "Property"}
               fill
               className={`object-cover transition-transform duration-300 group-hover:scale-105 ${

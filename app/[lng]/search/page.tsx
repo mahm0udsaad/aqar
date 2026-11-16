@@ -7,6 +7,9 @@ import { serverSearchProperties, type ServerSearchParams } from "@/lib/actions/s
 import { SearchPageContent } from "@/components/search-page-content"
 import { SearchPageSkeleton } from "@/components/search-page-skeleton"
 
+// Listings change at any time: always render with fresh data from the database
+export const dynamic = "force-dynamic"
+
 interface SearchPageProps {
   params: Promise<{ lng: Locale }>
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>

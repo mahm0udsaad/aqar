@@ -1,15 +1,15 @@
 "use server"
 
+import { getAdminUser } from "@/lib/auth/session"
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 
 // Helper function to upload category image to Supabase Storage
 async function uploadCategoryImageToStorage(file: File, categoryId: string): Promise<string | null> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createDb();
     
     const fileExt = file.name.split('.').pop();
     const fileName = `${categoryId}_${Date.now()}.${fileExt}`;
@@ -41,7 +41,7 @@ async function uploadCategoryImageToStorage(file: File, categoryId: string): Pro
 // Helper function to delete category image from Supabase Storage
 async function deleteCategoryImageFromStorage(url: string): Promise<void> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies });
+    const supabase = createDb();
     
     const urlParts = url.split('/');
     const fileName = urlParts[urlParts.length - 1];
@@ -87,26 +87,11 @@ export async function createCategory(
   formData: FormData
 ): Promise<CategoryActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { message: "Authentication required", success: false }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
-      return { message: "Admin access required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Extract and validate form data
@@ -215,26 +200,11 @@ export async function updateCategory(
   formData: FormData
 ): Promise<CategoryActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { message: "Authentication required", success: false }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
-      return { message: "Admin access required", success: false }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     // Get existing category data first
@@ -342,25 +312,10 @@ export async function updateCategory(
 
 export async function deleteCategory(id: string): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 
@@ -411,30 +366,15 @@ export async function updateCategoriesOrder(
   categories: { id: string; order_index: number }[]
 ): Promise<{ success: boolean; message: string }> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
     // Validate input
     if (!categories || categories.length === 0) {
       return { success: false, message: "No categories provided" }
     }
 
-    // Check if user is authenticated and is admin
-    const {
-      data: { session },
-    } = await supabase.auth.getSession()
-
-    if (!session) {
-      return { success: false, message: "Authentication required" }
-    }
-
-    const { data: profile } = await supabase
-      .from("user_profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle()
-
-    const role = profile?.role || (session.user.user_metadata?.role as string) || "user"
-    if (role !== "admin") {
+    const admin = await getAdminUser()
+    if (!admin) {
       return { success: false, message: "Admin access required" }
     }
 

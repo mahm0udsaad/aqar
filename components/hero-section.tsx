@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -53,7 +54,7 @@ export function HeroSection({ lng, dict, areas, homeStats }: HeroSectionProps) {
         <div 
           className="w-full h-full bg-cover bg-center bg-no-repeat transform scale-105"
           style={{
-            backgroundImage: `url('${(dict as any)?.hero?.background_image_url || '/images/hero-apartment-balcony.jpg'}')`,
+            backgroundImage: `url('${assetUrl((dict as any)?.hero?.background_image_url || '/images/hero-apartment-balcony.jpg')}')`,
           }}
         />
       </div>

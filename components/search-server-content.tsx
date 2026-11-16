@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { AlertCircle } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
 import type { PropertyWithDetails } from "@/lib/supabase/queries"
 
 interface Area {

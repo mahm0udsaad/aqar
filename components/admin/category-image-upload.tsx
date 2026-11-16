@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState, useRef, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
@@ -561,7 +562,7 @@ export function CategoryImageUpload({
             <CardContent className="p-0">
               <div className="relative overflow-hidden rounded-lg">
                 <img
-                  src={image.url}
+                  src={assetUrl(image.url)}
                   alt={image.alt_text || "Category image"}
                   className="w-full h-64 object-cover"
                 />

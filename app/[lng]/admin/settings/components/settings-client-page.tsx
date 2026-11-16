@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState, useEffect } from "react"
 import { AdminHeader } from "@/components/admin/admin-header"
@@ -12,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Save, Settings, Globe, Shield, Bell, Palette, Home as HomeIcon, Image as ImageIcon } from "lucide-react"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { getHomeContentForAdmin, saveHomeContent } from "@/lib/actions/site-content"
 import { toast } from "sonner"
 import { Dictionary } from "@/lib/i18n/types"
 import { Locale } from "@/lib/i18n/config"
@@ -25,7 +26,6 @@ interface SettingsClientPageProps {
 }
 
 export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
-  const supabase = createClientComponentClient()
   const router = useRouter()
   const [settings, setSettings] = useState({
     // General Settings
@@ -86,46 +86,13 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
     // Save homepage content
     try {
       setIsSaving(true)
-      // Ensure a single row pattern using a fixed id and updated_at for proper ordering
-      const { error: heroError } = await supabase
-        .from("home_hero")
-        .insert({
-          title_en: hero.title_en,
-          title_ar: hero.title_ar,
-          subtitle_en: hero.subtitle_en,
-          subtitle_ar: hero.subtitle_ar,
-          background_image_url: hero.background_image_url || null,
-          updated_at: new Date().toISOString(),
-        })
-      if (heroError) throw heroError
-
-      const rows = Object.entries(stats).map(([key, value]) => ({ key, value }))
-      const { error: statsError } = await supabase.from("home_stats").upsert(rows, { onConflict: "key" })
-      if (statsError) throw statsError
+      const result = await saveHomeContent(hero, stats)
+      if (!result.success) throw new Error(result.message)
       toast.success("Homepage content saved")
 
-      // Re-fetch latest and refresh
-      const { data: heroData } = await supabase
-        .from("home_hero")
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single()
-      if (heroData) {
-        setHero({
-          title_en: heroData.title_en || "",
-          title_ar: heroData.title_ar || "",
-          subtitle_en: heroData.subtitle_en || "",
-          subtitle_ar: heroData.subtitle_ar || "",
-          background_image_url: heroData.background_image_url || "",
-        })
-      }
-      const { data: statsRows } = await supabase.from("home_stats").select("key,value")
-      if (statsRows) {
-        const map: Record<string, string> = {}
-        statsRows.forEach((r: any) => (map[r.key] = r.value))
-        setStats((prev) => ({ ...prev, ...map }))
-      }
+      const latest = await getHomeContentForAdmin()
+      if (latest.hero) setHero(latest.hero)
+      setStats((prev) => ({ ...prev, ...latest.stats }))
       router.refresh()
     } catch (e) {
       console.error("Error saving homepage content:", e)
@@ -141,28 +108,9 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
   // Load current hero and stats
   useEffect(() => {
     const load = async () => {
-      const { data: heroData } = await supabase
-        .from("home_hero")
-        .select("*")
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .single()
-      if (heroData) {
-        setHero({
-          title_en: heroData.title_en || "",
-          title_ar: heroData.title_ar || "",
-          subtitle_en: heroData.subtitle_en || "",
-          subtitle_ar: heroData.subtitle_ar || "",
-          background_image_url: heroData.background_image_url || "",
-        })
-      }
-
-      const { data: statsRows } = await supabase.from("home_stats").select("key,value")
-      if (statsRows) {
-        const map: Record<string, string> = {}
-        statsRows.forEach((r: any) => (map[r.key] = r.value))
-        setStats((prev) => ({ ...prev, ...map }))
-      }
+      const latest = await getHomeContentForAdmin()
+      if (latest.hero) setHero(latest.hero)
+      setStats((prev) => ({ ...prev, ...latest.stats }))
     }
     load()
   }, [])
@@ -640,9 +588,8 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
                             }
                             const url = result.urls[0]
                             setHero((p) => ({ ...p, background_image_url: url }))
-                            await supabase
-                              .from("home_hero")
-                              .insert({ background_image_url: url, updated_at: new Date().toISOString() })
+                            const saved = await saveHomeContent({ ...hero, background_image_url: url }, stats)
+                            if (!saved.success) throw new Error(saved.message)
                             toast.success("Image uploaded")
                           } catch (err) {
                             console.error(err)
@@ -652,7 +599,7 @@ export function SettingsClientPage({ lng, dict }: SettingsClientPageProps) {
                       />
                       {hero.background_image_url && (
                         <div className="mt-2">
-                          <img src={hero.background_image_url} alt="Hero background preview" className="h-28 rounded-md object-cover" />
+                          <img src={assetUrl(hero.background_image_url)} alt="Hero background preview" className="h-28 rounded-md object-cover" />
                         </div>
                       )}
                     </div>

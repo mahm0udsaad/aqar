@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import Image from "next/image"
 import Link from "next/link"
@@ -64,7 +65,7 @@ export function AvailableToFeatureTable({ initialItems, lng, dict }: AvailableTo
                         <div className="flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-md overflow-hidden">
                             <Image
-                              src={mainImage?.url || "/placeholder.svg?height=48&width=48"}
+                              src={assetUrl(mainImage?.url || "/placeholder.svg?height=48&width=48")}
                               alt={(property as any).title_en || (property as any).title_ar || "Property"}
                               fill
                               className="object-cover"

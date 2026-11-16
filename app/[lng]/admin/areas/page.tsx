@@ -1,7 +1,6 @@
 import { AdminHeader } from "@/components/admin/admin-header"
 import { AreasGrid } from "./components/areas-grid"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
 import type { Locale } from "@/lib/i18n/config"
@@ -12,7 +11,7 @@ interface PageProps {
 
 export default async function AreasPage({ params }: PageProps) {
   const { lng } = await params
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
   const dict = await getDictionary(lng)
 
   // Fetch all areas (including inactive ones for admin management)

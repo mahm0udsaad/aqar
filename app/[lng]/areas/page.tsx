@@ -1,3 +1,4 @@
+import { assetUrl } from "@/lib/utils"
 import { Navbar } from "@/components/navbar"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -6,9 +7,11 @@ import { getDictionary } from "@/lib/i18n/get-dictionary"
 import type { Locale } from "@/lib/i18n/config"
 import Link from "next/link"
 import { MapPin } from "lucide-react"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
+
+// Listings change at any time: always render with fresh data from the database
+export const dynamic = "force-dynamic"
 
 interface AreasPageProps {
   params: Promise<{ lng: Locale }>
@@ -25,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ lng: Loca
 export default async function AreasPage({ params }: AreasPageProps) {
   const { lng } = await params
   const dict = await getDictionary(lng)
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
 
   // Fetch active areas
   const { data: areas } = await supabase
@@ -67,7 +70,7 @@ export default async function AreasPage({ params }: AreasPageProps) {
               <Link key={area.id} href={`/${lng}/search?area=${encodeURIComponent(area.name)}`}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer h-full overflow-hidden">
                   {area.image_url && (
-                    <img src={area.image_url} alt={`${area.name} image`} className="w-full h-32 object-cover" />
+                    <img src={assetUrl(area.image_url)} alt={`${area.name} image`} className="w-full h-32 object-cover" />
                   )}
                   <CardHeader>
                     <CardTitle className="flex items-center justify-between">

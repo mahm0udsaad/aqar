@@ -1,7 +1,6 @@
 import { AdminHeader } from "@/components/admin/admin-header"
 import { PropertyForm } from "../components/property-form"
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 import { getAreas } from "@/lib/actions/areas"
 import { getDictionary } from "@/lib/i18n/get-dictionary"
@@ -12,7 +11,7 @@ interface PageProps {
 
 export default async function NewPropertyPage({ params }: PageProps) {
   const { lng } = await params
-  const supabase = createServerComponentClient<Database>({ cookies })
+  const supabase = createDb()
   const dict = await getDictionary(lng)
   const dictEn = await getDictionary("en" as any)
   const dictAr = await getDictionary("ar" as any)

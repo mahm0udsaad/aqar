@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import React, { useState, useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
@@ -10,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { toast } from "sonner"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
 import { v4 as uuidv4 } from "uuid"
 import type { Database } from "@/lib/supabase/types"
 
@@ -76,9 +76,9 @@ const DraggableVideoItem: React.FC<DraggableVideoItemProps> = ({
         </div>
         <div className="relative w-24 h-24 rounded-md overflow-hidden bg-black">
           {item.url && !item.isUploading && !item.url.startsWith("blob:") ? (
-            <video className="w-full h-full object-cover" src={item.url} controls />
+            <video className="w-full h-full object-cover" src={assetUrl(item.url)} controls />
           ) : item.url && item.url.startsWith("blob:") ? (
-            <video className="w-full h-full object-cover" src={item.url} muted />
+            <video className="w-full h-full object-cover" src={assetUrl(item.url)} muted />
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <Video className="h-10 w-10 text-white" />
@@ -141,7 +141,6 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
 }) => {
   const [videos, setVideos] = useState<VideoFile[]>(initialVideos)
   const [videoUrl, setVideoUrl] = useState("")
-  const supabase = createClientComponentClient<Database>()
 
   useEffect(() => {
     onVideosChange(videos)
@@ -160,26 +159,19 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
         )
       }, 500)
 
-      const fileExtension = file.name.split('.').pop()
-      const fileName = `${uuidv4()}.${fileExtension}`
-      const filePath = `videos/properties/${fileName}`
-
-      const { error } = await supabase.storage
-        .from("property-videos")
-        .upload(filePath, file, {
-          cacheControl: "3600",
-          upsert: false,
-          contentType: file.type,
-        })
-
-      if (error) {
+      const body = new FormData()
+      body.append("file", file)
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH || ""}/api/uploads/video`, {
+        method: "POST",
+        body,
+        credentials: "same-origin",
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok || !json.url) {
         clearInterval(progressTimer)
-        throw error
+        throw new Error(json.error || `Upload failed (${res.status})`)
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("property-videos")
-        .getPublicUrl(filePath)
+      const publicUrl: string = json.url
 
       clearInterval(progressTimer)
 
@@ -194,7 +186,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
       console.error("Error uploading video:", error)
       let errorMessage = "Upload failed. Please try again.";
       if (error.message.includes("Failed to fetch")) {
-        errorMessage = "Network error. Please check your connection and CORS settings on your Supabase bucket.";
+        errorMessage = "Network error. Please check your connection and try again.";
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -244,7 +236,7 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
     })
 
     toast.success(`${validFiles.length} video(s) added and upload started.`)
-  }, [videos, maxFiles, supabase])
+  }, [videos, maxFiles])
 
   const addVideo = () => {
     if (!videoUrl.trim()) return
@@ -265,12 +257,8 @@ export const VideoUploader: React.FC<VideoUploaderProps> = ({
 
   const removeVideo = (index: number) => {
     const video = videos[index];
-    if (video && video.url && !video.url.startsWith('blob:')) {
-      const filePath = new URL(video.url).pathname.split('/property-videos/')[1];
-      if (filePath) {
-        supabase.storage.from('property-videos').remove([filePath]);
-      }
-    }
+    // Files are kept on disk; the property's video rows are updated when the form is saved.
+    void video
     setVideos((prev) => prev.filter((_, i) => i !== index))
   }
 

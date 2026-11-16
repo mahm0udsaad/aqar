@@ -1,7 +1,7 @@
 "use server"
 
-import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
-import { cookies } from "next/headers"
+import { getAdminUser } from "@/lib/auth/session"
+import { createDb } from "@/lib/db"
 import type { Database } from "@/lib/supabase/types"
 
 export interface UploadActionState {
@@ -21,11 +21,11 @@ export async function uploadImages(
   formData: FormData
 ): Promise<UploadActionState> {
   try {
-    const supabase = createServerComponentClient<Database>({ cookies })
+    const supabase = createDb()
 
-    const { data: { session } } = await supabase.auth.getSession()
-    if (!session) {
-      return { success: false, message: "Authentication required" }
+    const admin = await getAdminUser()
+    if (!admin) {
+      return { success: false, message: "Admin access required" }
     }
 
     const incomingFiles = formData.getAll("files") as File[]
@@ -34,14 +34,23 @@ export async function uploadImages(
     }
 
     // Optional override support
-    const targetBucket = (formData.get("bucket") as string) || "property-images"
-    const prefix = (formData.get("prefix") as string) || "uploads"
+    const ALLOWED_BUCKETS = new Set(["property-images", "category-images", "area-images", "site-images"])
+    const requestedBucket = (formData.get("bucket") as string) || "property-images"
+    const targetBucket = ALLOWED_BUCKETS.has(requestedBucket) ? requestedBucket : "property-images"
+    const prefix = ((formData.get("prefix") as string) || "uploads").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 40) || "uploads"
+    const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "gif", "avif"])
 
     const uploadedUrls: string[] = []
 
     for (const file of incomingFiles) {
       const safeName = file.name.replace(/\s+/g, "_")
-      const fileExt = safeName.split(".").pop() || "jpg"
+      const fileExt = (safeName.split(".").pop() || "jpg").toLowerCase()
+      if (!ALLOWED_EXT.has(fileExt) || (file.type && !file.type.startsWith("image/"))) {
+        return { success: false, message: `Unsupported file type: ${safeName}` }
+      }
+      if (file.size > 10 * 1024 * 1024) {
+        return { success: false, message: `File too large (max 10MB): ${safeName}` }
+      }
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
       const filePath = `${prefix}/${fileName}`
 

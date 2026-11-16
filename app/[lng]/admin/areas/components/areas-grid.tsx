@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
@@ -130,7 +131,7 @@ export function AreasGrid({ areas, lng, dict }: AreasGridProps) {
             <CardContent>
               <div className="space-y-2">
                 {area.image_url && (
-                  <img src={area.image_url} alt={`${area.name} image`} className="w-full h-32 object-cover rounded-md" />
+                  <img src={assetUrl(area.image_url)} alt={`${area.name} image`} className="w-full h-32 object-cover rounded-md" />
                 )}
                 <p className="text-sm text-muted-foreground">
                   Slug: <code className="text-xs">{area.slug}</code>

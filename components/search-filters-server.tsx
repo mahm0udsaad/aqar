@@ -1,7 +1,7 @@
 import { SearchFilterForm } from "@/components/search-filter-form"
 import { Card, CardContent } from "@/components/ui/card"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
 
 interface Area {
   id: string

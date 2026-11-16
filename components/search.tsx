@@ -12,7 +12,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { SearchContent } from "@/components/search-content"
 import { SearchFiltersSheet } from "@/components/search-filters-sheet"
-import { getCategories } from "@/lib/supabase/queries"
+import { fetchCategories as getCategories } from "@/lib/actions/public-data"
 import { getAreas } from "@/lib/actions/areas"
 
 import type { PropertyWithDetails } from "@/lib/supabase/queries"

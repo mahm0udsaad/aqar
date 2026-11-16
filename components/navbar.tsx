@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs"
+import { useAuth } from "@/lib/auth/auth-context"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
@@ -29,11 +29,9 @@ interface NavbarProps {
 export function Navbar({ lng, dict }: NavbarProps) {
   const [isScrolled, setIsScrolled] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [user, setUser] = useState<any>(null)
-  const [userProfile, setUserProfile] = useState<any>(null)
+  const { user, profile: userProfile, isAdmin, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClientComponentClient()
   const isSearchPage = pathname.includes("/search")
   const { count: comparisonCount } = useComparison()
 
@@ -54,8 +52,7 @@ export function Navbar({ lng, dict }: NavbarProps) {
   }
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    router.push(`/${lng}`)
+    await signOut(lng)
   }
 
   const toggleLanguage = () => {

@@ -9,8 +9,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Search, Filter, X } from "lucide-react"
 import type { Locale } from "@/lib/i18n/config"
-import type { ServerSearchParams } from "@/lib/actions/search"
-import { buildSearchUrl, getActiveFiltersCount } from "@/lib/actions/search"
+import type { ServerSearchParams } from "@/lib/search-params"
+import { buildSearchUrl, getActiveFiltersCount } from "@/lib/search-params"
 
 interface SearchFormProps {
   lng: Locale

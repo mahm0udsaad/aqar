@@ -1,4 +1,5 @@
 "use client"
+import { assetUrl } from "@/lib/utils"
 
 import { useState, useTransition } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -165,7 +166,7 @@ function SortableCategory({ category, lng, dict, isDragOverlay = false }: Sortab
         {category.image_url && (
           <div className="relative w-full h-32 rounded-md overflow-hidden mb-4">
             <Image 
-              src={category.image_url} 
+              src={assetUrl(category.image_url)} 
               alt={category.name}
               fill
               className="object-cover"
